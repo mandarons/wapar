@@ -1,0 +1,11 @@
+{
+    "mochaExplorer.files": "**/tests/**/*.test.ts",
+    "mochaExplorer.require": "ts-node/register",
+    "mochaExplorer.env": {
+        "NODE_ENV": "test"
+    },
+    "cSpell.words": [
+        "APIURL",
+        "Bouncie"
+    ]
+}
