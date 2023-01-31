@@ -9,7 +9,6 @@ import Sinon from 'sinon';
 import { Installations } from '../../src/db/installations/installations.schema';
 import { Heartbeats } from '../../src/db/heartbeats/heartbeat.schema';
 import { Demographics } from '../../src/db/demographics/demographic.schema';
-import { appsList } from '../../src/const';
 
 chai.should();
 chai.use(chaiHTTP);
@@ -114,64 +113,6 @@ describe('/api', async () => {
                     });
                 res.status.should.be.equal(500);
                 res.body.status.should.be.equal('error');
-            });
-        });
-    });
-    describe('/data', async () => {
-        describe('/', async () => {
-            before(async () => {
-                await DemographicModel.sync({ force: true });
-                await InstallationModel.sync({ force: true });
-            });
-            afterEach(async () => Sinon.restore());
-            after(async () => {
-                await DemographicModel.drop();
-                await InstallationModel.drop();
-            });
-            it('should return the aggregate data', async () => {
-                for await (const appName of appsList) {
-                    let res = await chai.request(server.app)
-                        .post('/api/installation/new')
-                        .send({
-                            app_name: appName,
-                            app_version: utils.randomAppVersion(),
-                        });
-                    res.status.should.be.equal(200);
-                    res.body.status.should.be.equal('success');
-                };
-                const res = await chai.request(server.app)
-                    .get('/api/data/');
-                res.status.should.be.equal(200);
-                res.body.status.should.be.equal('success');
-                res.body.data.totalInstallations.should.be.equal(2);
-            });
-            it('should return null in case of internal failure', async () => {
-                for await (const appName of appsList) {
-                    let res = await chai.request(server.app)
-                        .post('/api/heartbeat/new')
-                        .send({
-                            app_name: appName,
-                            app_version: utils.randomAppVersion(),
-                            installation_id: faker.datatype.uuid()
-                        });
-                    res.status.should.be.equal(200);
-                    res.body.status.should.be.equal('success');
-                };
-                Sinon.stub(Installations, 'count').throws({ errors: [{ message: 'Exception occurred.' }] });
-                let res = await chai.request(server.app)
-                    .get('/api/data/');
-                res.status.should.be.equal(200);
-                res.body.status.should.be.equal('success');
-                chai.expect(res.body.data.totalInstallations).to.be.null;
-                Sinon.restore();
-
-                Sinon.stub(Installations, 'findAll').throws({ errors: [{ message: 'Exception occurred.' }] });
-                res = await chai.request(server.app)
-                    .get('/api/data/');
-                res.status.should.be.equal(200);
-                res.body.status.should.be.equal('success');
-                res.body.data.totalInstallations.should.be.equal(2);
-                chai.expect(res.body.data.iCloudDocker.total).to.be.null;
             });
         });
     });

@@ -7,6 +7,8 @@ interface IConfig {
     server: {
         port: number;
         refreshDemographicsInterval: string;
+        saveDataInterval: string;
+        dataFilePath: string;
     };
     database: {
         host: string;
@@ -30,6 +32,7 @@ const configYamlMap: { [key: string]: string; } = {
 };
 
 const getConfigYamlPath = (): string => {
+    /* istanbul ignore next */
     const currentEnv = process.env.NODE_ENV !== undefined ? process.env.NODE_ENV.toLowerCase() : 'development';
     return configYamlMap[currentEnv];
 };

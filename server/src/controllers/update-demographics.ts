@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import appConfig, { ipInfoAPIURL, ipInfoBatchSize } from '../const';
-import { getMissingRecords, updateDemographicsInfoByIp } from '../db/demographics/demographic.model';
+import { getMissingDemographicRecords, updateDemographicsInfoByIp } from '../db';
 import { IDemographicRecordInstance } from '../db/demographics/demographic.schema';
 import axios, { AxiosResponse } from 'axios';
 export interface IIPInfoResponse {
@@ -25,7 +25,7 @@ const getIPInfo = async (ipList: string[]): Promise<IIPInfoResponse[]> => {
 };
 
 const job = async () => {
-    const missingRecords = await getMissingRecords();
+    const missingRecords = await getMissingDemographicRecords();
     if (missingRecords.success === false) {
         console.error(`Failed to get missing demographics - ${missingRecords.errorMessage}.`);
         return false;
