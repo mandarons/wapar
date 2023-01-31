@@ -4,6 +4,7 @@ import fs from 'fs';
 import { getAppDeployments, getTotalDeployments } from '.';
 import appConfig from '../const';
 interface IAggregateData {
+    createdAt: string;
     totalInstallations?: number | null;
     iCloudDocker?: {
         total: number | null;
@@ -23,7 +24,7 @@ const getAllAppDeployments = async (data: IAggregateData) => {
 };
 
 const getAggregateData = async (): Promise<IAggregateData | boolean> => {
-    const data: IAggregateData = { totalInstallations: 0 };
+    const data: IAggregateData = { totalInstallations: 0, createdAt: Date() };
     const totalDeployments = await getTotalDeployments();
     data.totalInstallations = totalDeployments === false ? null : totalDeployments as number;
     await getAllAppDeployments(data);
