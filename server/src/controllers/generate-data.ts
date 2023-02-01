@@ -40,7 +40,7 @@ const job = async () => {
 /* istanbul ignore next */
 const enableSaveAggregateDataRefresh = (pattern = appConfig.server.saveDataInterval) => cron.schedule(pattern, job);
 
-
+/* istanbul ignore if */
 if (require.main === module) {
     (async () => await job())();
 }

@@ -25,7 +25,7 @@ describe('/api', async () => {
 
     describe('/installation', async () => {
         describe('/new', async () => {
-            it('should create a new deployment entry', async () => {
+            it('should create a new deployment entry and return ID', async () => {
                 const res = await chai.request(server.app)
                     .post('/api/installation/new')
                     .send({
@@ -34,6 +34,7 @@ describe('/api', async () => {
                     });
                 res.status.should.be.equal(200);
                 res.body.status.should.be.equal('success');
+                res.body.data.id.should.not.be.empty;
             });
             it('should create a new deployment entry with previous installation id', async () => {
                 const res = await chai.request(server.app)

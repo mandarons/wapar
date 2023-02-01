@@ -15,7 +15,7 @@ const recordNewHeartbeat = async (data: IHeartbeatRecord): Promise<boolean> => {
     return result.success;
 };
 
-const recordNewDeployment = async (app_name: string, app_version: string, ip_address: string | undefined, previous_installation_id: string | null = null): Promise<boolean> => {
+const recordNewDeployment = async (app_name: string, app_version: string, ip_address: string | undefined, previous_installation_id: string | null = null): Promise<boolean | { id: string; }> => {
     const installationRecord: IInstallationRecordAttributes = { app_name, app_version };
     if (previous_installation_id) {
         installationRecord.previous_id = previous_installation_id;
@@ -26,7 +26,10 @@ const recordNewDeployment = async (app_name: string, app_version: string, ip_add
     }
     const demographicRecord: IDemographicRecordAttributes = { installation_id: (result.values as { id: string; }).id, ip_address };
     result = await addNewDemographicsInfo(demographicRecord);
-    return result.success;
+    if (result.success === false) {
+        return false;
+    }
+    return { id: demographicRecord.installation_id };
 };
 
 const getTotalDeployments = async (): Promise<number | boolean> => {
