@@ -1,11 +1,18 @@
 ---
+import data from "../../public/data.json";
+const dataGeneratedAt = new Date(data.createdAt);
 ---
 
 <footer>
     <div class="fixed bottom-0 w-full border-t">
         <div class="flex items-center justify-between p-4">
             <div class="flex items-center"></div>
-            <div class="flex items-end">
+            <div class="flex items-end space-x-4">
+                <p class="text-xs font-medium text-gray-600">
+                    Generated at: <span id="data-generated-at"
+                        >{dataGeneratedAt}</span
+                    >
+                </p>
                 <p class="text-xs font-medium text-gray-600">
                     Copyright &copy; 2023 Mandar Patil
                 </p>
@@ -13,3 +20,9 @@
         </div>
     </div>
 </footer>
+<script>
+    const dataGeneratedAtNode = document.querySelector("#data-generated-at");
+    dataGeneratedAtNode!.textContent = new Date(
+        dataGeneratedAtNode!.textContent!
+    ).toLocaleString();
+</script>
