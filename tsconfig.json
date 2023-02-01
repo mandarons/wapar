@@ -12,7 +12,7 @@
         "./server/tests/",
         "./node_modules/",
         "./build",
-        "./clients",
+        "./client",
         "./cypress"
     ]
 }

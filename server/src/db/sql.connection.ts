@@ -10,7 +10,9 @@ export interface IDatabaseResponse {
 
 const sequelize = new Sequelize(config.database.name, config.database.username, config.database.password, {
     dialect: 'postgres',
-    logging: false
+    logging: false,
+    host: config.database.host,
+    port: config.database.port
 });
 
 export default sequelize;

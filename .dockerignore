@@ -1,0 +1,7 @@
+.devcontainer/
+.nyc_output/
+.vscode/
+allure-results/
+client/
+coverage/
+server/

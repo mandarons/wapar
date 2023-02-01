@@ -24,7 +24,7 @@ const getAllAppDeployments = async (data: IAggregateData) => {
 };
 
 const getAggregateData = async (): Promise<IAggregateData | boolean> => {
-    const data: IAggregateData = { totalInstallations: 0, createdAt: Date() };
+    const data: IAggregateData = { totalInstallations: 0, createdAt: (new Date()).toUTCString() };
     const totalDeployments = await getTotalDeployments();
     data.totalInstallations = totalDeployments === false ? null : totalDeployments as number;
     await getAllAppDeployments(data);
@@ -40,6 +40,10 @@ const job = async () => {
 /* istanbul ignore next */
 const enableSaveAggregateDataRefresh = (pattern = appConfig.server.saveDataInterval) => cron.schedule(pattern, job);
 
+
+if (require.main === module) {
+    (async () => await job())();
+}
 export default {
     job,
     enableSaveAggregateDataRefresh
