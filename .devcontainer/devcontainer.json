@@ -12,7 +12,6 @@
 		"esbenp.prettier-vscode",
 		"GitHub.vscode-pull-request-github",
 		"hbenl.vscode-mocha-test-adapter",
-		"astro-build.astro-vscode",
 		"bradlc.vscode-tailwindcss"
 	],
 	// Features to add to the dev container. More info: https://containers.dev/features.
