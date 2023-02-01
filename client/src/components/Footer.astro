@@ -1,5 +1,6 @@
 ---
-import data from "../../public/data.json";
+const response = await fetch("/data.json");
+const data = await response.json();
 const dataGeneratedAt = new Date(data.createdAt);
 ---
 

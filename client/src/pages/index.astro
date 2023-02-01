@@ -1,7 +1,8 @@
 ---
 import Navigation from "../components/Navigation.astro";
 import Layout from "../layouts/Layout.astro";
-import data from "../../public/data.json";
+const response = await fetch("/data.json");
+const data = await response.json();
 ---
 
 <Layout title="Wapar :: Mandarons Apps Usage">
