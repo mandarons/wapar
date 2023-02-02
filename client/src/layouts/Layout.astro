@@ -1,13 +1,14 @@
 ---
 import Footer from "../components/Footer.astro";
+import Navigation from "../components/Navigation.astro";
 
 export interface Props {
 	title: string;
+	currentPage: string;
+	data: object;
 }
 
-const { title } = Astro.props;
-const response = await fetch("https://wapar.mandarons.com/data.json");
-const data = (await response.json()) as object;
+const { title, currentPage, data } = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -19,6 +20,7 @@ const data = (await response.json()) as object;
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 	</head>
+	<Navigation currentPage={currentPage} />
 	<body>
 		<slot />
 	</body>
