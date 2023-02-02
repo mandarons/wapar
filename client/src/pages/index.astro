@@ -1,0 +1,12 @@
+---
+import Navigation from "../components/Navigation.astro";
+import Layout from "../layouts/Layout.astro";
+const response = await fetch(`${Astro.url}/data.json`);
+console.log(Astro.url.href);
+const data = await response.json();
+---
+
+<Layout title="Wapar :: Mandarons Apps Usage">
+	<Navigation currentPage="home" />
+	<h1 class="text-center">{`Total:${data.totalInstallations}`}</h1>
+</Layout>

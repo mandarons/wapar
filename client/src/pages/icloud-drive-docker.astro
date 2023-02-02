@@ -1,0 +1,12 @@
+---
+import Navigation from "../components/Navigation.astro";
+import Layout from "../layouts/Layout.astro";
+const response = await fetch("/data.json");
+const data = await response.json();
+const appName = "icloud-drive-docker";
+---
+
+<Layout title="Wapar :: iCloud Drive Docker">
+    <Navigation currentPage={appName} />
+    <h1 class="text-center">{`Total: ${data.iCloudDocker.total}`}</h1>
+</Layout>
