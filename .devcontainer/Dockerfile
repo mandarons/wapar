@@ -13,7 +13,7 @@ FROM mcr.microsoft.com/devcontainers/javascript-node:0-18
 RUN \
     apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    software-properties-common git default-jre && \
+    software-properties-common git default-jre ca-certificates && \
     apt-get clean &&\
     rm -rf /var/lib/apt/lists/*
 RUN \

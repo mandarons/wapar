@@ -4,6 +4,8 @@
     "mochaExplorer.env": {
         "NODE_ENV": "test"
     },
+    "http.proxySupport": "off",
+    "http.systemCertificates": true,
     "cSpell.words": [
         "APIURL",
         "Bouncie"

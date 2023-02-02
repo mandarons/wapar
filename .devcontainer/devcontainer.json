@@ -14,8 +14,14 @@
 		"hbenl.vscode-mocha-test-adapter",
 		"bradlc.vscode-tailwindcss",
 		"mhutchie.git-graph",
-		"astro-build.astro-vscode"
+		"astro-build.astro-vscode",
+		"gitlab.gitlab-workflow"
 	],
+	"mounts": [
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg,type=bind,consistency=cached",
+		"source=/usr/local/share/ca-certificates,target=/usr/local/share/ca-certificates,type=bind,consistency=cached"
+	],
+	"postCreateCommand": "sudo update-ca-certificates"
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
