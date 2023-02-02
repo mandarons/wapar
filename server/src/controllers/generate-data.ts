@@ -1,8 +1,5 @@
-import cron from 'node-cron';
-import fs from 'fs';
 
 import { getAppDeployments, getTotalDeployments } from '.';
-import appConfig from '../const';
 interface IAggregateData {
     createdAt: string;
     totalInstallations?: number | null;
@@ -23,7 +20,7 @@ const getAllAppDeployments = async (data: IAggregateData) => {
     data.haBouncie.total = totalDeployments === false ? null : totalDeployments as number;
 };
 
-const getAggregateData = async (): Promise<IAggregateData | boolean> => {
+const getAggregateData = async (): Promise<IAggregateData> => {
     const data: IAggregateData = { totalInstallations: 0, createdAt: (new Date()).toUTCString() };
     const totalDeployments = await getTotalDeployments();
     data.totalInstallations = totalDeployments === false ? null : totalDeployments as number;
@@ -31,20 +28,6 @@ const getAggregateData = async (): Promise<IAggregateData | boolean> => {
     return data;
 };
 
-const job = async () => {
-    const data = await getAggregateData();
-    fs.writeFileSync(appConfig.server.dataFilePath, JSON.stringify(data as object));
-    return true;
-};
-
-/* istanbul ignore next */
-const enableSaveAggregateDataRefresh = (pattern = appConfig.server.saveDataInterval) => cron.schedule(pattern, job);
-
-/* istanbul ignore if */
-if (require.main === module) {
-    (async () => await job())();
-}
 export default {
-    job,
-    enableSaveAggregateDataRefresh
+    getAggregateData
 };
