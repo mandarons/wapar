@@ -36,8 +36,7 @@
     "typescript": "^4.9.4"
   },
   "scripts": {
-    "datagen": "ts-node server/src/controllers/generate-data.ts && mv data.json client/public/",
-    "build": "NODE_ENV=production npm run build --prefix client/ && rm -rf ./build && tsc --build ./tsconfig.json && cp -r ./server/config ./build/config && cp -r ./client/dist/ ./build/public/",
+    "build": "NODE_ENV=production rm -rf ./build && tsc --build ./tsconfig.json && mkdir ./build/config && cp ./server/config/config.yaml ./build/config/config.yaml",
     "build:server": "tsc --build ./tsconfig.json",
     "build:docker:local": "PUBLIC_URL=. npm run build && docker build --tag wapar .",
     "start": "nodemon -e ts,yaml ./server/src/index.ts",
