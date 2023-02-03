@@ -6,7 +6,7 @@ stages:
 
 npm:
   tags:
-    - node
+    - nodejs
   stage:  npm
   script:
     - npm install
