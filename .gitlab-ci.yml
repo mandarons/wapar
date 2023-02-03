@@ -9,7 +9,7 @@ npm:
     - nodejs
   stage:  npm
   script:
-    - npm install
+    - yarn install
   cache:
     when: on_success
     paths:
