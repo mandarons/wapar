@@ -13,18 +13,17 @@ import { appsList } from '../../src/const';
 chai.should();
 chai.use(chaiHTTP);
 describe('/api', async () => {
-    before(async () => {
-        await DemographicModel.sync({ force: true });
-        await InstallationModel.sync({ force: true });
-    });
-    afterEach(async () => Sinon.restore());
-    after(async () => {
-        await DemographicModel.drop();
-        await InstallationModel.drop();
-    });
-
     describe('/installation', async () => {
         describe('/new', async () => {
+            before(async () => {
+                await DemographicModel.sync({ force: true });
+                await InstallationModel.sync({ force: true });
+            });
+            afterEach(async () => Sinon.restore());
+            after(async () => {
+                await DemographicModel.drop();
+                await InstallationModel.drop();
+            });
             it('should create a new deployment entry and return ID', async () => {
                 const res = await chai.request(server.app)
                     .post('/api/installation/new')
@@ -83,6 +82,15 @@ describe('/api', async () => {
     });
     describe('/heartbeat', async () => {
         describe('/new', async () => {
+            before(async () => {
+                await DemographicModel.sync({ force: true });
+                await InstallationModel.sync({ force: true });
+            });
+            afterEach(async () => Sinon.restore());
+            after(async () => {
+                await DemographicModel.drop();
+                await InstallationModel.drop();
+            });
             it('should record a new heartbeat', async () => {
                 const res = await chai.request(server.app)
                     .post('/api/heartbeat/new')
@@ -127,6 +135,7 @@ describe('/api', async () => {
             after(async () => {
                 await DemographicModel.drop();
                 await InstallationModel.drop();
+                console.error('After done.');
             });
             it('should return the aggregate data', async () => {
                 for await (const appName of appsList) {
@@ -172,6 +181,7 @@ describe('/api', async () => {
                 res.body.status.should.be.equal('success');
                 res.body.data.totalInstallations.should.be.equal(2);
                 chai.expect(res.body.data.iCloudDocker.total).to.be.null;
+
             });
         });
     });
