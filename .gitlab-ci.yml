@@ -21,6 +21,8 @@ npm:
       - node_modules/
 
 test:
+  tags:
+    - nodejs
   stage: test
   dependencies:
     - npm
