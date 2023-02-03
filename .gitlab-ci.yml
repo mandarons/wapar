@@ -15,7 +15,7 @@ stages:
 
 npm:
   tags:
-    - docker
+    - nodejs
   stage:  npm
   script:
     - yarn install
@@ -31,7 +31,7 @@ npm:
 
 test:
   tags:
-    - docker
+    - nodejs
   stage: test
   dependencies:
     - npm
