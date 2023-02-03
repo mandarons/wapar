@@ -18,8 +18,11 @@ variables:
 test:
   tags:
     - nodejs
+  before_script:
+    - apk update && apk add postgresql
+    - psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS pgcrypto"
+    - psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
   script:
-    - ls
+    - echo "hi"
     - yarn install --frozen-lockfile
-    - ls
-    - yarn test:server
+    - yarn test:server:ci
