@@ -92,7 +92,7 @@ describe('/api', async () => {
                 await InstallationModel.drop();
             });
             it('should record a new heartbeat', async () => {
-                const res = await chai.request(server.app)
+                await chai.request(server.app)
                     .post('/api/heartbeat/new')
                     .send({
                         installation_id: faker.datatype.uuid(),
