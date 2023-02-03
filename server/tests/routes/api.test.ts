@@ -99,7 +99,7 @@ describe('/api', async () => {
                     });
                 res.status.should.be.equal(200);
                 res.body.status.should.be.equal('success');
-            }).timeout(5000);
+            });
             it('should not record a heartbeat if data is missing', async () => {
                 const res = await chai.request(server.app)
                     .post('/api/heartbeat/new')
@@ -157,8 +157,7 @@ describe('/api', async () => {
                         .post('/api/installation/new')
                         .send({
                             app_name: appName,
-                            app_version: utils.randomAppVersion(),
-                            installation_id: faker.datatype.uuid()
+                            app_version: utils.randomAppVersion()
                         });
                     res.status.should.be.equal(200);
                     res.body.status.should.be.equal('success');
@@ -179,7 +178,7 @@ describe('/api', async () => {
                 res.body.data.totalInstallations.should.be.equal(2);
                 chai.expect(res.body.data.iCloudDocker.total).to.be.null;
 
-            }).timeout(5000);
+            });
         });
     });
 });
