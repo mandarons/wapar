@@ -25,4 +25,4 @@ test:
   script:
     - echo "hi"
     - yarn install --frozen-lockfile
-    - yarn test:server:ci
+    - yarn test:server
