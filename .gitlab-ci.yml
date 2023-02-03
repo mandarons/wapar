@@ -25,4 +25,4 @@ test:
   dependencies:
     - npm
   script:
-    - npm run test:server:ci
+    - yarn test:server:ci
