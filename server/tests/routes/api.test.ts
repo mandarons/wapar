@@ -91,14 +91,14 @@ describe('/api', async () => {
                 await DemographicModel.drop();
                 await InstallationModel.drop();
             });
-            it('should record a new heartbeat', async () => {
-                // await chai.request(server.app)
-                //     .post('/api/heartbeat/new')
-                //     .send({
-                //         installation_id: faker.datatype.uuid(),
-                //         app_name: utils.randomAppName(),
-                //         app_version: utils.randomAppVersion()
-                //     });
+            it('should record a new heartbeat', async function () {
+                await chai.request(server.app)
+                    .post('/api/heartbeat/new')
+                    .send({
+                        installation_id: faker.datatype.uuid(),
+                        app_name: utils.randomAppName(),
+                        app_version: utils.randomAppVersion()
+                    });
                 // res.status.should.be.equal(200);
                 // res.body.status.should.be.equal('success');
             }).timeout(5000);
