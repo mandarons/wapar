@@ -1,7 +1,13 @@
 image: node:lts-alpine
 
 services:
-  -  postgres:13-alpine
+  - postgres:13-alpine
+
+cache:
+  untracked: true
+  key: dependencies
+  paths:
+    - node_modules/
 
 variables:
   POSTGRES_DB: wapardev
@@ -9,31 +15,11 @@ variables:
   POSTGRES_PASSWORD: wapar-user
   POSTGRES_HOST_AUTH_METHOD: trust
 
-stages:
-  - npm
-  - test
-
-npm:
-  tags:
-    - nodejs
-  stage:  npm
-  script:
-    - yarn install
-  cache:
-    when: on_success
-    paths:
-      - node_modules/
-  artifacts:
-    expire_in: 1 days
-    when: on_success
-    paths:
-      - node_modules/
-
 test:
   tags:
     - nodejs
-  stage: test
-  dependencies:
-    - npm
   script:
-    - yarn test:server:ci
+    - ls
+    - yarn install --frozen-lockfile
+    - ls
+    - yarn test:server
