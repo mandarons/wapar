@@ -1,13 +1,13 @@
 import server from '../../src/';
 import utils from '../data/utils';
-import { DemographicModel } from '../../src/db/demographics/demographic.model';
-import { InstallationModel } from '../../src/db/installations/installation.model';
+// import { DemographicModel } from '../../src/db/demographics/demographic.model';
+// import { InstallationModel } from '../../src/db/installations/installation.model';
 import chai from 'chai';
 import chaiHTTP from 'chai-http';
 import { faker } from '@faker-js/faker';
 import Sinon from 'sinon';
 // import { Installations } from '../../src/db/installations/installations.schema';
-// import { Heartbeats } from '../../src/db/heartbeats/heartbeat.schema';
+import { Heartbeats } from '../../src/db/heartbeats/heartbeat.schema';
 // import { Demographics } from '../../src/db/demographics/demographic.schema';
 // import { appsList } from '../../src/const';
 chai.should();
@@ -83,13 +83,11 @@ describe('/api', async () => {
     describe('/heartbeat', async () => {
         describe('/new', async () => {
             beforeEach(async () => {
-                await DemographicModel.sync({ force: true });
-                await InstallationModel.sync({ force: true });
+                await Heartbeats.sync({ force: true });
             });
             afterEach(async () => {
                 Sinon.restore();
-                // await DemographicModel.drop();
-                // await InstallationModel.drop();
+                await Heartbeats.drop();
             });
             it('should record a new heartbeat', async () => {
                 const res = await chai.request(server.app)
@@ -111,18 +109,18 @@ describe('/api', async () => {
                 res.status.should.be.equal(500);
                 res.body.status.should.be.equal('error');
             });
-            // it('should return error in case of internal failure', async () => {
-            //     Sinon.stub(Heartbeats, 'create').throws({ errors: [{ message: 'Exception occurred.' }] });
-            //     const res = await chai.request(server.app)
-            //         .post('/api/heartbeat/new')
-            //         .send({
-            //             app_name: utils.randomAppName(),
-            //             app_version: utils.randomAppVersion(),
-            //             installation_id: faker.datatype.uuid()
-            //         });
-            //     res.status.should.be.equal(500);
-            //     res.body.status.should.be.equal('error');
-            // });
+            it('should return error in case of internal failure', async () => {
+                Sinon.stub(Heartbeats, 'create').throws({ errors: [{ message: 'Exception occurred.' }] });
+                const res = await chai.request(server.app)
+                    .post('/api/heartbeat/new')
+                    .send({
+                        app_name: utils.randomAppName(),
+                        app_version: utils.randomAppVersion(),
+                        installation_id: faker.datatype.uuid()
+                    });
+                res.status.should.be.equal(500);
+                res.body.status.should.be.equal('error');
+            });
         });
     });
     // describe('/data', async () => {
