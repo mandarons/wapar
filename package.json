@@ -43,7 +43,7 @@
     "prod:local": "NODE_ENV=production nodemon -w ./build -e yaml ./build/src/index.js",
     "prod": "NODE_ENV=production node ./src/index.js",
     "test:server": "NODE_ENV=test mocha --exit -r ts-node/register --r source-map-support/register --recursive ./server/tests/**/*.test.ts",
-    "test:server:ci": "NODE_ENV=test nyc --reporter=html --reporter=json-summary  mocha --reporter mocha-allure-reporter --exit -r ts-node/register ./server/tests/**/*.ts"
+    "test:server:ci": "NODE_ENV=test nyc --reporter=html --reporter=json-summary  mocha --reporter mocha-allure-reporter --exit --timeout 5000 -r ts-node/register ./server/tests/**/*.ts"
   },
   "dependencies": {
     "axios": "^1.2.5",

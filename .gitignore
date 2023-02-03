@@ -104,3 +104,6 @@ dist
 .tern-port
 allure-results/
 build/
+builds/
+cache/
+allure-report/
