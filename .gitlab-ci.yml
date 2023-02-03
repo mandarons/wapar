@@ -1,30 +1,26 @@
 image: node:lts-alpine
-# Pick zero or more services to be used on all builds.
-# Only needed when using a docker container to run your tests in.
-# Check out: https://docs.gitlab.com/ee/ci/services/index.html
-services:
-  - postgres:latest
 
-# This folder is cached between builds
-# https://docs.gitlab.com/ee/ci/yaml/index.html#cache
-cache:
-  paths:
-    - node_modules/
-
-stages: # List of stages for jobs, and their order of execution
-  - build
+stages:
+  - npm
   - test
 
-build-job: # This job runs in the build stage, which runs first.
-  stage: build
+npm:
+  stage:  npm
   script:
-    - echo "Installing dependencies ..."
-    - npm install --dev
-    - echo "Installation complete."
+    - npm install
+  cache:
+    when: on_success
+    paths:
+      - node_modules/
+  artifacts:
+    expire_in: 1 days
+    when: on_success
+    paths:
+      - node_modules/
 
-unit-test-job: # This job runs in the test stage.
-  stage: test # It only starts when the job in the build stage completes successfully.
+test:
+  stage: test
+  dependencies:
+    - npm
   script:
-    - echo "Running tests..."
-    - yarn test:server:ci
-    - echo "Tests completed."
+    - npm run test:server:ci
