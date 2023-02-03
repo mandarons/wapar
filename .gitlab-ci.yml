@@ -20,7 +20,7 @@ build-job: # This job runs in the build stage, which runs first.
   stage: build
   script:
     - echo "Installing dependencies ..."
-    - yarn install
+    - npm install --dev
     - echo "Installation complete."
 
 unit-test-job: # This job runs in the test stage.
