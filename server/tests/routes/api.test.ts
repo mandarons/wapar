@@ -92,26 +92,25 @@ describe('/api', async () => {
                 await InstallationModel.drop();
             });
             it('should record a new heartbeat', async () => {
-                await chai.request(server.app)
-                    .post('/api/heartbeat/newh')
+                const res = await chai.request(server.app)
+                    .post('/api/heartbeat/new')
                     .send({
                         installation_id: faker.datatype.uuid(),
                         app_name: utils.randomAppName(),
                         app_version: utils.randomAppVersion()
                     });
-
-                // res.status.should.be.equal(200);
-                // res.body.status.should.be.equal('success');
+                res.status.should.be.equal(200);
+                res.body.status.should.be.equal('success');
             }).timeout(5000);
-            // it('should not record a heartbeat if data is missing', async () => {
-            //     const res = await chai.request(server.app)
-            //         .post('/api/heartbeat/new')
-            //         .send({
-            //             app_name: utils.randomAppName(),
-            //         });
-            //     res.status.should.be.equal(500);
-            //     res.body.status.should.be.equal('error');
-            // });
+            it('should not record a heartbeat if data is missing', async () => {
+                const res = await chai.request(server.app)
+                    .post('/api/heartbeat/new')
+                    .send({
+                        app_name: utils.randomAppName(),
+                    });
+                res.status.should.be.equal(500);
+                res.body.status.should.be.equal('error');
+            });
             // it('should return error in case of internal failure', async () => {
             //     Sinon.stub(Heartbeats, 'create').throws({ errors: [{ message: 'Exception occurred.' }] });
             //     const res = await chai.request(server.app)
