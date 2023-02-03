@@ -88,8 +88,8 @@ describe('/api', async () => {
             });
             afterEach(async () => {
                 Sinon.restore();
-                await DemographicModel.drop();
-                await InstallationModel.drop();
+                // await DemographicModel.drop();
+                // await InstallationModel.drop();
             });
             it('should record a new heartbeat', async () => {
                 const res = await chai.request(server.app)
