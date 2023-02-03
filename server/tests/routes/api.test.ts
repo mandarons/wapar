@@ -82,23 +82,23 @@ describe('/api', async () => {
     });
     describe('/heartbeat', async () => {
         describe('/new', async () => {
-            before(async () => {
+            beforeEach(async () => {
                 await DemographicModel.sync({ force: true });
                 await InstallationModel.sync({ force: true });
             });
-            afterEach(async () => Sinon.restore());
-            after(async () => {
+            afterEach(async () => {
+                Sinon.restore();
                 await DemographicModel.drop();
                 await InstallationModel.drop();
             });
-            it('should record a new heartbeat', (done) => {
-                chai.request(server.app)
+            it('should record a new heartbeat', async () => {
+                await chai.request(server.app)
                     .post('/api/heartbeat/new')
                     .send({
                         installation_id: faker.datatype.uuid(),
                         app_name: utils.randomAppName(),
                         app_version: utils.randomAppVersion()
-                    }).end((err, res) => done());
+                    });
 
                 // res.status.should.be.equal(200);
                 // res.body.status.should.be.equal('success');
