@@ -5,6 +5,8 @@ stages:
   - test
 
 npm:
+  tags:
+    - node
   stage:  npm
   script:
     - npm install
