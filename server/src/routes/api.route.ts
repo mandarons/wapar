@@ -5,8 +5,8 @@ import dataRoute from './data.route';
 
 const Router = express.Router();
 
-Router.use('/installation/', installationRoute);
-Router.use('/heartbeat/', heartbeatRoute);
+Router.use('/installation', installationRoute);
+Router.use('/heartbeat', heartbeatRoute);
 Router.use('/data', dataRoute);
 
 

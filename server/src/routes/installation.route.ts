@@ -11,7 +11,7 @@ Router.post('/new', async (req: express.Request, res: express.Response) => {
     const previousInstallationId = req.body.previous_installation_id === undefined ? null : req.body.previous_installation_id;
     // Record new installation
     const result = await recordNewDeployment(req.body.app_name, req.body.app_version, req.socket.remoteAddress, previousInstallationId);
-    if (result === false) {
+    if (!result) {
         return utils.errorResponse(res, 500, 'Something went wrong.');
     }
     return utils.successResponse(res, "All good.", { id: (result as { id: string; }).id });
