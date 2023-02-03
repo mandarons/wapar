@@ -1,5 +1,14 @@
 image: node:lts-alpine
 
+services:
+  -  postgres:13-alpine
+
+variables:
+  POSTGRES_DB: wapardev
+  POSTGRES_USER: waparuser
+  POSTGRES_PASSWORD: wapar-user
+  POSTGRES_HOST_AUTH_METHOD: trust
+
 stages:
   - npm
   - test
