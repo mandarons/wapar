@@ -134,8 +134,8 @@ jobs:
             ${{ runner.os }}-yarn-server-
       - name: initialize DB
         run: |
-          psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
-          psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
+          PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
+          PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
       - name: Run Server Tests
         run: |
           yarn test:server:ci
