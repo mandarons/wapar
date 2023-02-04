@@ -101,6 +101,21 @@ jobs:
           retention-days: 1
 
   test:
+    container:
+      image: mandarons/node-lts
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: wapardev
+          POSTGRES_USER: waparuser
+          POSTGRES_PASSWORD: wapar-user
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     needs: cache-server-install
     runs-on: ubuntu-latest
     steps:
@@ -117,6 +132,10 @@ jobs:
           key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-server-
+      - name: initialize DB
+        run: |
+          psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
+          psql -h "postgres" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
       - name: Run Server Tests
         run: |
           yarn test:server:ci
