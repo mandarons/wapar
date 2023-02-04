@@ -119,6 +119,10 @@ jobs:
     needs: cache-server-install
     runs-on: ubuntu-latest
     steps:
+      - name: initialize DB
+        run: |
+          PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
+          PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
       - name: Checkout source code
         uses: actions/checkout@v3
       - name: Setup Node.js environment
@@ -132,50 +136,46 @@ jobs:
           key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-server-
-      - name: initialize DB
-        run: |
-          PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
-          PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
       - name: Run Server Tests
         run: |
           yarn test:server:ci
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-output
-          path: coverage
-          retention-days: 1
-      - name: Checkout gh-pages
-        uses: actions/checkout@v3
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-      - name: Generate Allure Test Report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        with:
-          allure_results: allure-results
-          subfolder: test-results
-          allure_report: allure-report
-          allure_history: allure-history
-          keep_reports: 100
-      - name: Generate badges
-        run: |
-          node generate-badges.js
-      - name: Upload test artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-output
-          path: allure-history/test-results/
-          retention-days: 1
-      - name: Upload badges artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: badges-output
-          path: badges
-          retention-days: 1
+      # - name: Upload coverage artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: coverage-output
+      #     path: coverage
+      #     retention-days: 1
+      # - name: Checkout gh-pages
+      #   uses: actions/checkout@v3
+      #   if: always()
+      #   continue-on-error: true
+      #   with:
+      #     ref: gh-pages
+      #     path: gh-pages
+      # - name: Generate Allure Test Report
+      #   uses: simple-elf/allure-report-action@master
+      #   if: always()
+      #   with:
+      #     allure_results: allure-results
+      #     subfolder: test-results
+      #     allure_report: allure-report
+      #     allure_history: allure-history
+      #     keep_reports: 100
+      # - name: Generate badges
+      #   run: |
+      #     node generate-badges.js
+      # - name: Upload test artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: test-output
+      #     path: allure-history/test-results/
+      #     retention-days: 1
+      # - name: Upload badges artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: badges-output
+      #     path: badges
+      #     retention-days: 1
 
   # publish-test-report:
   #   needs: test
