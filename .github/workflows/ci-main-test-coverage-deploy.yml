@@ -13,6 +13,8 @@ on:
   workflow_dispatch:
 jobs:
   cache-server-install:
+    container:
+      image: mandarons/node-lts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
