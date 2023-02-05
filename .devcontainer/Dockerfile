@@ -22,3 +22,4 @@ RUN \
     rm allure-commandline-2.20.1.zip
 
 ENV PATH "/allure/allure-2.20.1/bin:${PATH}"
+RUN npm i -g @nestjs/cli
