@@ -21,7 +21,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
       - name: Set up Node.js environment
-        uses: actions/setup-node@v2.3.2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.14.0
       - name: Cache yarn dependencies
@@ -51,7 +51,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
       - name: Set up Node.js environment
-        uses: actions/setup-node@v2.3.2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.14.0
       - name: Cache yarn dependencies
@@ -74,7 +74,7 @@ jobs:
       - name: Check Out Repo
         uses: actions/checkout@v3
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.14.0
       - name: Restore yarn-server depdendencies
@@ -129,7 +129,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.14.0
       - name: Restore yarn-server depdendencies
@@ -264,7 +264,7 @@ jobs:
   #     - name: Checkout source code
   #       uses: actions/checkout@v3
   #     - name: Setup Node.js environment
-  #       uses: actions/setup-node@v2.3.2
+  #       uses: actions/setup-node@v3
   #       with:
   #         node-version: 18.14.0
   #     - name: Restore yarn-server depdendencies
