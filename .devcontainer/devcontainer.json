@@ -14,8 +14,6 @@
 		"hbenl.vscode-mocha-test-adapter",
 		"bradlc.vscode-tailwindcss",
 		"mhutchie.git-graph",
-		"astro-build.astro-vscode",
-		"gitlab.gitlab-workflow"
 	],
 	"mounts": [
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg,type=bind,consistency=cached",
