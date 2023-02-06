@@ -1,9 +1,12 @@
 {
-    "mochaExplorer.files": "**/tests/**/*.test.ts",
+    "mochaExplorer.files": "tests/**/*.test.ts",
     "mochaExplorer.require": "ts-node/register",
     "mochaExplorer.env": {
         "NODE_ENV": "test"
     },
+    "mochaExplorer.cwd": "server",
+    "mochaExplorer.exit": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "http.proxySupport": "off",
     "http.systemCertificates": true,
     "cSpell.words": [
