@@ -5,6 +5,8 @@ import chaiHttp from 'chai-http';
 import { Installation } from '../../src/installations/installation.model';
 import { AppModule } from '../../src/app.module';
 import utils from '../data.utils';
+import Sinon from 'sinon';
+
 chai.should();
 chai.use(chaiHttp);
 
@@ -25,6 +27,7 @@ describe('/api/usage', async () => {
             await Installation.sync({ force: true });
         });
         afterEach(async () => {
+            Sinon.restore();
             await Installation.drop();
         });
         it('should return empty data', async () => {
@@ -42,6 +45,15 @@ describe('/api/usage', async () => {
             res.body.totalInstallations.should.be.equal(2);
             res.body.iCloudDocker.total.should.be.equal(1);
             res.body.haBouncie.total.should.be.equal(1);
+        });
+        it('should return empty data in case of internal failure', async () => {
+            Sinon.stub(Installation, 'findAndCountAll').throws({ errors: [{ message: 'Exception occcurred.' }] });
+            let res = await chai.request(server).get('/api/usage');
+            res.status.should.be.equal(200);
+            Sinon.restore();
+            Sinon.stub(Installation, 'count').throws({ errors: [{ message: 'Exception occcurred.' }] });
+            res = await chai.request(server).get('/api/usage');
+            res.status.should.be.equal(200);
         });
     });
     it('POST should return error', async () => {
