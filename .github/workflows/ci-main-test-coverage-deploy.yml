@@ -28,22 +28,22 @@ jobs:
         uses: actions/cache@v3
         id: cache-dependencies
         with:
-          path: node_modules
+          path: server/node_modules
           key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-server-
-      - name: Cache Cypress binary
-        id: cache-cypress-binary
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-binary-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            cypress-binary-
+      # - name: Cache Cypress binary
+      #   id: cache-cypress-binary
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.cache/Cypress
+      #     key: cypress-binary-${{ hashFiles('yarn.lock') }}
+      #     restore-keys: |
+      #       cypress-binary-
       - name: Install Dependencies
         if: steps.cache-dependencies.outputs.cache-hit != 'true' || steps.cache-cypress-binary.outputs.cache-hit != 'true'
         run: |
-          yarn install --frozen-lockfile
+          yarn install --cwd server --frozen-lockfile
 
   cache-web-client-install:
     runs-on: ubuntu-latest
@@ -77,13 +77,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.14.0
-      - name: Restore yarn-server depdendencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-server-
+      # - name: Restore yarn-server depdendencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: node_modules
+      #     key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-yarn-server-
       - name: Restore yarn-web-client depdendencies
         uses: actions/cache@v3
         with:
@@ -96,12 +96,12 @@ jobs:
           yarn build
         env:
           PUBLIC_URL: "."
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-output
-          path: build
-          retention-days: 1
+      # - name: Upload build artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: build-output
+      #     path: build
+      #     retention-days: 1
 
   test:
     container:
@@ -135,7 +135,7 @@ jobs:
       - name: Restore yarn-server depdendencies
         uses: actions/cache@v3
         with:
-          path: node_modules
+          path: server/node_modules
           key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-server-
