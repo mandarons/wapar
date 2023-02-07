@@ -19,7 +19,7 @@ export interface IConfig {
     };
 }
 
-export const configFilePath = join(__dirname, '..', '..', 'config', YAML_CONFIG_FILENAME);
+export const configFilePath = join(__dirname, YAML_CONFIG_FILENAME);
 
 export default () => {
     return jsYAML.load(readFileSync(configFilePath, 'utf-8')) as Record<string, any>;

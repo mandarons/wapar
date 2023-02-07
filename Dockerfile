@@ -1,8 +1,8 @@
 FROM node:lts-alpine AS build
 ENV NODE_ENV production
 WORKDIR /app
-COPY package.json .
-COPY yarn.lock .
+COPY ./server/package.json .
+COPY ./server/yarn.lock .
 RUN yarn install --frozen-lockfile --prod
 
 FROM node:lts-alpine
@@ -11,5 +11,5 @@ ENV NODE_ENV production
 USER node
 WORKDIR /app
 COPY --chown=node:node --from=build /app/node_modules /app/node_modules
-COPY --chown=node:node build .
-CMD ["dumb-init", "node", "./src/index.js"]
+COPY --chown=node:node server/dist .
+CMD ["dumb-init", "node", "./main.js"]
