@@ -29,10 +29,29 @@ describe('/api/heartbeat', async () => {
         await Installation.drop();
         await Heartbeat.drop();
     });
-    it('POST', async () => {
+    it('POST should succeed', async () => {
         const record = await Installation.create(dataUtils.createInstallationRecord(dataUtils.appsList[0]));
         const res = await chai.request(server).post('/api/heartbeat').send(dataUtils.createHeartbeatRecord(record.id));
         res.status.should.be.equal(201);
         res.body.message.should.be.equal('All good.');
+    });
+    it('POST should fail for invalid data', async () => {
+        await Installation.create(dataUtils.createInstallationRecord(dataUtils.appsList[0]));
+        const res = await chai.request(server).post('/api/heartbeat').send({ invalid: 'data' });
+        res.status.should.be.equal(422);
+    });
+    it('GET should return error', async () => {
+        const res = await chai.request(server).get('/api/heartbeat');
+        res.status.should.be.equal(404);
+    });
+    it('PUT should return error', async () => {
+        const record = await Installation.create(dataUtils.createInstallationRecord(dataUtils.appsList[0]));
+        const res = await chai.request(server).put('/api/heartbeat').send(dataUtils.createHeartbeatRecord(record.id));
+        res.status.should.be.equal(404);
+    });
+    it('DELETE should return error', async () => {
+        const record = await Installation.create(dataUtils.createInstallationRecord(dataUtils.appsList[0]));
+        const res = await chai.request(server).delete('/api/heartbeat').send(dataUtils.createHeartbeatRecord(record.id));
+        res.status.should.be.equal(404);
     });
 });

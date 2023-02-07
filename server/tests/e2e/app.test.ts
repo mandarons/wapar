@@ -7,7 +7,7 @@ import { AppModule } from '../../src/app.module';
 chai.should();
 chai.use(chaiHTTP);
 
-describe('AppController (e2e)', async () => {
+describe('root', async () => {
     let app: INestApplication;
     let server: any;
     beforeEach(async () => {
@@ -20,9 +20,21 @@ describe('AppController (e2e)', async () => {
         server = app.getHttpServer();
     });
 
-    it('/ (GET)', async () => {
+    it('GET should return success', async () => {
         const res = await chai.request(server).get('/');
         res.status.should.be.equal(200);
         res.text.should.be.equal('Hello World!');
+    });
+    it('POST should return error', async () => {
+        const res = await chai.request(server).post('/').send({ some: 'data' });
+        res.status.should.be.equal(404);
+    });
+    it('PUT should return error', async () => {
+        const res = await chai.request(server).put('/').send({ some: 'data' });
+        res.status.should.be.equal(404);
+    });
+    it('DELETE should return error', async () => {
+        const res = await chai.request(server).delete('/').send({ some: 'data' });
+        res.status.should.be.equal(404);
     });
 });

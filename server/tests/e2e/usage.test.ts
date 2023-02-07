@@ -5,7 +5,6 @@ import chaiHttp from 'chai-http';
 import { Installation } from '../../src/installations/installation.model';
 import { AppModule } from '../../src/app.module';
 import utils from '../data.utils';
-import { IInstallationRecordAttributes } from 'src/installations/installation.interface';
 chai.should();
 chai.use(chaiHttp);
 
@@ -44,5 +43,17 @@ describe('/api/usage', async () => {
             res.body.iCloudDocker.total.should.be.equal(1);
             res.body.haBouncie.total.should.be.equal(1);
         });
+    });
+    it('POST should return error', async () => {
+        const res = await chai.request(server).post('/api/usage').send({ valid: 'data' });
+        res.status.should.be.equal(404);
+    });
+    it('PUT should return error', async () => {
+        const res = await chai.request(server).put('/api/usage').send({ valid: 'data' });
+        res.status.should.be.equal(404);
+    });
+    it('DELETE should return error', async () => {
+        const res = await chai.request(server).delete('/api/usage').send({ valid: 'data' });
+        res.status.should.be.equal(404);
     });
 });
