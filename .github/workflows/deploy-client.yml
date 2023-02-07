@@ -4,7 +4,7 @@ on:
   schedule: 
     - cron: "0 0 * * *"
 jobs:
-  cache-web-client-install:
+  cache-dependencies:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
@@ -25,8 +25,8 @@ jobs:
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
         run: |
           yarn install --cwd client --frozen-lockfile
-  build:
-    needs: [cache-web-client-install]
+  build-and-deploy:
+    needs: [cache-dependencies]
     runs-on: ubuntu-latest
     steps:
       - name: Check Out Repo
