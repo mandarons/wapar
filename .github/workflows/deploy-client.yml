@@ -47,13 +47,6 @@ jobs:
           yarn --cwd client build
         env:
           PUBLIC_URL: "."
-  deploy:
-    needs: [build]
-    runs-on: ubuntu-latest
-    name: Deploy
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
       - name: Publish
         uses: cloudflare/wrangler-action@2.0.0
         with:
