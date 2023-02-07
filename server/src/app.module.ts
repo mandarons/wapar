@@ -10,19 +10,19 @@ import { InstallationsModule } from './installations/installations.module';
 import { UsageModule } from './usage/usage.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [configuration],
-    }),
-    AppModule,
-    ApiModule,
-    InstallationsModule,
-    HeartbeatsModule,
-    UsageModule,
-    DbModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+            load: [configuration],
+        }),
+        AppModule,
+        ApiModule,
+        InstallationsModule,
+        HeartbeatsModule,
+        UsageModule,
+        DbModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule {}

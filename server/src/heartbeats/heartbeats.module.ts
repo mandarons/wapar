@@ -5,8 +5,8 @@ import { Heartbeat } from './heartbeat.model';
 import { HeartbeatService } from './heartbeat.service';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Heartbeat])],
-  providers: [HeartbeatService],
-  controllers: [HeartbeatController],
+    imports: [SequelizeModule.forFeature([Heartbeat])],
+    providers: [HeartbeatService],
+    controllers: [HeartbeatController],
 })
 export class HeartbeatsModule {}

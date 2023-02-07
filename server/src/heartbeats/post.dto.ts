@@ -1,4 +1,4 @@
 export class PostHeartbeatDto {
-  installationId: string;
-  data: object;
+    installationId: string;
+    data: object;
 }
