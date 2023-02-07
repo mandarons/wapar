@@ -3,3 +3,4 @@
 allure-results/
 client/
 coverage/
+**/node_modules/
