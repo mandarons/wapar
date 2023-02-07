@@ -10,6 +10,7 @@ async function bootstrap() {
         new FastifyAdapter({
             ignoreDuplicateSlashes: true,
             ignoreTrailingSlash: true,
+            trustProxy: true,
         }),
     );
     Installation.sync();
