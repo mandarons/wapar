@@ -2,7 +2,6 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
-import { Heartbeat } from '../../src/heartbeats/heartbeat.model';
 import { AppModule } from '../../src/app.module';
 import dataUtils from '../data.utils';
 import { Installation } from '../../src/installations/installation.model';
@@ -22,12 +21,10 @@ describe('/api/heartbeat', async () => {
         server = app.getHttpServer();
     });
     beforeEach(async () => {
-        await Installation.sync({ force: true });
-        await Heartbeat.sync({ force: true });
+        await dataUtils.syncDb();
     });
     afterEach(async () => {
-        await Installation.drop();
-        await Heartbeat.drop();
+        await dataUtils.syncDb(false);
     });
     it('POST should succeed', async () => {
         const record = await Installation.create(dataUtils.createInstallationRecord(dataUtils.appsList[0]));
