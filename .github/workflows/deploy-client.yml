@@ -1,0 +1,60 @@
+name: Deploy client
+on:
+  workflow_dispatch:
+  schedule: 
+    - cron: "0 0 * * *"
+job:
+  cache-web-client-install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.14.0
+      - name: Cache yarn dependencies
+        uses: actions/cache@v3
+        id: cache-dependencies
+        with:
+          path: client/node_modules
+          key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('client/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-web-client-
+      - name: Install Dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: |
+          yarn install --cwd client --frozen-lockfile
+  build:
+    needs: [cache-web-client-install]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.14.0
+      - name: Restore yarn-web-client depdendencies
+        uses: actions/cache@v3
+        with:
+          path: client/node_modules
+          key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('client/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-web-client-
+      - name: Build
+        run: |
+          yarn --cwd client build
+        env:
+          PUBLIC_URL: "."
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+      - name: Publish
+        uses: cloudflare/wrangler-action@2.0.0
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          workingDirectory: 'client/dist'
