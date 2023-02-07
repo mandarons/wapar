@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { IDatabaseResponse } from 'src/db/db.interface';
+import { IDatabaseResponse } from '../db/db.interface';
 import { IInstallationRecordAttributes } from './installation.interface';
 import { Installation } from './installation.model';
 import utils from '../db/db.utils';

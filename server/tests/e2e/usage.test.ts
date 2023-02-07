@@ -6,6 +6,7 @@ import { Installation } from '../../src/installations/installation.model';
 import { AppModule } from '../../src/app.module';
 import utils from '../data.utils';
 import Sinon from 'sinon';
+import dataUtils from '../data.utils';
 
 chai.should();
 chai.use(chaiHttp);
@@ -24,11 +25,11 @@ describe('/api/usage', async () => {
     });
     describe('GET', async () => {
         beforeEach(async () => {
-            await Installation.sync({ force: true });
+            await dataUtils.syncDb();
         });
         afterEach(async () => {
             Sinon.restore();
-            await Installation.drop();
+            await dataUtils.syncDb(false);
         });
         it('should return empty data', async () => {
             const res = await chai.request(server).get('/api/usage');

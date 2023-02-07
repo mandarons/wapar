@@ -2,7 +2,6 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
-import { Installation } from '../../src/installations/installation.model';
 import { AppModule } from '../../src/app.module';
 import dataUtils from '../data.utils';
 chai.should();
@@ -21,10 +20,10 @@ describe('/api/installation', async () => {
         server = app.getHttpServer();
     });
     beforeEach(async () => {
-        await Installation.sync({ force: true });
+        await dataUtils.syncDb();
     });
     afterEach(async () => {
-        await Installation.drop();
+        await dataUtils.syncDb(false);
     });
     it('POST with valid data should succeed', async () => {
         const res = await chai.request(server).post('/api/installation').send(dataUtils.createInstallationRecord());
