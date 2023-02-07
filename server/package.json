@@ -21,6 +21,7 @@
     "@nestjs/config": "^2.3.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/platform-fastify": "^9.3.5",
     "@nestjs/sequelize": "^9.0.0",
     "js-yaml": "^4.1.0",
     "pg": "^8.9.0",
