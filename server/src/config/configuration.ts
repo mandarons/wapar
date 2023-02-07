@@ -5,31 +5,22 @@ import { join } from 'path';
 const YAML_CONFIG_FILENAME = 'config.yaml';
 
 export interface IConfig {
-  server: {
-    port: number;
-    refreshDemographicsInterval: string;
-    dataFilePath: string;
-  };
-  database: {
-    host: string;
-    port: number;
-    name: string;
-    username: string;
-    password: string;
-  };
+    server: {
+        port: number;
+        refreshDemographicsInterval: string;
+        dataFilePath: string;
+    };
+    database: {
+        host: string;
+        port: number;
+        name: string;
+        username: string;
+        password: string;
+    };
 }
 
-export const configFilePath = join(
-  __dirname,
-  '..',
-  '..',
-  'config',
-  YAML_CONFIG_FILENAME,
-);
+export const configFilePath = join(__dirname, '..', '..', 'config', YAML_CONFIG_FILENAME);
 
 export default () => {
-  return jsYAML.load(readFileSync(configFilePath, 'utf-8')) as Record<
-    string,
-    any
-  >;
+    return jsYAML.load(readFileSync(configFilePath, 'utf-8')) as Record<string, any>;
 };

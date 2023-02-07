@@ -5,9 +5,9 @@ import { Installation } from './installation.model';
 import { InstallationsService } from './installation.service';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Installation])],
-  providers: [InstallationsService],
-  controllers: [InstallationController],
-  exports: [InstallationsService],
+    imports: [SequelizeModule.forFeature([Installation])],
+    providers: [InstallationsService],
+    controllers: [InstallationController],
+    exports: [InstallationsService],
 })
 export class InstallationsModule {}
