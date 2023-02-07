@@ -48,6 +48,7 @@ jobs:
         env:
           PUBLIC_URL: "."
   deploy:
+    needs: [build]
     runs-on: ubuntu-latest
     name: Deploy
     steps:
