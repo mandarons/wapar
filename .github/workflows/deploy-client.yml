@@ -52,3 +52,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           workingDirectory: 'client/dist'
+          command: pages publish --project-name=wapar
