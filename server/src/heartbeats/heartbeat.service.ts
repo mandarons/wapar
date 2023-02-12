@@ -11,7 +11,7 @@ export class HeartbeatService {
         let returnValue: IDatabaseResponse = { success: false };
         try {
             delete data.id;
-            const createdEntry = await Heartbeat.create(data, { raw: false });
+            const createdEntry = await this.heartbeatModel.create(data, { raw: false });
             returnValue.success = true;
             returnValue.values = createdEntry.toJSON();
         } catch (error: any) {
