@@ -4,9 +4,9 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Debug Server",
+            "name": "Debug Service",
             "args": [
-                "${workspaceFolder}/server/src/main.ts"
+                "${workspaceFolder}/service/src/main.ts"
             ],
             "runtimeArgs": [
                 "--nolazy",
@@ -17,8 +17,34 @@
             ],
             "sourceMaps": true,
             // "envFile": "${workspaceFolder}/.env",
-            "cwd": "${workspaceRoot}/server",
+            "cwd": "${workspaceRoot}/service",
             "console": "integratedTerminal",
+        },
+        {
+            "name": "Web: debug server-side",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev",
+            "cwd": "${workspaceRoot}/web",
+        },
+        {
+            "name": "Web: debug client-side",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "cwd": "${workspaceRoot}/web",
+        },
+        {
+            "name": "Web: debug full stack",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev",
+            "serverReadyAction": {
+                "pattern": "started server on .+, url: (https?://.+)",
+                "uriFormat": "%s",
+                "action": "debugWithChrome"
+            },
+            "cwd": "${workspaceRoot}/web",
         }
     ]
 }
