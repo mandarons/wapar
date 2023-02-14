@@ -6,7 +6,7 @@ const Footer = ({ dataGeneratedAt }: { dataGeneratedAt: string | null } = { data
     if (data) {
       setData(new Date(data).toLocaleString());
     }
-  });
+  }, [data]);
   return (
     <footer>
       <div className="fixed bottom-0 w-full border-t">
