@@ -15,6 +15,7 @@
 		"bradlc.vscode-tailwindcss",
 		"mhutchie.git-graph",
 		"astro-build.astro-vscode",
+		"prisma.prisma"
 	],
 	"mounts": [
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg,type=bind,consistency=cached",
