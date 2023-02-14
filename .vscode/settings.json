@@ -1,10 +1,10 @@
 {
-    "mochaExplorer.files": "tests/**/*.test.ts",
+    "mochaExplorer.files": "test/**/*.test.ts",
     "mochaExplorer.require": "ts-node/register",
     "mochaExplorer.env": {
         "NODE_ENV": "test"
     },
-    "mochaExplorer.cwd": "server",
+    "mochaExplorer.cwd": "service",
     "mochaExplorer.exit": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "http.proxySupport": "off",
@@ -12,5 +12,8 @@
     "cSpell.words": [
         "APIURL",
         "Bouncie"
-    ]
+    ],
+    "[prisma]": {
+        "editor.defaultFormatter": "Prisma.prisma"
+    }
 }
