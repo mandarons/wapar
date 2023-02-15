@@ -124,6 +124,8 @@ jobs:
           DATABASE_URL: ${{ vars.DATABASE_URL }}
         run: yarn --cwd service prisma migrate dev --name "init-ci"
       - name: Run service Tests
+        env:
+          DATABASE_URL: ${{ vars.DATABASE_URL }}
         run: |
           yarn --cwd service test:ci
       # - name: Upload coverage artifacts
