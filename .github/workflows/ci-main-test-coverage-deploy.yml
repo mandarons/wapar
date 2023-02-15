@@ -4,12 +4,9 @@ on:
     push:
         branches: [main]
         paths:
-            - 'client/**'
-            - 'cypress/**'
+            - 'web/**'
             - 'server/**'
             - 'Dockerfile'
-            - '*.json'
-            - 'yarn.lock'
             - '.github/workflows/'
     workflow_dispatch:
 jobs:
@@ -58,14 +55,14 @@ jobs:
               uses: actions/cache@v3
               id: cache-dependencies
               with:
-                  path: client/node_modules
-                  key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('client/yarn.lock') }}
+                  path: web/node_modules
+                  key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('web/yarn.lock') }}
                   restore-keys: |
                       ${{ runner.os }}-yarn-web-client-
             - name: Install Dependencies
               if: steps.cache-dependencies.outputs.cache-hit != 'true'
               run: |
-                  yarn install --cwd client --frozen-lockfile
+                  yarn install --cwd web --frozen-lockfile
 
     build:
         needs: [cache-web-client-install]
@@ -87,13 +84,13 @@ jobs:
             - name: Restore yarn-web-client depdendencies
               uses: actions/cache@v3
               with:
-                  path: client/node_modules
-                  key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('client/yarn.lock') }}
+                  path: web/node_modules
+                  key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('web/yarn.lock') }}
                   restore-keys: |
                       ${{ runner.os }}-yarn-web-client-
             - name: Build
               run: |
-                  yarn --cwd client build
+                  yarn --cwd web build
               env:
                   PUBLIC_URL: '.'
             # - name: Upload build artifacts
