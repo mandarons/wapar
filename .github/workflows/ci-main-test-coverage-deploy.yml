@@ -104,10 +104,6 @@ jobs:
         needs: cache-service-install
         runs-on: ubuntu-latest
         steps:
-            - name: initialize DB
-              run: |
-                  PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
-                  PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
             - name: Checkout source code
               uses: actions/checkout@v3
             - name: Setup Node.js environment
@@ -125,7 +121,7 @@ jobs:
             #   uses: mxschmitt/action-tmate@v3
             - name: Run service Tests
               env:
-                DATABASE_URL: $DATABASE_URL
+                DATABASE_URL: ${{ vars.DATABASE_URL }}
               run: |
                   yarn --cwd service test:ci
             # - name: Upload coverage artifacts
