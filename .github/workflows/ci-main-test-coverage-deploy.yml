@@ -119,6 +119,10 @@ jobs:
                       ${{ runner.os }}-yarn-service-
             # - name: Setup tmate session
             #   uses: mxschmitt/action-tmate@v3
+            - name: Set up database
+              env:
+                DATABASE_URL: ${{ vars.DATABASE_URL }}
+              run: yarn --cwd service prisma migrate dev --name "init-ci"
             - name: Run service Tests
               env:
                 DATABASE_URL: ${{ vars.DATABASE_URL }}
