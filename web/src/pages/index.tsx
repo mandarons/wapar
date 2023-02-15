@@ -13,15 +13,15 @@ const Home = ({ data }: { data: IUsageSummary }) => {
           </div>
           <div className="-m-5 flex flex-wrap text-center">
             <div className="w-1/2 p-4 sm:w-1/3">
-              <h2 className="title-font text-3xl font-medium text-green-600 sm:text-4xl">{data.totalInstallations}</h2>
+              <h2 data-testid='total-installations' className="title-font text-3xl font-medium text-green-600 sm:text-4xl">{data.totalInstallations}</h2>
               <p className="leading-relaxed">Total Installations</p>
             </div>
             <div className="w-1/2 p-4 sm:w-1/3">
-              <h2 className="title-font text-3xl font-medium text-green-600 sm:text-4xl">{data.iCloudDocker.total}</h2>
+              <h2 data-testid='icloud-drive-docker-total-installations' className="title-font text-3xl font-medium text-green-600 sm:text-4xl">{data.iCloudDocker.total}</h2>
               <p className="leading-relaxed">iCloud Drive Docker</p>
             </div>
             <div className="w-1/2 p-4 sm:w-1/3">
-              <h2 className="title-font text-3xl font-medium text-green-600 sm:text-4xl">{data.haBouncie.total}</h2>
+              <h2 data-testid='ha-bouncie-total-installations' className="title-font text-3xl font-medium text-green-600 sm:text-4xl">{data.haBouncie.total}</h2>
               <p className="leading-relaxed">Home Assistant - Bouncie</p>
             </div>
           </div>

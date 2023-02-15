@@ -23,3 +23,5 @@ RUN \
 
 ENV PATH "/allure/allure-2.20.1/bin:${PATH}"
 RUN npm i -g @nestjs/cli
+USER node
+RUN npx playwright install --with-deps
