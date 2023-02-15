@@ -4,7 +4,7 @@
     "mochaExplorer.env": {
         "NODE_ENV": "test"
     },
-    "mochaExplorer.cwd": "service",
+    "mochaExplorer.cwd": "server",
     "mochaExplorer.exit": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "http.proxySupport": "off",
