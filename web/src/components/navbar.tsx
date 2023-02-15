@@ -9,7 +9,7 @@ const Navbar = ({ selectedItem }: { selectedItem: string }) => {
       <div className="flex items-center space-x-4">
         <Link href="/">
           <svg height="60" width="60">
-            <image xlinkHref="/favicon.svg" height="60" width="60" />
+            <image data-testid='favicon.svg' xlinkHref="/favicon.svg" height="60" width="60" />
           </svg>
         </Link>
         <h1 className="text-2xl font-semibold">Wapar</h1>
@@ -21,7 +21,7 @@ const Navbar = ({ selectedItem }: { selectedItem: string }) => {
         </Link>
         <Link href={`https://github.com/mandarons`}>
           <svg height="40" width="40">
-            <image xlinkHref="/github.svg" height="40" width="40" />
+            <image data-testid='github.svg' xlinkHref="/github.svg" height="40" width="40" />
           </svg>
         </Link>
       </div>
