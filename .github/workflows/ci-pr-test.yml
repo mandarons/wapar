@@ -7,8 +7,7 @@ on:
       - "web/**"
       - "service/**"
       - "Dockerfile"
-      - "*.json"
-      - ".github/workflows/"
+      - ".github/workflows/**"
   workflow_dispatch:
 jobs:
   cache-service-install:
@@ -27,17 +26,9 @@ jobs:
         id: cache-dependencies
         with:
           path: service/node_modules
-          key: ${{ runner.os }}-yarn-service-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-yarn-service-${{ hashFiles('service/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-service-
-#       - name: Cache Cypress binary
-#         id: cache-cypress-binary
-#         uses: actions/cache@v3
-#         with:
-#           path: ~/.cache/Cypress
-#           key: cypress-binary-${{ hashFiles('yarn.lock') }}
-#           restore-keys: |
-#             cypress-binary-
       - name: Install Dependencies
         if: steps.cache-dependencies.outputs.cache-hit != 'true' || steps.cache-cypress-binary.outputs.cache-hit != 'true'
         run: |
@@ -75,13 +66,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.14.0
-#       - name: Restore yarn-service depdendencies
-#         uses: actions/cache@v3
-#         with:
-#           path: node_modules
-#           key: ${{ runner.os }}-yarn-service-${{ hashFiles('yarn.lock') }}
-#           restore-keys: |
-#             ${{ runner.os }}-yarn-service-
       - name: Restore yarn-web-client depdendencies
         uses: actions/cache@v3
         with:
@@ -120,10 +104,6 @@ jobs:
     needs: cache-service-install
     runs-on: ubuntu-latest
     steps:
-      - name: initialize DB
-        run: |
-          PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
-          PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
       - name: Checkout source code
         uses: actions/checkout@v3
       - name: Setup Node.js environment
@@ -139,6 +119,10 @@ jobs:
             ${{ runner.os }}-yarn-service-
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
+      - name: Set up database
+        env:
+          DATABASE_URL: ${{ vars.DATABASE_URL }}
+        run: yarn --cwd service prisma migrate dev --name "init-ci"
       - name: Run service Tests
         run: |
           yarn --cwd service test:ci
