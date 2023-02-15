@@ -5,12 +5,12 @@ on:
         branches: [main]
         paths:
             - 'web/**'
-            - 'server/**'
+            - 'service/**'
             - 'Dockerfile'
             - '.github/workflows/'
     workflow_dispatch:
 jobs:
-    cache-server-install:
+    cache-service-install:
         container:
             image: mandarons/node-lts
         runs-on: ubuntu-latest
@@ -25,10 +25,10 @@ jobs:
               uses: actions/cache@v3
               id: cache-dependencies
               with:
-                  path: server/node_modules
-                  key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
+                  path: service/node_modules
+                  key: ${{ runner.os }}-yarn-service-${{ hashFiles('service/yarn.lock') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-server-
+                      ${{ runner.os }}-yarn-service-
             # - name: Cache Cypress binary
             #   id: cache-cypress-binary
             #   uses: actions/cache@v3
@@ -40,7 +40,7 @@ jobs:
             - name: Install Dependencies
               if: steps.cache-dependencies.outputs.cache-hit != 'true' || steps.cache-cypress-binary.outputs.cache-hit != 'true'
               run: |
-                  yarn install --cwd server --frozen-lockfile
+                  yarn install --cwd service --frozen-lockfile
 
     cache-web-client-install:
         runs-on: ubuntu-latest
@@ -74,13 +74,6 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: 18.14.0
-            # - name: Restore yarn-server depdendencies
-            #   uses: actions/cache@v3
-            #   with:
-            #     path: node_modules
-            #     key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
-            #     restore-keys: |
-            #       ${{ runner.os }}-yarn-server-
             - name: Restore yarn-web-client depdendencies
               uses: actions/cache@v3
               with:
@@ -116,7 +109,7 @@ jobs:
                     --health-interval 10s
                     --health-timeout 5s
                     --health-retries 5
-        needs: cache-server-install
+        needs: cache-service-install
         runs-on: ubuntu-latest
         steps:
             - name: initialize DB
@@ -129,18 +122,18 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: 18.14.0
-            - name: Restore yarn-server depdendencies
+            - name: Restore yarn-service depdendencies
               uses: actions/cache@v3
               with:
-                  path: server/node_modules
-                  key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
+                  path: service/node_modules
+                  key: ${{ runner.os }}-yarn-service-${{ hashFiles('service/yarn.lock') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-server-
+                      ${{ runner.os }}-yarn-service-
             # - name: Setup tmate session
             #   uses: mxschmitt/action-tmate@v3
-            - name: Run Server Tests
+            - name: Run service Tests
               run: |
-                  yarn --cwd server test:ci
+                  yarn --cwd service test:ci
             # - name: Upload coverage artifacts
             #   uses: actions/upload-artifact@v3
             #   with:
@@ -264,13 +257,13 @@ jobs:
     #       uses: actions/setup-node@v3
     #       with:
     #         node-version: 18.14.0
-    #     - name: Restore yarn-server depdendencies
+    #     - name: Restore yarn-service depdendencies
     #       uses: actions/cache@v3
     #       with:
     #         path: node_modules
-    #         key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
+    #         key: ${{ runner.os }}-yarn-service-${{ hashFiles('yarn.lock') }}
     #         restore-keys: |
-    #           ${{ runner.os }}-yarn-server-
+    #           ${{ runner.os }}-yarn-service-
     #     - name: Restore Cypress binary
     #       id: cache-cypress-binary
     #       uses: actions/cache@v3
