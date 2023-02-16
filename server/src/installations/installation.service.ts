@@ -42,25 +42,33 @@ export class InstallationsService {
         return returnValue;
     }
     async getMissingIPInfo(): Promise<IDatabaseResponse> {
-        let returnValue: IDatabaseResponse = { success: false};
+        let returnValue: IDatabaseResponse = { success: false };
         try {
-            const records = await this.installationModel.findAll({where: {countryCode: null}, attributes: ['ipAddress', 'id'], limit: 100, raw: true});
+            const records = await this.installationModel.findAll({ where: { countryCode: null }, attributes: ['ipAddress', 'id'], limit: 100, raw: true });
             returnValue = utils.constructDatabaseSuccessResponse(records);
         } catch (error: any) {
             returnValue = utils.constructDatabaseErrorResponse(error);
         }
         return returnValue;
     }
-    async patchMissingIPInfo(batch: {id: string; countryCode: string; region: string;}[]) {
-        let returnValue: IDatabaseResponse = {success: false};
+    async patchMissingIPInfo(batch: { id: string; countryCode: string; region: string }[]) {
+        let returnValue: IDatabaseResponse = { success: false };
         try {
-            await Promise.all(batch.map(async e => this.installationModel.update({
-                countryCode: e.countryCode, 
-                region: e.region
-            }, {
-                where: {
-                    id: e.id
-                }})));
+            await Promise.all(
+                batch.map(async (e) =>
+                    this.installationModel.update(
+                        {
+                            countryCode: e.countryCode,
+                            region: e.region,
+                        },
+                        {
+                            where: {
+                                id: e.id,
+                            },
+                        },
+                    ),
+                ),
+            );
         } catch (error: any) {
             returnValue = utils.constructDatabaseErrorResponse(error);
         }
