@@ -23,7 +23,7 @@ export class Heartbeat extends Model<IHeartbeatRecordAttributes, IHeartbeatRecor
     })
     installationId: string;
     @Column({
-        type: DataType.JSON,
+        type: DataType.JSONB,
         defaultValue: null,
     })
     data: object;
