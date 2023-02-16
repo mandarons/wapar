@@ -1,6 +1,6 @@
-.nyc_output/
+.devcontainer/
+.github/
 .vscode/
-allure-results/
-client/
-coverage/
+.scripts/
+web/
 **/node_modules/
