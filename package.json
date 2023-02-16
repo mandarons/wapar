@@ -1,0 +1,19 @@
+{
+  "name": "wapar",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "docker:local": "yarn --cwd server build && docker build --tag wapar ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mandarons/wapar.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mandarons/wapar/issues"
+  },
+  "homepage": "https://github.com/mandarons/wapar#readme"
+}
