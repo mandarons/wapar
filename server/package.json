@@ -23,6 +23,7 @@
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/platform-fastify": "^9.3.5",
     "@nestjs/sequelize": "^9.0.0",
+    "axios": "^1.3.3",
     "js-yaml": "^4.1.0",
     "pg": "^8.9.0",
     "reflect-metadata": "^0.1.13",

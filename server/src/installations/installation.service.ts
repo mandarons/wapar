@@ -22,7 +22,7 @@ export class InstallationsService {
     async findByAppName(appName: string): Promise<IDatabaseResponse> {
         let returnValue: IDatabaseResponse = { success: false };
         try {
-            const foundEntry = await Installation.findAndCountAll({
+            const foundEntry = await this.installationModel.findAndCountAll({
                 where: { appName },
             });
             returnValue = utils.constructDatabaseSuccessResponse(foundEntry.count);
@@ -34,8 +34,33 @@ export class InstallationsService {
     async count(): Promise<IDatabaseResponse> {
         let returnValue: IDatabaseResponse = { success: false };
         try {
-            const count = await Installation.count();
+            const count = await this.installationModel.count();
             returnValue = utils.constructDatabaseSuccessResponse(count);
+        } catch (error: any) {
+            returnValue = utils.constructDatabaseErrorResponse(error);
+        }
+        return returnValue;
+    }
+    async getMissingIPInfo(): Promise<IDatabaseResponse> {
+        let returnValue: IDatabaseResponse = { success: false};
+        try {
+            const records = await this.installationModel.findAll({where: {countryCode: null}, attributes: ['ipAddress', 'id'], limit: 100, raw: true});
+            returnValue = utils.constructDatabaseSuccessResponse(records);
+        } catch (error: any) {
+            returnValue = utils.constructDatabaseErrorResponse(error);
+        }
+        return returnValue;
+    }
+    async patchMissingIPInfo(batch: {id: string; countryCode: string; region: string;}[]) {
+        let returnValue: IDatabaseResponse = {success: false};
+        try {
+            await Promise.all(batch.map(async e => this.installationModel.update({
+                countryCode: e.countryCode, 
+                region: e.region
+            }, {
+                where: {
+                    id: e.id
+                }})));
         } catch (error: any) {
             returnValue = utils.constructDatabaseErrorResponse(error);
         }
