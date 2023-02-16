@@ -8,6 +8,7 @@ import { DbModule } from './db/db.module';
 import { HeartbeatsModule } from './heartbeats/heartbeats.module';
 import { InstallationsModule } from './installations/installations.module';
 import { UsageModule } from './usage/usage.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
     imports: [
@@ -21,6 +22,7 @@ import { UsageModule } from './usage/usage.module';
         HeartbeatsModule,
         UsageModule,
         DbModule,
+        TasksModule,
     ],
     controllers: [AppController],
     providers: [AppService],
