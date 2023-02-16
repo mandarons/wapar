@@ -9,6 +9,7 @@ import { HeartbeatsModule } from './heartbeats/heartbeats.module';
 import { InstallationsModule } from './installations/installations.module';
 import { UsageModule } from './usage/usage.module';
 import { TasksModule } from './tasks/tasks.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
     imports: [
@@ -23,6 +24,7 @@ import { TasksModule } from './tasks/tasks.module';
         UsageModule,
         DbModule,
         TasksModule,
+        ScheduleModule.forRoot(),
     ],
     controllers: [AppController],
     providers: [AppService],

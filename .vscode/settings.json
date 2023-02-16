@@ -6,14 +6,8 @@
     },
     "mochaExplorer.cwd": "server",
     "mochaExplorer.exit": true,
+    "prettier.configPath": "server/.prettierrc",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "http.proxySupport": "off",
     "http.systemCertificates": true,
-    "cSpell.words": [
-        "APIURL",
-        "Bouncie"
-    ],
-    "[prisma]": {
-        "editor.defaultFormatter": "Prisma.prisma"
-    }
 }
