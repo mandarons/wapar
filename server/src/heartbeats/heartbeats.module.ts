@@ -9,5 +9,6 @@ import { HeartbeatService } from './heartbeat.service';
     imports: [SequelizeModule.forFeature([Heartbeat]), InstallationsModule],
     providers: [HeartbeatService],
     controllers: [HeartbeatController],
+    exports: [HeartbeatService],
 })
 export class HeartbeatsModule {}

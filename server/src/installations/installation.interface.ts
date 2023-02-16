@@ -1,4 +1,4 @@
-import { Model, Optional } from 'sequelize';
+// import { Model, Optional } from 'sequelize';
 
 export interface IInstallationRecordAttributes {
     id?: string;
@@ -9,12 +9,13 @@ export interface IInstallationRecordAttributes {
     data?: object | null;
     countryCode?: string | null;
     region?: string | null;
-    city?: string | null;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface IInstallationRecordCreationAttributes extends Optional<IInstallationRecordAttributes, 'id'> {}
-export interface IInstallationRecordInstance extends Model<IInstallationRecordAttributes, IInstallationRecordCreationAttributes>, IInstallationRecordAttributes {
-    createdAt: Date;
-    updatedAt: Date;
-}
+// export interface IInstallationRecordCreationAttributes extends Optional<IInstallationRecordAttributes, 'id'> {}
+// export interface IInstallationRecordInstance extends Model<IInstallationRecordAttributes, IInstallationRecordCreationAttributes>, IInstallationRecordAttributes {
+//     createdAt: Date;
+//     updatedAt: Date;
+// }

@@ -1,6 +1,6 @@
 import { literal } from 'sequelize';
-import { Column, Table, Model, DataType } from 'sequelize-typescript';
-import { IInstallationRecordAttributes, IInstallationRecordCreationAttributes } from './installation.interface';
+import { Column, Table, Model, DataType, CreatedAt, UpdatedAt } from 'sequelize-typescript';
+import { IInstallationRecordAttributes } from './installation.interface';
 
 @Table({
     timestamps: true,
@@ -9,7 +9,7 @@ import { IInstallationRecordAttributes, IInstallationRecordCreationAttributes } 
     underscored: true,
     comment: 'Installation record of apps',
 })
-export class Installation extends Model<IInstallationRecordAttributes, IInstallationRecordCreationAttributes> {
+export class Installation extends Model<IInstallationRecordAttributes> {
     @Column({
         type: DataType.UUID,
         primaryKey: true,
@@ -53,4 +53,12 @@ export class Installation extends Model<IInstallationRecordAttributes, IInstalla
         defaultValue: null,
     })
     region: string;
+
+    @CreatedAt
+    @Column
+    createdAt!: Date;
+
+    @UpdatedAt
+    @Column
+    updatedAt!: Date;
 }
