@@ -20,12 +20,12 @@ export class TasksService {
             const response = await firstValueFrom(this.httpService.post(IP_API_ENDPOINT, ipAddresses));
             const ipInfo = await response.data;
             // Create map of ip address to demographic info
-            const ipToInfo = new Map(ipInfo.map((i: { query: string; country: string; region: string }) => [i.query, { country: i.country, region: i.region }]));
+            const ipToInfo = new Map(ipInfo.map((i: { query: string; countryCode: string; region: string }) => [i.query, { countryCode: i.countryCode, region: i.region }]));
             // Update missing records in table
             const patchData: { id: string; countryCode: string; region: string }[] = [];
             missingData.forEach((d) => {
-                const ipInfo = ipToInfo.get(d.ipAddress) as { country: string; region: string };
-                patchData.push({ id: d.id, countryCode: ipInfo.country, region: ipInfo.region });
+                const ipInfo = ipToInfo.get(d.ipAddress) as { countryCode: string; region: string };
+                patchData.push({ id: d.id, countryCode: ipInfo.countryCode, region: ipInfo.region });
             });
             await this.installationService.patchMissingIPInfo(patchData);
             return true;

@@ -17,6 +17,13 @@ chai.should();
 describe('Tasks', async () => {
     let service: TasksService;
     let installationService: InstallationsService;
+    const fakeIPInfoPost = (url: string, data: any) =>
+        new Promise((resolve) => resolve({ data: (data as string[]).map((e: string) => ({ query: e, countryCode: faker.address.countryCode(), region: faker.address.state() })) }));
+    const createInstallationRecords = async (count: number) => {
+        const installationRecords = new Array(count);
+        for (let i = 0; i < installationRecords.length; ++i) installationRecords[i] = dataUtils.createInstallationRecord();
+        await Installation.bulkCreate(installationRecords);
+    };
     before(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [TasksService],
@@ -39,31 +46,15 @@ describe('Tasks', async () => {
         await dataUtils.syncDb(false);
     });
     it('Should populate IP info for < 100 IP addresses', async () => {
-        const mock = Sinon.stub(axios, 'post');
-        mock.callsFake((url, data) => {
-            return new Promise((resolve) =>
-                resolve({ data: (data as string[]).map((e: string) => ({ query: e, country: faker.address.country(), region: faker.address.state() })) }),
-            );
-        });
-        const installationRecords = new Array(80);
-        for (let i = 0; i < installationRecords.length; ++i) installationRecords[i] = dataUtils.createInstallationRecord();
-
-        await Installation.bulkCreate(installationRecords);
+        Sinon.stub(axios, 'post').callsFake(fakeIPInfoPost);
+        await createInstallationRecords(80);
         const result = await service.updateIpInfo();
         result.should.be.true;
         (await installationService.getMissingIPInfo()).length.should.be.equal(0);
     });
     it('Should populate IP info in chunks of 100', async () => {
-        const mock = Sinon.stub(axios, 'post');
-        mock.callsFake((url, data) => {
-            return new Promise((resolve) =>
-                resolve({ data: (data as string[]).map((e: string) => ({ query: e, country: faker.address.country(), region: faker.address.state() })) }),
-            );
-        });
-        const installationRecords = new Array(110);
-        for (let i = 0; i < installationRecords.length; ++i) installationRecords[i] = dataUtils.createInstallationRecord();
-
-        await Installation.bulkCreate(installationRecords);
+        Sinon.stub(axios, 'post').callsFake(fakeIPInfoPost);
+        await createInstallationRecords(110);
         let result = await service.updateIpInfo();
         result.should.be.true;
         (await installationService.getMissingIPInfo()).length.should.be.equal(10);
