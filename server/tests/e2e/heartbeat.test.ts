@@ -21,7 +21,8 @@ describe(ENDPOINT, async () => {
         const record = await Installation.create(dataUtils.createInstallationRecord(dataUtils.appsList[0]));
         const res = await chai.request(server).post(ENDPOINT).send(dataUtils.createHeartbeatRecord(record.id));
         res.status.should.be.equal(201);
-        res.body.message.should.be.equal('All good.');
+        res.body.should.have.property('id');
+        res.body.id.should.be.not.empty;
     });
     it('POST should fail for invalid data', async () => {
         await Installation.create(dataUtils.createInstallationRecord(dataUtils.appsList[0]));
