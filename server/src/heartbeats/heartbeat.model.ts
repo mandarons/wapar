@@ -1,6 +1,6 @@
 import { literal } from 'sequelize';
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
-import { IHeartbeatRecordAttributes, IHeartbeatRecordCreationAttributes } from './heartbeat.interface';
+import { Column, CreatedAt, DataType, Model, Table, UpdatedAt } from 'sequelize-typescript';
+import { IHeartbeatRecordAttributes } from './heartbeat.interface';
 @Table({
     timestamps: true,
     paranoid: true,
@@ -8,7 +8,7 @@ import { IHeartbeatRecordAttributes, IHeartbeatRecordCreationAttributes } from '
     underscored: true,
     comment: 'Heartbeats of existing installations',
 })
-export class Heartbeat extends Model<IHeartbeatRecordAttributes, IHeartbeatRecordCreationAttributes> {
+export class Heartbeat extends Model<IHeartbeatRecordAttributes> {
     @Column({
         type: DataType.UUID,
         primaryKey: true,
@@ -27,4 +27,12 @@ export class Heartbeat extends Model<IHeartbeatRecordAttributes, IHeartbeatRecor
         defaultValue: null,
     })
     data: object;
+
+    @CreatedAt
+    @Column
+    createdAt!: Date;
+
+    @UpdatedAt
+    @Column
+    updatedAt!: Date;
 }

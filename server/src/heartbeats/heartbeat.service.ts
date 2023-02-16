@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Sequelize } from 'sequelize';
 import { InstallationsService } from '../installations/installation.service';
 import { IHeartbeatRecordAttributes } from './heartbeat.interface';
 import { Heartbeat } from './heartbeat.model';
@@ -13,5 +14,12 @@ export class HeartbeatService {
             return await this.heartbeatModel.create(data, { raw: true });
         }
         throw new HttpException('Installation not found.', HttpStatus.NOT_FOUND);
+    }
+    async getMonthlyActive() {
+        const data = await this.heartbeatModel.sequelize?.query('select COUNT(DISTINCT installation_id) from "Heartbeat" where created_at  >= (now() - interval \'30 days\')', {
+            raw: true,
+            plain: true,
+        });
+        return data ? Number(data.count) : 0;
     }
 }

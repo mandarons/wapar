@@ -4,6 +4,7 @@ import { Installation } from '../../src/installations/installation.model';
 import utils from '../data.utils';
 import Sinon from 'sinon';
 import dataUtils from '../data.utils';
+import { Heartbeat } from '../../src/heartbeats/heartbeat.model';
 
 chai.should();
 chai.use(chaiHttp);
@@ -25,15 +26,20 @@ describe(ENDPOINT, async () => {
             const res = await chai.request(server).get(ENDPOINT);
             res.status.should.be.equal(200);
             res.body.totalInstallations.should.be.equal(0);
+            res.body.monthlyActive.should.be.equal(0);
             res.body.iCloudDocker.total.should.be.equal(0);
             res.body.haBouncie.total.should.be.equal(0);
         });
         it('should return non-empty data', async () => {
-            await Installation.create(utils.createInstallationRecord(utils.appsList[0]));
-            await Installation.create(utils.createInstallationRecord(utils.appsList[1]));
+            let record = await Installation.create(utils.createInstallationRecord(utils.appsList[0]));
+            await Heartbeat.create(utils.createHeartbeatRecord(record.id));
+            record = await Installation.create(utils.createInstallationRecord(utils.appsList[1]));
+            await Heartbeat.create(utils.createHeartbeatRecord(record.id));
+            await Heartbeat.create(utils.createHeartbeatRecord(record.id));
             const res = await chai.request(server).get(ENDPOINT);
             res.status.should.be.equal(200);
             res.body.totalInstallations.should.be.equal(2);
+            res.body.monthlyActive.should.be.equal(2);
             res.body.iCloudDocker.total.should.be.equal(1);
             res.body.haBouncie.total.should.be.equal(1);
         });
