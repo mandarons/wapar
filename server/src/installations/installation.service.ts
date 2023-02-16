@@ -8,6 +8,9 @@ export class InstallationsService {
     async create(data: IInstallationRecordAttributes) {
         return this.installationModel.create(data, { raw: true });
     }
+    async findById(id: string) {
+        return await this.installationModel.findOne({ where: { id }, raw: true });
+    }
     async findByAppName(appName: string) {
         return await this.installationModel.count({ where: { appName } });
     }

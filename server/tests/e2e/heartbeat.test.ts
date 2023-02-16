@@ -24,6 +24,10 @@ describe(ENDPOINT, async () => {
         res.body.should.have.property('id');
         res.body.id.should.be.not.empty;
     });
+    it('POST should fail for non-existent installation', async () => {
+        const res = await chai.request(server).post(ENDPOINT).send(dataUtils.createHeartbeatRecord('f6a16ff7-4a31-11eb-be7b-8344edc8f36b'));
+        res.status.should.be.equal(404);
+    });
     it('POST should fail for invalid data', async () => {
         await Installation.create(dataUtils.createInstallationRecord(dataUtils.appsList[0]));
         const res = await chai.request(server).post(ENDPOINT).send({ invalid: 'data' });
