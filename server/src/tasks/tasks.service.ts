@@ -3,7 +3,7 @@ import { InstallationsService } from '../installations/installation.service';
 import { HttpService } from '@nestjs/axios';
 import { Interval } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
-const IP_API_ENDPOINT = 'http://ip-api.com/batch?fields=country,region,query';
+const IP_API_ENDPOINT = 'http://ip-api.com/batch?fields=countryCode,region,query';
 
 @Injectable()
 export class TasksService {
