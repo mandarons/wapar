@@ -1,4 +1,4 @@
-import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { HeartbeatService } from './heartbeat.service';
 import { PostHeartbeatDto } from './post.dto';
 
@@ -11,9 +11,6 @@ export class HeartbeatController {
         body: PostHeartbeatDto,
     ) {
         const result = await this.heartbeatService.create(body);
-        if (result.success === false) {
-            throw new HttpException('Failed to record.', HttpStatus.UNPROCESSABLE_ENTITY);
-        }
-        return { message: 'All good.' };
+        return { id: result.installationId };
     }
 }

@@ -53,4 +53,9 @@ describe('Tasks', async () => {
         result.should.be.true;
         (await installationService.getMissingIPInfo()).length.should.be.equal(0);
     });
+    it('Should return false if nothing to do', async () => {
+        const result = await service.updateIpInfo();
+        result.should.be.false;
+        (await installationService.getMissingIPInfo()).length.should.be.equal(0);
+    });
 });
