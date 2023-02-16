@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InstallationsService } from 'src/installations/installation.service';
+import { InstallationsService } from '../installations/installation.service';
 import { HttpService} from '@nestjs/axios';
 // import { firstValueFrom } from 'rxjs';
 // import { IInstallationRecordInstance } from 'src/installations/installation.interface';
