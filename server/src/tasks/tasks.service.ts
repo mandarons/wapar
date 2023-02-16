@@ -13,10 +13,9 @@ export class TasksService {
     async updateIpInfo() {
         // Get 100 missing data records
         const missingData = await this.installationService.getMissingIPInfo();
-        if (missingData.success && (missingData.values as { ipAddress: string; id: string }[]).length > 0) {
-            const data = missingData.values as { ipAddress: string; id: string }[];
+        if (missingData.length > 0) {
             // Get unique IP addresses
-            const ipAddresses = [...new Set(data.filter((e) => e.ipAddress))].map((i) => i.ipAddress);
+            const ipAddresses = [...new Set(missingData.filter((e) => e.ipAddress))].map((i) => i.ipAddress);
             // Get demographic info for IP addresses
             const response = await firstValueFrom(this.httpService.post(IP_API_ENDPOINT, ipAddresses));
             const ipInfo = await response.data;
@@ -24,7 +23,7 @@ export class TasksService {
             const ipToInfo = new Map(ipInfo.map((i: { query: string; country: string; region: string }) => [i.query, { country: i.country, region: i.region }]));
             // Update missing records in table
             const patchData: { id: string; countryCode: string; region: string }[] = [];
-            data.forEach((d) => {
+            missingData.forEach((d) => {
                 const ipInfo = ipToInfo.get(d.ipAddress) as { country: string; region: string };
                 patchData.push({ id: d.id, countryCode: ipInfo.country, region: ipInfo.region });
             });

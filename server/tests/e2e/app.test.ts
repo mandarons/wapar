@@ -6,7 +6,7 @@ import { AppModule } from '../../src/app.module';
 
 chai.should();
 chai.use(chaiHTTP);
-
+const ENDPOINT = '/';
 describe('root', async () => {
     let app: INestApplication;
     let server: any;
@@ -21,20 +21,20 @@ describe('root', async () => {
     });
 
     it('GET should return success', async () => {
-        const res = await chai.request(server).get('/');
+        const res = await chai.request(server).get(ENDPOINT);
         res.status.should.be.equal(200);
         res.text.should.be.equal('Hello World!');
     });
     it('POST should return error', async () => {
-        const res = await chai.request(server).post('/').send({ some: 'data' });
+        const res = await chai.request(server).post(ENDPOINT).send({ some: 'data' });
         res.status.should.be.equal(404);
     });
     it('PUT should return error', async () => {
-        const res = await chai.request(server).put('/').send({ some: 'data' });
+        const res = await chai.request(server).put(ENDPOINT).send({ some: 'data' });
         res.status.should.be.equal(404);
     });
     it('DELETE should return error', async () => {
-        const res = await chai.request(server).delete('/').send({ some: 'data' });
+        const res = await chai.request(server).delete(ENDPOINT).send({ some: 'data' });
         res.status.should.be.equal(404);
     });
 });
