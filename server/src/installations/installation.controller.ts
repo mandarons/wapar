@@ -1,8 +1,8 @@
-import { Body, Controller, HttpException, HttpStatus, Ip, Post } from '@nestjs/common';
+import { Body, Controller, Ip, Post } from '@nestjs/common';
 import { InstallationsService } from './installation.service';
 import { PostInstallationDto } from './post.dto';
 
-@Controller('/api/installation')
+@Controller('installation')
 export class InstallationController {
     constructor(private readonly installationService: InstallationsService) {}
     @Post()
@@ -15,9 +15,6 @@ export class InstallationController {
             ...body,
             ipAddress,
         });
-        if (result.success === false) {
-            throw new HttpException('Failed to record.', HttpStatus.UNPROCESSABLE_ENTITY);
-        }
-        return { id: (result.values as { id: string }).id };
+        return { id: result.id };
     }
 }

@@ -51,6 +51,6 @@ describe('Tasks', async () => {
         await Installation.bulkCreate(installationRecords);
         const result = await service.updateIpInfo();
         result.should.be.true;
-        ((await installationService.getMissingIPInfo()).values as object[]).length.should.be.equal(0);
+        (await installationService.getMissingIPInfo()).length.should.be.equal(0);
     });
 });

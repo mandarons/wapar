@@ -2,7 +2,7 @@ import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/commo
 import { HeartbeatService } from './heartbeat.service';
 import { PostHeartbeatDto } from './post.dto';
 
-@Controller('/api/heartbeat')
+@Controller('heartbeat')
 export class HeartbeatController {
     constructor(private readonly heartbeatService: HeartbeatService) {}
     @Post()

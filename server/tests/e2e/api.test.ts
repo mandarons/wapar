@@ -6,8 +6,8 @@ import { AppModule } from '../../src/app.module';
 
 chai.should();
 chai.use(chaiHTTP);
-
-describe('/api', async () => {
+const ENDPOINT = '/api';
+describe(ENDPOINT, async () => {
     let app: INestApplication;
     let server: any;
     beforeEach(async () => {
@@ -21,20 +21,20 @@ describe('/api', async () => {
     });
 
     it('GET should return success', async () => {
-        const res = await chai.request(server).get('/api');
+        const res = await chai.request(server).get(ENDPOINT);
         res.status.should.be.equal(200);
         res.text.should.be.equal('All good.');
     });
     it('POST should return error', async () => {
-        const res = await chai.request(server).post('/api').send({ some: 'data' });
+        const res = await chai.request(server).post(ENDPOINT).send({ some: 'data' });
         res.status.should.be.equal(404);
     });
     it('PUT should return error', async () => {
-        const res = await chai.request(server).put('/api').send({ some: 'data' });
+        const res = await chai.request(server).put(ENDPOINT).send({ some: 'data' });
         res.status.should.be.equal(404);
     });
     it('DELETE should return error', async () => {
-        const res = await chai.request(server).delete('/api').send({ some: 'data' });
+        const res = await chai.request(server).delete(ENDPOINT).send({ some: 'data' });
         res.status.should.be.equal(404);
     });
 });
