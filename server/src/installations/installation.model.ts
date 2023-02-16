@@ -39,7 +39,7 @@ export class Installation extends Model<IInstallationRecordAttributes, IInstalla
     })
     previousId: string;
     @Column({
-        type: DataType.JSON,
+        type: DataType.JSONB,
         defaultValue: null,
     })
     data: object;
@@ -53,9 +53,4 @@ export class Installation extends Model<IInstallationRecordAttributes, IInstalla
         defaultValue: null,
     })
     region: string;
-    @Column({
-        type: DataType.STRING,
-        defaultValue: null,
-    })
-    city: string;
 }
