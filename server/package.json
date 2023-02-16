@@ -14,7 +14,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "NODE_ENV=test mocha --exit -r ts-node/register --r source-map-support/register --recursive ./tests/**/*.test.ts",
-    "test:ci": "NODE_ENV=test nyc --reporter=html --reporter=json-summary  mocha --reporter mocha-allure-reporter --exit --timeout 5000 -r ts-node/register ./tests/**/*.ts"
+    "test:ci": "NODE_ENV=test nyc --reporter=html --reporter=json-summary  mocha --reporter mocha-allure-reporter --exit --timeout 5000 -r ts-node/register --recursive ./tests/**/*.test.ts"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
