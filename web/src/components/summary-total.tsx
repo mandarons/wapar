@@ -23,7 +23,7 @@ const SummaryTotal = ({
                         <p className="leading-relaxed">Total Installations</p>
                     </div>
                     <div className="w-1/2 p-4 sm:w-1/4">
-                        <h2 data-testid="total-installations" className="title-font text-3xl font-medium text-green-600 sm:text-4xl">
+                        <h2 data-testid="monthly-active" className="title-font text-3xl font-medium text-green-600 sm:text-4xl">
                             {monthlyActive}
                         </h2>
                         <p className="leading-relaxed">Monthly Active</p>
