@@ -17,8 +17,6 @@ chai.should();
 describe('Tasks', async () => {
     let service: TasksService;
     let installationService: InstallationsService;
-    const fakeIPInfoPost = (url: string, data: any) =>
-        new Promise((resolve) => resolve({ data: (data as string[]).map((e: string) => ({ query: e, countryCode: faker.address.countryCode(), region: faker.address.state() })) }));
     const createInstallationRecords = async (count: number) => {
         const installationRecords = new Array(count);
         for (let i = 0; i < installationRecords.length; ++i) installationRecords[i] = dataUtils.createInstallationRecord();
@@ -46,14 +44,14 @@ describe('Tasks', async () => {
         await dataUtils.syncDb(false);
     });
     it('Should populate IP info for < 100 IP addresses', async () => {
-        Sinon.stub(axios, 'post').callsFake(fakeIPInfoPost);
+        Sinon.stub(axios, 'post').callsFake(dataUtils.fakeIPInfoPost);
         await createInstallationRecords(80);
         const result = await service.updateIpInfo();
         result.should.be.true;
         (await installationService.getMissingIPInfo()).length.should.be.equal(0);
     });
     it('Should populate IP info in chunks of 100', async () => {
-        Sinon.stub(axios, 'post').callsFake(fakeIPInfoPost);
+        Sinon.stub(axios, 'post').callsFake(dataUtils.fakeIPInfoPost);
         await createInstallationRecords(110);
         let result = await service.updateIpInfo();
         result.should.be.true;

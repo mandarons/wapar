@@ -17,6 +17,13 @@ const createInstallationRecord = (appName = randomAppName()): IInstallationRecor
         ipAddress: faker.internet.ipv4(),
     };
 };
+const createInstallationRecordWithGeo = (appName = randomAppName()): IInstallationRecordAttributes => {
+    return {
+        ...createInstallationRecord(appName),
+        countryCode: faker.address.countryCode(),
+        region: faker.address.stateAbbr(),
+    };
+};
 const createHeartbeatRecord = (installationId: string, data: object | null = null): IHeartbeatRecordAttributes => {
     return {
         installationId,
@@ -50,11 +57,16 @@ const createServer = async () => {
     await app.getHttpAdapter().getInstance().ready();
     return app.getHttpServer();
 };
+const fakeIPInfoPost = (url: string, data: any) =>
+    new Promise((resolve) => resolve({ data: (data as string[]).map((e: string) => ({ query: e, countryCode: faker.address.countryCode(), region: faker.address.state() })) }));
+
 export default {
+    fakeIPInfoPost,
     appsList,
     randomAppName,
     randomAppVersion,
     createInstallationRecord,
+    createInstallationRecordWithGeo,
     createHeartbeatRecord,
     syncDb,
     createServer,
