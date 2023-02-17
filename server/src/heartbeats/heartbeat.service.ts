@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Sequelize } from 'sequelize';
 import { InstallationsService } from '../installations/installation.service';
 import { IHeartbeatRecordAttributes } from './heartbeat.interface';
 import { Heartbeat } from './heartbeat.model';
@@ -21,5 +20,15 @@ export class HeartbeatService {
             plain: true,
         });
         return data ? Number(data.count) : 0;
+    }
+    async getCountryCodeToCount() {
+        const data = await this.heartbeatModel.sequelize?.query(
+            'select country_code, COUNT(1) from "Installation" where country_code is not null group by country_code order by 2 desc',
+            {
+                raw: true,
+                plain: false,
+            },
+        );
+        return data ? data[0] : [];
     }
 }
