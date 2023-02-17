@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker';
 import { HttpModule } from '@nestjs/axios';
 import { Test, TestingModule } from '@nestjs/testing';
 import axios from 'axios';
