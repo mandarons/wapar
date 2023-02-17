@@ -10,7 +10,7 @@ const WorldMap = ({ countryToCount }: { countryToCount: { countryCode: string; c
             map.current = new svgMap({
                 targetElementID: 'svgMap',
                 minZoom: 1,
-                maxZoom: 10,
+                maxZoom: 2,
                 initialZoom: 1,
                 showContinentSelector: false,
                 zoomScaleSensitivity: 1,
@@ -21,6 +21,8 @@ const WorldMap = ({ countryToCount }: { countryToCount: { countryCode: string; c
                 mouseWheelKeyMessageMac: 'Not enabled',
                 flagType: 'emoji',
                 noDataText: 'No installations detected',
+                colorMax: '#000000',
+                colorMin: '#eeeeee',
                 data: {
                     data: {
                         installations: {
