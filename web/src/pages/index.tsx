@@ -9,7 +9,12 @@ const Home = ({ data }: { data: IUsageSummary }) => {
         <>
             <Navbar selectedItem=""></Navbar>
             <div className="flex w-full flex-col">
-                <SummaryTotal totalInstallations={data.totalInstallations} iCloudDockerTotal={data.iCloudDocker.total} haBouncieTotal={data.haBouncie.total} />
+                <SummaryTotal
+                    monthlyActive={data.monthlyActive}
+                    totalInstallations={data.totalInstallations}
+                    iCloudDockerTotal={data.iCloudDocker.total}
+                    haBouncieTotal={data.haBouncie.total}
+                />
                 <WorldMap countryToCount={data.countryToCount} />
             </div>
             <Footer dataGeneratedAt={data.createdAt}></Footer>
