@@ -1,12 +1,14 @@
 interface IUsageSummary {
-  totalInstallations: number | null;
-  createdAt: string;
-  iCloudDocker: {
-    total: number | null;
-  };
-  haBouncie: {
-    total: number | null;
-  };
+    totalInstallations: number;
+    createdAt: string;
+    countryToCount: { countryCode: string; count: number }[];
+    monthlyActive: number;
+    iCloudDocker: {
+        total: number;
+    };
+    haBouncie: {
+        total: number;
+    };
 }
 
 export default IUsageSummary;
