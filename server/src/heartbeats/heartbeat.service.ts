@@ -29,6 +29,10 @@ export class HeartbeatService {
                 plain: false,
             },
         );
-        return data ? data[0] : [];
+        if (data) {
+            data[0] = data[0].map(({ country_code, count }) => ({ countryCode: country_code, count: Number(count) }));
+            return data[0];
+        }
+        return [];
     }
 }
