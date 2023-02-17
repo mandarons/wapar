@@ -21,8 +21,8 @@ const WorldMap = ({ countryToCount }: { countryToCount: { countryCode: string; c
                 mouseWheelKeyMessageMac: 'Not enabled',
                 flagType: 'emoji',
                 noDataText: 'No installations detected',
-                colorMax: '#000000',
-                colorMin: '#eeeeee',
+                colorMax: '#09431e',
+                colorMin: '#bcf6d1',
                 data: {
                     data: {
                         installations: {
