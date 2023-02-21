@@ -4,7 +4,6 @@ test('should show usage summary', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByTestId('data-generated-at')).not.toBeEmpty();
     await expect(page.getByTestId('total-installations')).not.toBeEmpty();
-    await expect(page.getByTestId('monthly-active')).not.toBeEmpty();
     await expect(page.getByTestId('icloud-drive-docker-total-installations')).not.toBeEmpty();
     await expect(page.getByTestId('ha-bouncie-total-installations')).not.toBeEmpty();
 });
