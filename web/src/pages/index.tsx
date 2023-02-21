@@ -10,8 +10,8 @@ const Home = ({ data }: { data: IUsageSummary }) => {
             <Navbar selectedItem=""></Navbar>
             <div className="flex w-full flex-col">
                 <SummaryTotal
-                    monthlyActive={data.monthlyActive}
-                    totalInstallations={data.totalInstallations}
+                    // monthlyActive={data.monthlyActive}
+                    totalInstallations={data.totalInstallations + data.haBouncie.total}
                     iCloudDockerTotal={data.iCloudDocker.total}
                     haBouncieTotal={data.haBouncie.total}
                 />
@@ -23,8 +23,12 @@ const Home = ({ data }: { data: IUsageSummary }) => {
 };
 
 const getStaticProps = async () => {
-    const res = await fetch('https://wapar-api.mandarons.com/api/usage');
-    const data = await res.json();
+    let res = await fetch('https://wapar-api.mandarons.com/api/usage');
+    const waparData = await res.json();
+    res = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
+    const haData = await res.json();
+    const data = { ...waparData };
+    data.haBouncie = haData.bouncie;
     return {
         props: { data },
     };

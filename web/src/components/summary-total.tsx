@@ -1,10 +1,10 @@
 const SummaryTotal = ({
-    monthlyActive,
+    // monthlyActive,
     totalInstallations,
     iCloudDockerTotal,
     haBouncieTotal,
 }: {
-    monthlyActive: number;
+    // monthlyActive: number;
     totalInstallations: number;
     iCloudDockerTotal: number;
     haBouncieTotal: number;
@@ -16,25 +16,25 @@ const SummaryTotal = ({
                     <h1 className="title-font mb-4 text-2xl font-medium text-gray-900 sm:text-3xl">Application Installations</h1>
                 </div>
                 <div className="-m-5 flex flex-wrap text-center">
-                    <div className="w-1/2 p-4 sm:w-1/4">
+                    <div className="w-1/2 p-4 sm:w-1/3">
                         <h2 data-testid="total-installations" className="title-font text-3xl font-medium text-green-600 sm:text-4xl">
                             {totalInstallations}
                         </h2>
                         <p className="leading-relaxed">Total Installations</p>
                     </div>
-                    <div className="w-1/2 p-4 sm:w-1/4">
+                    {/* <div className="w-1/2 p-4 sm:w-1/4">
                         <h2 data-testid="monthly-active" className="title-font text-3xl font-medium text-green-600 sm:text-4xl">
                             {monthlyActive}
                         </h2>
                         <p className="leading-relaxed">Monthly Active</p>
-                    </div>
-                    <div className="w-1/2 p-4 sm:w-1/4">
+                    </div> */}
+                    <div className="w-1/2 p-4 sm:w-1/3">
                         <h2 data-testid="icloud-drive-docker-total-installations" className="title-font text-3xl font-medium text-green-600 sm:text-4xl">
                             {iCloudDockerTotal}
                         </h2>
                         <p className="leading-relaxed">iCloud Drive Docker</p>
                     </div>
-                    <div className="w-1/2 p-4 sm:w-1/4">
+                    <div className="w-1/2 p-4 sm:w-1/3">
                         <h2 data-testid="ha-bouncie-total-installations" className="title-font text-3xl font-medium text-green-600 sm:text-4xl">
                             {haBouncieTotal}
                         </h2>
