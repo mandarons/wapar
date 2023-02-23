@@ -26,6 +26,7 @@ describe(ENDPOINT, async () => {
         it('should return empty data', async () => {
             const res = await chai.request(server).get(ENDPOINT);
             res.status.should.be.equal(200);
+            res.body.countryToCount.length.should.be.equal(0);
             res.body.totalInstallations.should.be.equal(0);
             res.body.monthlyActive.should.be.equal(0);
             res.body.iCloudDocker.total.should.be.equal(0);
