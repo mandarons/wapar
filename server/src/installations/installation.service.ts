@@ -37,4 +37,14 @@ export class InstallationsService {
             ),
         );
     }
+    async getCountryCodeToCount() {
+        const data = await this.installationModel.sequelize?.query(
+            'select country_code, COUNT(1) from "Installation" where country_code is not null group by country_code order by 2 desc',
+            {
+                raw: true,
+                plain: false,
+            },
+        );
+        return data?.[0].map(({ country_code, count }) => ({ countryCode: country_code, count: Number(count) }));
+    }
 }
