@@ -10,7 +10,7 @@ export class UsageService {
             totalInstallations: await this.installationService.count(),
             monthlyActive: await this.heartbeatService.getMonthlyActive(),
             createdAt: new Date().toUTCString(),
-            countryToCount: await this.heartbeatService.getCountryCodeToCount(),
+            countryToCount: await this.installationService.getCountryCodeToCount(),
             iCloudDocker: {
                 total: await this.installationService.findByAppName('icloud-drive-docker'),
             },
