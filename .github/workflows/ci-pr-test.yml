@@ -88,7 +88,8 @@ jobs:
 
     test:
         container:
-            image: mandarons/node-lts
+            # image: mandarons/node-lts
+            image: mcr.microsoft.com/playwright:v1.39.0-jammy
         services:
             postgres:
                 image: postgres:15-alpine
