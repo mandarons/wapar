@@ -12,7 +12,8 @@ on:
 jobs:
     cache-server-install:
         container:
-            image: mandarons/node-lts
+            # image: mandarons/node-lts
+            image: mcr.microsoft.com/playwright:v1.39.0-jammy
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
