@@ -18,9 +18,9 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
             - name: Set up Node.js environment
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
                   node-version: 18.14.0
             - name: Cache yarn dependencies
@@ -40,9 +40,9 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
             - name: Set up Node.js environment
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
                   node-version: 18.14.0
             - name: Cache yarn dependencies
@@ -63,9 +63,9 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Check Out Repo
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
             - name: Setup Node.js environment
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
                   node-version: 18.14.0
             - name: Restore yarn-web-client depdendencies
@@ -109,9 +109,9 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
             - name: Setup Node.js environment
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
                   node-version: 18.14.0
             - name: Restore yarn-server depdendencies
@@ -137,7 +137,7 @@ jobs:
             #     path: coverage
             #     retention-days: 1
             # - name: Checkout gh-pages
-            #   uses: actions/checkout@v3
+            #   uses: actions/checkout@v4
             #   if: always()
             #   continue-on-error: true
             #   with:
@@ -178,7 +178,7 @@ jobs:
     #         name: test-output
     #         path: allure-history
     #     - name: Checkout gh-pages
-    #       uses: actions/checkout@v3
+    #       uses: actions/checkout@v4
     #       if: always()
     #       continue-on-error: true
     #       with:
@@ -203,7 +203,7 @@ jobs:
     #         name: coverage-output
     #         path: coverage
     #     - name: Checkout gh-pages
-    #       uses: actions/checkout@v3
+    #       uses: actions/checkout@v4
     #       if: always()
     #       continue-on-error: true
     #       with:
@@ -228,7 +228,7 @@ jobs:
     #         name: badges-output
     #         path: badges
     #     - name: Checkout gh-pages
-    #       uses: actions/checkout@v3
+    #       uses: actions/checkout@v4
     #       if: always()
     #       continue-on-error: true
     #       with:
@@ -248,9 +248,9 @@ jobs:
     #   runs-on: ubuntu-latest
     #   steps:
     #     - name: Checkout source code
-    #       uses: actions/checkout@v3
+    #       uses: actions/checkout@v4
     #     - name: Setup Node.js environment
-    #       uses: actions/setup-node@v3
+    #       uses: actions/setup-node@v4
     #       with:
     #         node-version: 18.14.0
     #     - name: Restore yarn-server depdendencies
@@ -286,7 +286,7 @@ jobs:
     #   runs-on: ubuntu-latest
     #   steps:
     #     - name: Check Out Repo
-    #       uses: actions/checkout@v3
+    #       uses: actions/checkout@v4
     #     - name: Download build artifacts
     #       uses: actions/download-artifact@v3
     #       with:
