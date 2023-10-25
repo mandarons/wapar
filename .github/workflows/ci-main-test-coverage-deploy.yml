@@ -13,6 +13,8 @@ jobs:
     cache-server-install:
         container:
             image: mandarons/node-lts
+            options: >-
+              --user=root
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
@@ -88,6 +90,8 @@ jobs:
     test:
         container:
             image: mandarons/node-lts
+            options: >-
+              --user=root
         services:
             postgres:
                 image: postgres:15-alpine
