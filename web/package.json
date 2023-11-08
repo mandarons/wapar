@@ -16,7 +16,7 @@
     "@types/react-dom": "18.0.10",
     "eslint-config-next": "13.5.4",
     "eslint": "8.36.0",
-    "next": "13.5.4",
+    "next": "13.5.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "svgmap": "^2.10.1",
