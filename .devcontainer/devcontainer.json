@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
 {
-	"name": "Node.js & PostgreSQL",
+	"name": "Wapar",
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "app",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
@@ -14,8 +14,6 @@
 		"hbenl.vscode-mocha-test-adapter",
 		"bradlc.vscode-tailwindcss",
 		"mhutchie.git-graph",
-		"astro-build.astro-vscode",
-		"prisma.prisma",
 		"ms-playwright.playwright"
 	],
 	"mounts": [
