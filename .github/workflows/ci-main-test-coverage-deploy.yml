@@ -46,6 +46,8 @@ jobs:
               with:
                   node-version: 20.11.0
             - uses: pnpm/action-setup@v2
+              with:
+                  version: 8
             - name: Cache pnpm dependencies
               uses: actions/cache@v4
               id: cache-dependencies
@@ -70,6 +72,8 @@ jobs:
               with:
                   node-version: 20.11.0
             - uses: pnpm/action-setup@v2
+              with:
+                  version: 8
             - name: Restore pnpm-app depdendencies
               uses: actions/cache@v4
               with:
