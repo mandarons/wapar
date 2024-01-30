@@ -45,18 +45,18 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: 20.11.0
-            - name: Cache yarn dependencies
+            - name: Cache pnpm dependencies
               uses: actions/cache@v4
               id: cache-dependencies
               with:
                   path: app/node_modules
-                  key: ${{ runner.os }}-yarn-app-${{ hashFiles('app/yarn.lock') }}
+                  key: ${{ runner.os }}-pnpm-app-${{ hashFiles('app/pnpm-lock.yaml') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-app-
+                      ${{ runner.os }}-pnpm-app-
             - name: Install Dependencies
               if: steps.cache-dependencies.outputs.cache-hit != 'true'
               run: |
-                  yarn install --cwd app --frozen-lockfile
+                  pnpm install --prefix app --frozen-lockfile
 
     build:
         needs: [cache-app-install]
@@ -68,16 +68,16 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: 20.11.0
-            - name: Restore yarn-app depdendencies
+            - name: Restore pnpm-app depdendencies
               uses: actions/cache@v4
               with:
                   path: app/node_modules
-                  key: ${{ runner.os }}-yarn-app-${{ hashFiles('app/yarn.lock') }}
+                  key: ${{ runner.os }}-pnpm-app-${{ hashFiles('app/pnpm-lock.yaml') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-app-
+                      ${{ runner.os }}-pnpm-app-
             - name: Build
               run: |
-                  yarn --cwd app build
+                  pnpm --prefix app build
               env:
                   PUBLIC_URL: '.'
     #       - name: Upload build artifacts

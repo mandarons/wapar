@@ -4,7 +4,7 @@ on:
     push:
         branches: [main]
         paths:
-            - 'web/**'
+            - 'app/**'
             - 'server/**'
             - 'Dockerfile'
             - '.github/workflows/**'
@@ -14,7 +14,7 @@ jobs:
         container:
             image: mandarons/node-lts
             options: >-
-              --user=root
+                --user=root
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
@@ -22,9 +22,9 @@ jobs:
             - name: Set up Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
+                  node-version: 20.11.0
             - name: Cache yarn dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               id: cache-dependencies
               with:
                   path: server/node_modules
@@ -36,7 +36,7 @@ jobs:
               run: |
                   yarn install --cwd server --frozen-lockfile
 
-    cache-web-client-install:
+    cache-app-install:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
@@ -44,22 +44,22 @@ jobs:
             - name: Set up Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
-            - name: Cache yarn dependencies
-              uses: actions/cache@v3
+                  node-version: 20.11.0
+            - name: Cache pnpm dependencies
+              uses: actions/cache@v4
               id: cache-dependencies
               with:
-                  path: web/node_modules
-                  key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('web/yarn.lock') }}
+                  path: app/node_modules
+                  key: ${{ runner.os }}-pnpm-app-${{ hashFiles('app/pnpm-lock.yaml') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-web-client-
+                      ${{ runner.os }}-pnpm-app-
             - name: Install Dependencies
               if: steps.cache-dependencies.outputs.cache-hit != 'true'
               run: |
-                  yarn install --cwd web --frozen-lockfile
+                  pnpm install --prefix app --frozen-lockfile
 
     build:
-        needs: [cache-web-client-install]
+        needs: [cache-app-install]
         runs-on: ubuntu-latest
         steps:
             - name: Check Out Repo
@@ -67,17 +67,17 @@ jobs:
             - name: Setup Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
-            - name: Restore yarn-web-client depdendencies
-              uses: actions/cache@v3
+                  node-version: 20.11.0
+            - name: Restore pnpm-app depdendencies
+              uses: actions/cache@v4
               with:
-                  path: web/node_modules
-                  key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('web/yarn.lock') }}
+                  path: app/node_modules
+                  key: ${{ runner.os }}-pnpm-app-${{ hashFiles('app/pnpm-lock.yaml') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-web-client-
+                      ${{ runner.os }}-pnpm-app-
             - name: Build
               run: |
-                  yarn --cwd web build
+                  pnpm --prefix app build
               env:
                   PUBLIC_URL: '.'
             # - name: Upload build artifacts
@@ -91,7 +91,7 @@ jobs:
         container:
             image: mandarons/node-lts
             options: >-
-              --user=root
+                --user=root
         services:
             postgres:
                 image: postgres:15-alpine
@@ -113,9 +113,9 @@ jobs:
             - name: Setup Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
+                  node-version: 20.11.0
             - name: Restore yarn-server depdendencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: server/node_modules
                   key: ${{ runner.os }}-yarn-server-${{ hashFiles('server/yarn.lock') }}
@@ -125,8 +125,8 @@ jobs:
             #   uses: mxschmitt/action-tmate@v3
             - name: initialize DB
               run: |
-                PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
-                PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
+                  PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
+                  PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
             - name: Run server Tests
               run: |
                   yarn --cwd server test:ci
@@ -252,9 +252,9 @@ jobs:
     #     - name: Setup Node.js environment
     #       uses: actions/setup-node@v4
     #       with:
-    #         node-version: 18.14.0
+    #         node-version: 20.11.0
     #     - name: Restore yarn-server depdendencies
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: node_modules
     #         key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
@@ -262,7 +262,7 @@ jobs:
     #           ${{ runner.os }}-yarn-server-
     #     - name: Restore Cypress binary
     #       id: cache-cypress-binary
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: ~/.cache/Cypress
     #         key: cypress-binary-${{ hashFiles('yarn.lock') }}
@@ -293,7 +293,7 @@ jobs:
     #         name: build-output
     #         path: build
     #     - name: Cache Docker layers
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: /tmp/.buildx-cache
     #         key: ${{ runner.os }}-buildx-${{ github.sha }}
