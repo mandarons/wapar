@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Table, tableMapperValues } from '@skeletonlabs/skeleton';
-	import type { TableSource } from '@skeletonlabs/skeleton';
+	import { onMount } from 'svelte';
+	import 'svgmap/dist/svgMap.min.css';
 	export let data: {
 		totalInstallations: number;
 		monthlyActive: number;
@@ -9,17 +9,50 @@
 		iCloudDocker: { total: number };
 		haBouncie: { total: number };
 	};
-	let regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
-	const countryTable: TableSource = {
-		head: ['Country', 'Count'],
-		body: tableMapperValues(
-			data.countryToCount.map((c) => ({
-				countryName: regionNames.of(c.countryCode),
-				count: c.count
-			})),
-			['countryName', 'count']
-		)
-	};
+	let mapObj: any = null;
+	onMount(async () => {
+		if (!mapObj) {
+			const module = await import('svgmap');
+			const svgMap = module.default;
+			mapObj = new svgMap({
+				targetElementID: 'svgMap',
+				minZoom: 1,
+				maxZoom: 3,
+				initialZoom: 1,
+				showContinentSelector: false,
+				zoomScaleSensitivity: 1,
+				showZoomReset: false,
+				mouseWheelZoomEnabled: true,
+				mouseWheelZoomWithKey: false,
+				mouseWheelZoomKeyMessage: 'Not enabled',
+				mouseWheelKeyMessageMac: 'Not enabled',
+				flagType: 'emoji',
+				noDataText: 'No installations detected',
+				colorMax: '#050000',
+				colorMin: '#ffb3b3',
+				data: {
+					data: {
+						installations: {
+							name: 'Installations',
+							format: '{0}',
+							thousandSeparator: ',',
+							thresholdMax: 50000,
+							thresholdMin: 0
+						}
+					},
+					applyData: 'installations',
+					values: Object.fromEntries(
+						new Map(
+							data.countryToCount.map(({ countryCode, count }) => [
+								countryCode,
+								{ installations: count }
+							])
+						)
+					)
+				}
+			});
+		}
+	});
 </script>
 
 <section class="body-font text-gray-600">
@@ -67,10 +100,16 @@
 				<p class="leading-relaxed">Home Assistant - Bouncie</p>
 			</div>
 		</div>
-		<div
-			class="flex justify-center items-center mx-auto w-full border border-gray-200 rounded-2xl overflow-hidden p-4 m-12"
-		>
-			<Table source={countryTable} />
-		</div>
 	</div>
 </section>
+<div class="container mx-auto flex flex-col items-center">
+	<div id="svgMap" class="w-11/12 flex-col items-center justify-center"></div>
+</div>
+<div class="fixed bottom-0 w-full">
+	<div class="flex items-center justify-between p-4">
+		<div class="flex items-center"></div>
+		<div class="flex items-end space-x-4">
+			<p class="text-xs font-medium text-gray-600">Copyright &copy; 2023 Mandar Patil</p>
+		</div>
+	</div>
+</div>

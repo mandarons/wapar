@@ -9,7 +9,9 @@
 		<!-- App Bar -->
 		<AppBar>
 			<svelte:fragment slot="lead">
-				<img src="/favicon.svg" alt="Wapar" class="w-16 h-16" />
+				<a href="/">
+					<img src="/favicon.svg" alt="Wapar" class="w-16 h-16" />
+				</a>
 				<strong class="text-xl uppercase">Wapar</strong>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
