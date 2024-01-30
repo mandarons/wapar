@@ -62,8 +62,8 @@
 				Application Installations
 			</h1>
 		</div>
-		<div class="-m-5 flex flex-wrap text-center">
-			<div class="w-1/2 p-4 sm:w-1/4">
+		<div class="-m-5 flex text-center justify-between">
+			<div class="w-1/2 p-4">
 				<h2
 					data-testid="total-installations"
 					class="title-font text-3xl font-medium text-green-600 sm:text-4xl"
@@ -72,16 +72,7 @@
 				</h2>
 				<p class="leading-relaxed">Total Installations</p>
 			</div>
-			<div class="w-1/2 p-4 sm:w-1/4">
-				<h2
-					data-testid="monthly-active"
-					class="title-font text-3xl font-medium text-green-600 sm:text-4xl"
-				>
-					{data.monthlyActive}
-				</h2>
-				<p class="leading-relaxed">Monthly Active</p>
-			</div>
-			<div class="w-1/2 p-4 sm:w-1/4">
+			<div class="w-1/2 p-4">
 				<h2
 					data-testid="icloud-drive-docker-total-installations"
 					class="title-font text-3xl font-medium text-green-600 sm:text-4xl"
@@ -90,7 +81,7 @@
 				</h2>
 				<p class="leading-relaxed">iCloud Drive Docker</p>
 			</div>
-			<div class="w-1/2 p-4 sm:w-1/4">
+			<div class="w-1/2 p-4">
 				<h2
 					data-testid="ha-bouncie-total-installations"
 					class="title-font text-3xl font-medium text-green-600 sm:text-4xl"
