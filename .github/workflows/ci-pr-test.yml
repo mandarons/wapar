@@ -4,8 +4,8 @@ on:
     pull_request:
         branches: [main]
         paths:
-            - 'web/**'
             - 'server/**'
+            - 'app/**'
             - 'Dockerfile'
             - '.github/workflows/**'
     workflow_dispatch:
@@ -14,7 +14,7 @@ jobs:
         container:
             image: mandarons/node-lts
             options: >-
-              --user=root
+                --user=root
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
@@ -22,9 +22,9 @@ jobs:
             - name: Set up Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
+                  node-version: 20.11.0
             - name: Cache yarn dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               id: cache-dependencies
               with:
                   path: server/node_modules
@@ -36,7 +36,7 @@ jobs:
               run: |
                   yarn install --cwd server --frozen-lockfile
 
-    cache-web-client-install:
+    cache-app-install:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
@@ -44,22 +44,22 @@ jobs:
             - name: Set up Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
+                  node-version: 20.11.0
             - name: Cache yarn dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               id: cache-dependencies
               with:
-                  path: web/node_modules
-                  key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('web/yarn.lock') }}
+                  path: app/node_modules
+                  key: ${{ runner.os }}-yarn-app-${{ hashFiles('app/yarn.lock') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-web-client-
+                      ${{ runner.os }}-yarn-app-
             - name: Install Dependencies
               if: steps.cache-dependencies.outputs.cache-hit != 'true'
               run: |
-                  yarn install --cwd web --frozen-lockfile
+                  yarn install --cwd app --frozen-lockfile
 
     build:
-        needs: [cache-web-client-install]
+        needs: [cache-app-install]
         runs-on: ubuntu-latest
         steps:
             - name: Check Out Repo
@@ -67,17 +67,17 @@ jobs:
             - name: Setup Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
-            - name: Restore yarn-web-client depdendencies
-              uses: actions/cache@v3
+                  node-version: 20.11.0
+            - name: Restore yarn-app depdendencies
+              uses: actions/cache@v4
               with:
-                  path: web/node_modules
-                  key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('web/yarn.lock') }}
+                  path: app/node_modules
+                  key: ${{ runner.os }}-yarn-app-${{ hashFiles('app/yarn.lock') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-web-client-
+                      ${{ runner.os }}-yarn-app-
             - name: Build
               run: |
-                  yarn --cwd web build
+                  yarn --cwd app build
               env:
                   PUBLIC_URL: '.'
     #       - name: Upload build artifacts
@@ -91,7 +91,7 @@ jobs:
         container:
             image: mandarons/node-lts
             options: >-
-              --user=root
+                --user=root
         services:
             postgres:
                 image: postgres:15-alpine
@@ -113,9 +113,9 @@ jobs:
             - name: Setup Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
+                  node-version: 20.11.0
             - name: Restore yarn-server depdendencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: server/node_modules
                   key: ${{ runner.os }}-yarn-server-${{ hashFiles('server/yarn.lock') }}
@@ -252,18 +252,18 @@ jobs:
     #     - name: Setup Node.js environment
     #       uses: actions/setup-node@v4
     #       with:
-    #         node-version: 18.14.0
-    #     - name: Restore yarn-web-client depdendencies
-    #       uses: actions/cache@v3
+    #         node-version: 20.11.0
+    #     - name: Restore yarn-app depdendencies
+    #       uses: actions/cache@v4
     #       with:
-    #         path: web/node_modules
-    #         key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('web/yarn.lock') }}
+    #         path: app/node_modules
+    #         key: ${{ runner.os }}-yarn-app-${{ hashFiles('app/yarn.lock') }}
     #         restore-keys: |
-    #           ${{ runner.os }}-yarn-web-client-
+    #           ${{ runner.os }}-yarn-app-
     #     - name: Install Playwright Browsers
     #       run: npx playwright install --with-deps
     #     - name: Run E2E tests
-    #       run: yarn --cwd web e2e
+    #       run: yarn --cwd app e2e
     #     - uses: actions/upload-artifact@v3
     #       if: always()
     #       with:
@@ -279,9 +279,9 @@ jobs:
     #     - name: Setup Node.js environment
     #       uses: actions/setup-node@v4
     #       with:
-    #         node-version: 18.14.0
+    #         node-version: 20.11.0
     #     - name: Restore yarn-server depdendencies
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: node_modules
     #         key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
@@ -289,7 +289,7 @@ jobs:
     #           ${{ runner.os }}-yarn-server-
     #     - name: Restore Cypress binary
     #       id: cache-cypress-binary
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: ~/.cache/Cypress
     #         key: cypress-binary-${{ hashFiles('yarn.lock') }}
@@ -320,7 +320,7 @@ jobs:
     #         name: build-output
     #         path: build
     #     - name: Cache Docker layers
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: /tmp/.buildx-cache
     #         key: ${{ runner.os }}-buildx-${{ github.sha }}
