@@ -6,6 +6,7 @@ export const load: PageServerLoad = async () => {
     res = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
     const haData = await res.json();
     const data = { ...waparData };
+    data.totalInstallations = haData.bouncie.total + data.iCloudDocker.total;
     data.haBouncie = haData.bouncie;
     return data;
 };
