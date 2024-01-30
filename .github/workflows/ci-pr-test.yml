@@ -22,9 +22,9 @@ jobs:
             - name: Set up Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
+                  node-version: 20.11.0
             - name: Cache yarn dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               id: cache-dependencies
               with:
                   path: server/node_modules
@@ -44,9 +44,9 @@ jobs:
             - name: Set up Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
+                  node-version: 20.11.0
             - name: Cache yarn dependencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               id: cache-dependencies
               with:
                   path: app/node_modules
@@ -67,9 +67,9 @@ jobs:
             - name: Setup Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
+                  node-version: 20.11.0
             - name: Restore yarn-app depdendencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: app/node_modules
                   key: ${{ runner.os }}-yarn-app-${{ hashFiles('app/yarn.lock') }}
@@ -113,9 +113,9 @@ jobs:
             - name: Setup Node.js environment
               uses: actions/setup-node@v4
               with:
-                  node-version: 18.14.0
+                  node-version: 20.11.0
             - name: Restore yarn-server depdendencies
-              uses: actions/cache@v3
+              uses: actions/cache@v4
               with:
                   path: server/node_modules
                   key: ${{ runner.os }}-yarn-server-${{ hashFiles('server/yarn.lock') }}
@@ -252,9 +252,9 @@ jobs:
     #     - name: Setup Node.js environment
     #       uses: actions/setup-node@v4
     #       with:
-    #         node-version: 18.14.0
+    #         node-version: 20.11.0
     #     - name: Restore yarn-app depdendencies
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: app/node_modules
     #         key: ${{ runner.os }}-yarn-app-${{ hashFiles('app/yarn.lock') }}
@@ -279,9 +279,9 @@ jobs:
     #     - name: Setup Node.js environment
     #       uses: actions/setup-node@v4
     #       with:
-    #         node-version: 18.14.0
+    #         node-version: 20.11.0
     #     - name: Restore yarn-server depdendencies
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: node_modules
     #         key: ${{ runner.os }}-yarn-server-${{ hashFiles('yarn.lock') }}
@@ -289,7 +289,7 @@ jobs:
     #           ${{ runner.os }}-yarn-server-
     #     - name: Restore Cypress binary
     #       id: cache-cypress-binary
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: ~/.cache/Cypress
     #         key: cypress-binary-${{ hashFiles('yarn.lock') }}
@@ -320,7 +320,7 @@ jobs:
     #         name: build-output
     #         path: build
     #     - name: Cache Docker layers
-    #       uses: actions/cache@v3
+    #       uses: actions/cache@v4
     #       with:
     #         path: /tmp/.buildx-cache
     #         key: ${{ runner.os }}-buildx-${{ github.sha }}
