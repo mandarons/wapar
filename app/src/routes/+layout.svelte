@@ -16,7 +16,7 @@
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<a href="https://github.com/mandarons" target="_blank">
-					<img src="/github.svg" alt="Github" class="w-12 h-12" />
+					<img data-testid="github.svg" src="/github.svg" alt="Github" class="w-12 h-12" />
 				</a>
 			</svelte:fragment>
 		</AppBar>
