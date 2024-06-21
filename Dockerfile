@@ -1,11 +1,11 @@
-FROM node:lts-alpine AS build
+FROM node:20.14.0-alpine3.20 AS build
 ENV NODE_ENV production
 WORKDIR /app
 COPY ./server/package.json .
 COPY ./server/yarn.lock .
 RUN yarn install --frozen-lockfile --prod
 
-FROM node:lts-alpine
+FROM node:20.14.0-alpine3.20
 RUN apk update && apk add --no-cache dumb-init curl
 ENV NODE_ENV production
 USER node
