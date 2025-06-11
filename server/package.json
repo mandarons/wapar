@@ -21,7 +21,7 @@
     "@nestjs/common": "^9.4.3",
     "@nestjs/config": "^2.3.4",
     "@nestjs/core": "^9.4.3",
-    "@nestjs/platform-express": "^10.4.14",
+    "@nestjs/platform-express": "^10.4.19",
     "@nestjs/platform-fastify": "^9.3.5",
     "@nestjs/sequelize": "^9.0.2",
     "@nestjs/schedule": "^2.2.3",
