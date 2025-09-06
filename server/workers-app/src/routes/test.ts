@@ -10,7 +10,7 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 8, delayMs = 120): P
       return await fn();
     } catch (err: any) {
       const msg = String(err?.message || '');
-      if (msg.includes('SQLITE_BUSY') || msg.includes('database is locked') || msg.includes('internal error')) {
+      if (msg.includes('SQLITE_BUSY') || msg.includes('database is locked') || msg.includes('internal error') || msg.includes('no such table')) {
         await new Promise((r) => setTimeout(r, delayMs));
         lastErr = err;
         continue;
@@ -21,10 +21,40 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 8, delayMs = 120): P
   throw lastErr;
 }
 
+async function ensureSchema(DB: D1Database) {
+  // Create tables/indexes if they don't exist
+  await DB.prepare(`CREATE TABLE IF NOT EXISTS Installation (
+    id TEXT PRIMARY KEY,
+    app_name TEXT NOT NULL,
+    app_version TEXT NOT NULL,
+    ip_address TEXT NOT NULL,
+    previous_id TEXT,
+    data TEXT,
+    country_code TEXT,
+    region TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );`).run();
+  await DB.prepare(`CREATE INDEX IF NOT EXISTS idx_installation_app_name ON Installation(app_name);`).run();
+  await DB.prepare(`CREATE INDEX IF NOT EXISTS idx_installation_country_code ON Installation(country_code);`).run();
+
+  await DB.prepare(`CREATE TABLE IF NOT EXISTS Heartbeat (
+    id TEXT PRIMARY KEY,
+    installation_id TEXT NOT NULL,
+    data TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (installation_id) REFERENCES Installation(id)
+  );`).run();
+  await DB.prepare(`CREATE INDEX IF NOT EXISTS idx_heartbeat_installation_id ON Heartbeat(installation_id);`).run();
+  await DB.prepare(`CREATE INDEX IF NOT EXISTS idx_heartbeat_created_at ON Heartbeat(created_at);`).run();
+}
+
 // Danger: test utilities. Do not expose in production environments without protection.
 
 testRoutes.post('/reset', async (c) => {
   try {
+    await ensureSchema(c.env.DB);
     // Perform sequential deletes with retry, without explicit SQL transactions
     await withRetry(async () => {
       await c.env.DB.prepare('DELETE FROM Heartbeat;').run();
