@@ -1,0 +1,33 @@
+name: workers-app CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'server/workers-app/**'
+      - '.github/workflows/ci-workers-tests.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'server/workers-app/**'
+      - '.github/workflows/ci-workers-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: server/workers-app
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Run tests
+        working-directory: server/workers-app
+        run: bun run test
