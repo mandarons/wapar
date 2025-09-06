@@ -1,7 +1,7 @@
 import { beforeAll, afterAll } from 'vitest';
-import { unstable_dev, UnstableDevWorker } from 'wrangler';
+import { unstable_dev, type Unstable_DevWorker } from 'wrangler';
 
-export let worker: UnstableDevWorker;
+export let worker: Unstable_DevWorker;
 
 function getRunnerUA(): string {
   return process.env.npm_config_user_agent || '';

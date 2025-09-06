@@ -9,8 +9,6 @@ export default defineConfig({
     testTimeout: 30000,
     // Make tests run serially to avoid D1 SQLITE_BUSY during local dev
     pool: 'threads',
-    minThreads: 1,
-    maxThreads: 1,
     fileParallelism: false,
     isolate: true,
   },
