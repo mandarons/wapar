@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { resetDb, d1QueryOne, getBase, waitForCount } from './utils';
+import { describe, it, expect } from 'vitest';
+import { d1QueryOne, getBase, waitForCount } from './utils';
 
 const ENDPOINT = '/api/heartbeat';
 const INSTALL_ENDPOINT = '/api/installation';
@@ -24,10 +24,6 @@ async function createInstallation(): Promise<string> {
 }
 
 describe(ENDPOINT, () => {
-  beforeEach(async () => {
-    await resetDb();
-  });
-
   it('POST should succeed and create one record', async () => {
     const base = getBase();
     const installationId = await createInstallation();

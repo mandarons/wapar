@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { resetDb, getBase } from './utils';
+import { describe, it, expect } from 'vitest';
+import { getBase, queryOne } from './utils';
 
 const ENDPOINT = '/api/installation';
 
@@ -12,10 +12,6 @@ function randomVersion() {
 }
 
 describe(ENDPOINT, () => {
-  beforeEach(async () => {
-    await resetDb();
-  });
-
   it('POST with valid data should succeed', async () => {
     const base = getBase();
     const res = await fetch(`${base}${ENDPOINT}`, {

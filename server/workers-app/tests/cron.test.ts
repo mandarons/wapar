@@ -1,15 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { resetDb, d1Exec, d1QueryOne, getBase } from './utils';
+import { describe, it, expect } from 'vitest';
+import { d1Exec, d1QueryOne, getBase } from './utils';
 
 function uuid() {
   return globalThis.crypto?.randomUUID?.() ?? '00000000-0000-4000-8000-000000000000';
 }
 
 describe('cron: enrich-ip', () => {
-  beforeEach(async () => {
-    await resetDb();
-  });
-
   it('enriches missing country_code and region for installations', async () => {
     // Seed 2 installations with distinct IPs and missing geo
     const id1 = uuid();

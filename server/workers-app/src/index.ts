@@ -3,6 +3,7 @@ import { installationRoutes } from './routes/installation';
 import { heartbeatRoutes } from './routes/heartbeat';
 import { usageRoutes } from './routes/usage';
 import { testRoutes } from './routes/test';
+import { handleValidationError, handleGenericError } from './utils/errors';
 
 type Bindings = { DB: D1Database; ENABLE_TEST_ROUTES?: string };
 
@@ -11,10 +12,10 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.onError((err, c) => {
   // Handle Zod errors as 400 Bad Request
   if ((err as any).name === 'ZodError') {
-    return c.json({ message: 'Validation error', issues: (err as any).issues ?? [] }, 400);
+    return handleValidationError(c, err);
   }
-  console.error('Unhandled error:', err);
-  return c.json({ message: 'Internal Server Error' }, 500);
+  
+  return handleGenericError(c, err);
 });
 
 app.get('/api', (c) => c.text('All good.'));
