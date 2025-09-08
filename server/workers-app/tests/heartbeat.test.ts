@@ -45,6 +45,119 @@ describe(ENDPOINT, () => {
     expect(Number(countRow?.count ?? 0)).toBe(1);
   });
 
+  it('POST with data field should store JSON data correctly', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    const testData = {
+      sessionId: 'session-123',
+      userAgent: 'Mozilla/5.0 (X11; Linux x86_64)',
+      performance: {
+        loadTime: 1234,
+        renderTime: 567
+      },
+      features: ['feature-a', 'feature-b']
+    };
+
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        installationId,
+        data: testData
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBe(installationId);
+
+    // Verify data was stored correctly in database
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${installationId}'`, 1);
+    const stored = await d1QueryOne<{ data: string }>(`SELECT data FROM Heartbeat WHERE installation_id = '${installationId}'`);
+    expect(stored?.data).toBeDefined();
+    const parsedData = JSON.parse(stored?.data ?? '');
+    expect(parsedData).toEqual(testData);
+  });
+
+  it('POST with null data field should store null', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        installationId,
+        data: null
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    
+    // Verify null data was stored correctly
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${installationId}'`, 1);
+    const stored = await d1QueryOne<{ data: string | null }>(`SELECT data FROM Heartbeat WHERE installation_id = '${installationId}'`);
+    expect(stored?.data).toBeNull();
+  });
+
+  it('POST without data field should store null', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ installationId })
+    });
+    
+    expect(res.status).toBe(201);
+    
+    // Verify null data was stored when not provided
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${installationId}'`, 1);
+    const stored = await d1QueryOne<{ data: string | null }>(`SELECT data FROM Heartbeat WHERE installation_id = '${installationId}'`);
+    expect(stored?.data).toBeNull();
+  });
+
+  it('POST with complex nested data should work', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    const complexData = {
+      session: {
+        id: 'sess_abc123',
+        startTime: '2024-01-01T10:00:00Z',
+        duration: 3600,
+        events: [
+          { type: 'click', target: 'button', timestamp: '2024-01-01T10:05:00Z' },
+          { type: 'scroll', position: 150, timestamp: '2024-01-01T10:06:00Z' }
+        ]
+      },
+      system: {
+        cpu: { usage: 45.2, cores: 8 },
+        memory: { used: '4.2GB', total: '16GB' },
+        network: { latency: 23, bandwidth: '100Mbps' }
+      },
+      errors: []
+    };
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        installationId,
+        data: complexData
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    
+    // Verify complex data was stored and can be retrieved correctly
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${installationId}'`, 1);
+    const stored = await d1QueryOne<{ data: string }>(`SELECT data FROM Heartbeat WHERE installation_id = '${installationId}'`);
+    expect(stored?.data).toBeDefined();
+    const parsedData = JSON.parse(stored?.data ?? '');
+    expect(parsedData).toEqual(complexData);
+  });
+
   it('POST twice in same day should not create duplicate record', async () => {
     const base = getBase();
     const installationId = await createInstallation();

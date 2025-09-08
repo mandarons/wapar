@@ -21,7 +21,7 @@ installationRoutes.post('/', async (c) => {
     body.appVersion,
     ipAddress,
     body.previousId ?? null,
-    null,
+    body.data ? JSON.stringify(body.data) : null,
     now,
     now,
   );
