@@ -23,6 +23,24 @@ export function getBase(): string {
   throw new Error('Worker is not ready (no address/port)');
 }
 
+async function initializeTestDatabase() {
+  // Initialize database schema by calling the reset endpoint
+  // This ensures tables exist before any tests run
+  const base = getBase();
+  const res = await fetch(`${base}/__test/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Database initialization failed: ${res.status} ${text}`);
+  }
+  const body = await res.json() as any;
+  if (!body?.ok) {
+    throw new Error(`Database initialization returned ok=false: ${JSON.stringify(body)}`);
+  }
+}
+
 export async function resetDb() {
   // Skip database reset entirely - let tests handle their own data isolation
   // This avoids any potential D1 locking or worker communication issues
@@ -92,6 +110,9 @@ beforeAll(async () => {
   // Ensure the dev server is fully ready before tests run
   // @ts-ignore - ready is available on UnstableDevWorker in wrangler v4
   await (worker as any).ready;
+  
+  // Initialize database schema for all tests
+  await initializeTestDatabase();
 }, 60000); // Increase timeout for worker startup
 
 afterAll(async () => {

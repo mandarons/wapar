@@ -23,15 +23,15 @@ usageRoutes.get('/', async (c) => {
       .where(gte(heartbeats.createdAt, since));
     const monthlyActive = monthlyActiveResult[0]?.count ?? 0;
 
-    // Country counts - use alias and proper ordering
+    // Country counts - fix ORDER BY to reference the count function
     const countryToCount = await db.select({
       country_code: installations.countryCode,
-      count: count().as('count_alias')
+      count: count()
     })
       .from(installations)
       .where(isNotNull(installations.countryCode))
       .groupBy(installations.countryCode)
-      .orderBy(desc('count_alias'));
+      .orderBy(desc(count()));
 
     // App-specific counts
     const getAppCount = async (appName: string) => {
