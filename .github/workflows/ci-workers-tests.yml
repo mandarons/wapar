@@ -28,6 +28,10 @@ jobs:
         working-directory: server/workers-app
         run: bun install --frozen-lockfile || bun install
 
+      - name: Generate Drizzle migrations
+        working-directory: server/workers-app
+        run: bun run db:generate
+
       - name: Run tests
         working-directory: server/workers-app
         run: bun run test
