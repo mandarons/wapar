@@ -16,6 +16,9 @@ port = 8787
 [vars]
 # Default to disabled in production; enable in dev via [dev].vars
 ENABLE_TEST_ROUTES = "0"
+# Drizzle configuration for production
+DRIZZLE_LOG = "false"
 
 [env.dev.vars]
 ENABLE_TEST_ROUTES = "1"
+DRIZZLE_LOG = "true"

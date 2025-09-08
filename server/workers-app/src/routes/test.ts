@@ -1,5 +1,8 @@
 import { Hono } from 'hono';
 import { scheduled } from '../jobs/enrich-ip';
+import { getDb } from '../db/client';
+import { installations, heartbeats } from '../db/schema';
+import { sql } from 'drizzle-orm';
 
 export const testRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -70,13 +73,15 @@ async function ensureSchema(DB: D1Database) {
 
 testRoutes.post('/reset', async (c) => {
   try {
-    // Use DELETE instead of DROP to avoid schema recreation issues
+    const db = getDb(c.env);
+    
+    // Use Drizzle to delete all data
     await withRetry(async () => {
-      await c.env.DB.prepare('DELETE FROM Heartbeat;').run();
+      await db.delete(heartbeats);
     });
     
     await withRetry(async () => {
-      await c.env.DB.prepare('DELETE FROM Installation;').run();
+      await db.delete(installations);
     });
     
     // Ensure schema exists (in case this is first run)
@@ -91,9 +96,9 @@ testRoutes.post('/reset', async (c) => {
 
 testRoutes.post('/exec', async (c) => {
   try {
-    const { sql, params = [] } = await c.req.json<{ sql: string; params?: unknown[] }>();
+    const { sql: sqlQuery, params = [] } = await c.req.json<{ sql: string; params?: unknown[] }>();
     await withRetry(async () => {
-      await c.env.DB.prepare(sql).bind(...params).run();
+      await c.env.DB.prepare(sqlQuery).bind(...params).run();
     });
     return c.json({ ok: true });
   } catch (err) {
@@ -103,9 +108,9 @@ testRoutes.post('/exec', async (c) => {
 
 testRoutes.post('/queryOne', async (c) => {
   try {
-    const { sql, params = [] } = await c.req.json<{ sql: string; params?: unknown[] }>();
+    const { sql: sqlQuery, params = [] } = await c.req.json<{ sql: string; params?: unknown[] }>();
     const row = await withRetry(async () => {
-      return (await c.env.DB.prepare(sql).bind(...params).first()) as any;
+      return (await c.env.DB.prepare(sqlQuery).bind(...params).first()) as any;
     });
     return c.json({ ok: true, data: row ?? null });
   } catch (err) {

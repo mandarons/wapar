@@ -1,37 +1,62 @@
 import { Hono } from 'hono';
-import { queryOne, queryAll } from '../db/client';
+import { getDb } from '../db/client';
+import { installations, heartbeats } from '../db/schema';
+import { count, countDistinct, eq, isNotNull, gte, desc } from 'drizzle-orm';
+import { handleGenericError } from '../utils/errors';
 
 export const usageRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
 usageRoutes.get('/', async (c) => {
-  const now = new Date().toUTCString();
+  try {
+    const now = new Date().toUTCString();
+    const db = getDb(c.env);
 
-  const totalInstallations = await queryOne<{ count: number }>(
-    c.env,
-    'SELECT COUNT(1) as count FROM Installation',
-  );
+    // Total installations count
+    const totalInstallationsResult = await db.select({ count: count() })
+      .from(installations);
+    const totalInstallations = totalInstallationsResult[0]?.count ?? 0;
 
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const monthlyActive = await queryOne<{ count: number }>(
-    c.env,
-    'SELECT COUNT(DISTINCT installation_id) as count FROM Heartbeat WHERE created_at >= ?',
-    since,
-  );
+    // Monthly active installations (last 30 days)
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const monthlyActiveResult = await db.select({ count: countDistinct(heartbeats.installationId) })
+      .from(heartbeats)
+      .where(gte(heartbeats.createdAt, since));
+    const monthlyActive = monthlyActiveResult[0]?.count ?? 0;
 
-  const countryToCount = await queryAll<{ country_code: string; count: number }>(
-    c.env,
-    'SELECT country_code, COUNT(1) as count FROM Installation WHERE country_code IS NOT NULL GROUP BY country_code ORDER BY count DESC',
-  );
+    // Country counts - use alias and proper ordering
+    const countryToCount = await db.select({
+      country_code: installations.countryCode,
+      count: count().as('count_alias')
+    })
+      .from(installations)
+      .where(isNotNull(installations.countryCode))
+      .groupBy(installations.countryCode)
+      .orderBy(desc('count_alias'));
 
-  const countByApp = async (name: string) =>
-    (await queryOne<{ count: number }>(c.env, 'SELECT COUNT(1) as count FROM Installation WHERE app_name = ?', name))?.count ?? 0;
+    // App-specific counts
+    const getAppCount = async (appName: string) => {
+      const result = await db.select({ count: count() })
+        .from(installations)
+        .where(eq(installations.appName, appName));
+      return result[0]?.count ?? 0;
+    };
 
-  return c.json({
-    totalInstallations: totalInstallations?.count ?? 0,
-    monthlyActive: monthlyActive?.count ?? 0,
-    createdAt: now,
-    countryToCount: countryToCount.map((r) => ({ countryCode: r.country_code, count: Number(r.count) })),
-    iCloudDocker: { total: await countByApp('icloud-drive-docker') },
-    haBouncie: { total: await countByApp('ha-bouncie') },
-  });
+    const iCloudDockerTotal = await getAppCount('icloud-drive-docker');
+    const haBouncieTotal = await getAppCount('ha-bouncie');
+
+    return c.json({
+      totalInstallations,
+      monthlyActive,
+      createdAt: now,
+      countryToCount: countryToCount.map((r) => ({ 
+        countryCode: r.country_code, 
+        count: Number(r.count) 
+      })),
+      iCloudDocker: { total: iCloudDockerTotal },
+      haBouncie: { total: haBouncieTotal },
+    });
+  } catch (error) {
+    console.error('Usage route error:', error);
+    return handleGenericError(c, error as Error);
+  }
 });

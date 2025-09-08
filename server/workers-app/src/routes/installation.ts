@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { InstallationSchema } from '../utils/validation';
-import { execute } from '../db/client';
+import { getDb } from '../db/client';
+import { installations, type NewInstallation } from '../db/schema';
 import { handleValidationError, handleGenericError } from '../utils/errors';
 
 export const installationRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
@@ -10,23 +11,23 @@ installationRoutes.post('/', async (c) => {
     const json = await c.req.json();
     const body = InstallationSchema.parse(json);
 
+    const db = getDb(c.env);
     const id = crypto.randomUUID();
     const ipAddress = c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || '0.0.0.0';
     const now = new Date().toISOString();
 
-    await execute(
-      c.env,
-      `INSERT INTO Installation (id, app_name, app_version, ip_address, previous_id, data, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    const newInstallation: NewInstallation = {
       id,
-      body.appName,
-      body.appVersion,
+      appName: body.appName,
+      appVersion: body.appVersion,
       ipAddress,
-      body.previousId ?? null,
-      body.data ? JSON.stringify(body.data) : null,
-      now,
-      now,
-    );
+      previousId: body.previousId ?? null,
+      data: body.data ? JSON.stringify(body.data) : null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await db.insert(installations).values(newInstallation);
 
     return c.json({ id }, 201);
   } catch (error) {
