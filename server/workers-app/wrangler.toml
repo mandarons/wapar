@@ -1,0 +1,24 @@
+name = "wapar-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[triggers]
+crons = ["0 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wapar-db"
+database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40"
+
+[dev]
+port = 8787
+
+[vars]
+# Default to disabled in production; enable in dev via [dev].vars
+ENABLE_TEST_ROUTES = "0"
+# Drizzle configuration for production
+DRIZZLE_LOG = "false"
+
+[env.dev.vars]
+ENABLE_TEST_ROUTES = "1"
+DRIZZLE_LOG = "true"
