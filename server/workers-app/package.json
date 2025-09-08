@@ -1,0 +1,27 @@
+{
+  "name": "workers-app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "npm run db:deploy && wrangler deploy",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:deploy": "wrangler d1 execute wapar-db --file=./drizzle/0000_ambiguous_callisto.sql",
+    "db:push": "drizzle-kit push",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.5",
+    "hono": "^4.9.6",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250906.0",
+    "drizzle-kit": "^0.31.4",
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.9",
+    "wrangler": "^4.34.0"
+  }
+}
