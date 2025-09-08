@@ -73,9 +73,12 @@ async function ensureSchema(DB: D1Database) {
 
 testRoutes.post('/reset', async (c) => {
   try {
+    // Ensure schema exists FIRST (in case this is first run)
+    await ensureSchema(c.env.DB);
+    
     const db = getDb(c.env);
     
-    // Use Drizzle to delete all data
+    // Use Drizzle to delete all data (now that tables exist)
     await withRetry(async () => {
       await db.delete(heartbeats);
     });
@@ -83,9 +86,6 @@ testRoutes.post('/reset', async (c) => {
     await withRetry(async () => {
       await db.delete(installations);
     });
-    
-    // Ensure schema exists (in case this is first run)
-    await ensureSchema(c.env.DB);
     
     return c.json({ ok: true });
   } catch (err) {
