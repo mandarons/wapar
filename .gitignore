@@ -107,3 +107,5 @@ build/
 builds/
 cache/
 allure-report/
+.history/
+server/workers-app/.wrangler/
