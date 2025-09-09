@@ -10,13 +10,23 @@ export const scheduled: ExportedHandlerScheduledHandler = async (event, env) => 
   const ips = [...new Set(missing.map((m) => m.ip_address).filter(Boolean))];
   if (ips.length === 0) return;
 
-  const res = await fetch('http://ip-api.com/batch?fields=countryCode,region,query', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(ips),
-  });
-  if (!res.ok) return;
-  const data = await res.json() as Array<{ query: string; countryCode: string; region: string }>;
+  let data: Array<{ query: string; countryCode: string; region: string }>;
+  
+  // Check if we have test batch data
+  const testBatchData = (env as any).__TEST_BATCH_DATA;
+  if (testBatchData) {
+    // Use mock data for testing
+    data = testBatchData;
+  } else {
+    // Make real API call for production
+    const res = await fetch('http://ip-api.com/batch?fields=countryCode,region,query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ips),
+    });
+    if (!res.ok) return;
+    data = await res.json() as Array<{ query: string; countryCode: string; region: string }>;
+  }
 
   const map = new Map(data.map((d) => [d.query, { countryCode: d.countryCode, region: d.region }]));
 

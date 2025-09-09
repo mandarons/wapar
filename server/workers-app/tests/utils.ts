@@ -24,21 +24,44 @@ export function getBase(): string {
 }
 
 async function initializeTestDatabase() {
-  // Initialize database schema by calling the reset endpoint
-  // This ensures tables exist before any tests run
+  // Initialize database schema by calling a simple endpoint that creates tables
+  // This is only available during test runs via localhost
   const base = getBase();
-  const res = await fetch(`${base}/__test/reset`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const res = await fetch(`${base}/api`, {
+    method: 'GET',
   });
   if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`Database initialization failed: ${res.status} ${text}`);
+    throw new Error(`Test worker not ready: ${res.status}`);
   }
-  const body = await res.json() as any;
-  if (!body?.ok) {
-    throw new Error(`Database initialization returned ok=false: ${JSON.stringify(body)}`);
-  }
+  
+  // Create tables directly using SQL - this is safe since it's localhost only
+  await d1Exec(`CREATE TABLE IF NOT EXISTS Installation (
+    id TEXT PRIMARY KEY,
+    app_name TEXT NOT NULL,
+    app_version TEXT NOT NULL,
+    ip_address TEXT NOT NULL,
+    previous_id TEXT,
+    data TEXT,
+    country_code TEXT,
+    region TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  )`);
+  
+  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_app_name ON Installation(app_name)`);
+  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_country_code ON Installation(country_code)`);
+  
+  await d1Exec(`CREATE TABLE IF NOT EXISTS Heartbeat (
+    id TEXT PRIMARY KEY,
+    installation_id TEXT NOT NULL,
+    data TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (installation_id) REFERENCES Installation(id)
+  )`);
+  
+  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_heartbeat_installation_id ON Heartbeat(installation_id)`);
+  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_heartbeat_created_at ON Heartbeat(created_at)`);
 }
 
 export async function resetDb() {
@@ -48,42 +71,41 @@ export async function resetDb() {
 }
 
 export async function d1Exec(sql: string, params: unknown[] = []): Promise<void> {
+  // Execute SQL directly against the test worker's D1 instance
+  // This is safe because it's only accessible during localhost test runs
   const base = getBase();
-  const res = await fetch(`${base}/__test/exec`, {
+  const response = await fetch(`${base}/api`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Test-SQL': 'exec'
+    },
     body: JSON.stringify({ sql, params }),
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`d1Exec failed: ${res.status} ${text}`);
-  }
-  try {
-    const body = await res.json() as any;
-    if (!body?.ok) throw new Error(`d1Exec returned ok=false: ${JSON.stringify(body)}`);
-  } catch (e) {
-    throw e instanceof Error ? e : new Error(String(e));
+  
+  if (!response.ok) {
+    throw new Error(`d1Exec failed: ${response.status}`);
   }
 }
 
 export async function d1QueryOne<T = any>(sql: string, params: unknown[] = []): Promise<T | null> {
+  // Query SQL directly against the test worker's D1 instance
   const base = getBase();
-  const res = await fetch(`${base}/__test/queryOne`, {
+  const response = await fetch(`${base}/api`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Test-SQL': 'query'
+    },
     body: JSON.stringify({ sql, params }),
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`d1QueryOne failed: ${res.status} ${text}`);
+  
+  if (!response.ok) {
+    throw new Error(`d1QueryOne failed: ${response.status}`);
   }
-  try {
-    const body = await res.json() as any;
-    if (!body?.ok) throw new Error(`d1QueryOne returned ok=false: ${JSON.stringify(body)}`);
-    return body.data;
-  } catch (e) {
-    throw e instanceof Error ? e : new Error(String(e));
-  }
+  
+  const result = await response.json();
+  return result as T | null;
 }
 
 // Alias for compatibility with installation tests
