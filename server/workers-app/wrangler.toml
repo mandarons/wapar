@@ -1,4 +1,4 @@
-name = "wapar-api"
+name = "wapar"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
@@ -16,6 +16,9 @@ port = 8787
 [vars]
 # Drizzle configuration for production
 DRIZZLE_LOG = "false"
+
+[env.dev]
+d1_databases = [ { binding = "DB", database_name = "wapar-db", database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40" } ]
 
 [env.dev.vars]
 DRIZZLE_LOG = "true"

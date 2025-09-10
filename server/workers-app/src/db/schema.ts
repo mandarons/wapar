@@ -1,5 +1,5 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+import { sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
 
 export const installations = sqliteTable('Installation', {
   id: text('id').primaryKey(),
@@ -12,10 +12,7 @@ export const installations = sqliteTable('Installation', {
   region: text('region'),
   createdAt: text('created_at').default(sql`(datetime('now'))`).notNull(),
   updatedAt: text('updated_at').default(sql`(datetime('now'))`).notNull(),
-}, (table) => ({
-  appNameIdx: index('idx_installation_app_name').on(table.appName),
-  countryCodeIdx: index('idx_installation_country_code').on(table.countryCode),
-}));
+});
 
 export const heartbeats = sqliteTable('Heartbeat', {
   id: text('id').primaryKey(),
@@ -23,10 +20,13 @@ export const heartbeats = sqliteTable('Heartbeat', {
   data: text('data'),
   createdAt: text('created_at').default(sql`(datetime('now'))`).notNull(),
   updatedAt: text('updated_at').default(sql`(datetime('now'))`).notNull(),
-}, (table) => ({
-  installationIdIdx: index('idx_heartbeat_installation_id').on(table.installationId),
-  createdAtIdx: index('idx_heartbeat_created_at').on(table.createdAt),
-}));
+});
+
+// Define indexes separately
+export const installationAppNameIdx = index('idx_installation_app_name').on(installations.appName);
+export const installationCountryCodeIdx = index('idx_installation_country_code').on(installations.countryCode);
+export const heartbeatInstallationIdIdx = index('idx_heartbeat_installation_id').on(heartbeats.installationId);
+export const heartbeatCreatedAtIdx = index('idx_heartbeat_created_at').on(heartbeats.createdAt);
 
 export type Installation = typeof installations.$inferSelect;
 export type NewInstallation = typeof installations.$inferInsert;

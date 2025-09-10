@@ -21,6 +21,9 @@ app.onError((err, c) => {
 // Main API endpoint with test SQL support for localhost
 app.get('/api', (c) => c.text('All good.'));
 
+// Root endpoint
+app.get('/', (c) => c.text('Hello World!'));
+
 app.post('/api', async (c) => {
   const host = new URL(c.req.url).hostname;
   const isLocalhost = host === '127.0.0.1' || host === 'localhost';
@@ -62,10 +65,10 @@ app.post('/__test/run-scheduled', async (c) => {
   
   try {
     const body = await c.req.json();
-    const mockEvent = {
+    const mockEvent: ScheduledController = {
       cron: '0 * * * *',
-      type: 'scheduled' as const,
-      scheduledTime: Date.now()
+      scheduledTime: Date.now(),
+      noRetry: () => {} 
     };
     
     // Pass mock batch data through environment for testing
@@ -74,7 +77,11 @@ app.post('/__test/run-scheduled', async (c) => {
       __TEST_BATCH_DATA: body.batch
     };
     
-    await scheduled(mockEvent, testEnv, { waitUntil: () => {}, passThroughOnException: () => {} });
+    await scheduled(mockEvent, testEnv, { 
+      waitUntil: () => {}, 
+      passThroughOnException: () => {},
+      props: {} // Required property for ExecutionContext
+    });
     return c.json({ ok: true });
   } catch (error) {
     return c.json({ error: String(error) }, 500);

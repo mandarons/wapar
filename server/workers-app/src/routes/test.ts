@@ -2,7 +2,6 @@ import { Hono } from 'hono';
 import { scheduled } from '../jobs/enrich-ip';
 import { getDb } from '../db/client';
 import { installations, heartbeats } from '../db/schema';
-import { sql } from 'drizzle-orm';
 
 export const testRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 

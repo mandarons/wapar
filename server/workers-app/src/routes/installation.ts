@@ -7,8 +7,11 @@ import { handleValidationError, handleGenericError } from '../utils/errors';
 const installationSchema = z.object({
   appName: z.string().min(1),
   appVersion: z.string().min(1),
+  ipAddress: z.string().optional(),
   previousId: z.string().optional(),
   data: z.string().optional(),
+  countryCode: z.string().optional(),
+  region: z.string().optional(),
 });
 
 export const installationRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
@@ -21,7 +24,7 @@ installationRoutes.post('/', async (c) => {
     const db = getDb(c.env);
     const installationId = crypto.randomUUID();
     const now = new Date().toISOString();
-    const ipAddress = c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || '0.0.0.0';
+    const ipAddress = validatedData.ipAddress || c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || '0.0.0.0';
     
     const newInstallation: NewInstallation = {
       id: installationId,
@@ -30,6 +33,8 @@ installationRoutes.post('/', async (c) => {
       ipAddress,
       previousId: validatedData.previousId || null,
       data: validatedData.data || null,
+      countryCode: validatedData.countryCode || null,
+      region: validatedData.region || null,
       createdAt: now,
       updatedAt: now,
     };
