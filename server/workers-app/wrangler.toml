@@ -22,3 +22,6 @@ d1_databases = [ { binding = "DB", database_name = "wapar-db", database_id = "15
 
 [env.dev.vars]
 DRIZZLE_LOG = "true"
+
+[observability.logs]
+enabled = true
