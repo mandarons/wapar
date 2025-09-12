@@ -93,3 +93,4 @@ app.route('/api/heartbeat', heartbeatRoutes);
 app.route('/api/usage', usageRoutes);
 
 export default app;
+export { scheduled };
