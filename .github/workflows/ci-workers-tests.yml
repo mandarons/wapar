@@ -4,17 +4,21 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'server/workers-app/**'
+      - 'cf-server/**'
       - '.github/workflows/ci-workers-tests.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'server/workers-app/**'
+      - 'cf-server/**'
       - '.github/workflows/ci-workers-tests.yml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cf-server
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,13 +29,10 @@ jobs:
           bun-version: latest
 
       - name: Install dependencies
-        working-directory: server/workers-app
         run: bun install --frozen-lockfile || bun install
 
       - name: Generate Drizzle migrations
-        working-directory: server/workers-app
         run: bun run db:generate
 
       - name: Run tests
-        working-directory: server/workers-app
         run: bun run test

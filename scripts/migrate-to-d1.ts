@@ -78,7 +78,7 @@ class DatabaseMigrator {
       password: process.env.POSTGRES_PASSWORD || 'wapar-user',
     });
 
-    this.workersAppPath = path.join(__dirname, '../server/workers-app');
+    this.workersAppPath = path.join(__dirname, '../cf-server');
     this.options = options;
     this.tempQueryFile = path.join(this.workersAppPath, 'temp-query.sql');
   }
