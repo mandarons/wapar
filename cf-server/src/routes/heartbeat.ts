@@ -12,7 +12,42 @@ heartbeatRoutes.post('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
   try {
-    const json = await c.req.json();
+    // Get raw body text first for debugging
+    const rawBody = await c.req.text();
+    
+    // Log raw body for debugging (truncated for security)
+    Logger.info('Heartbeat request received', {
+      operation: 'heartbeat.request',
+      metadata: { 
+        bodyLength: rawBody.length,
+        bodyPreview: rawBody.substring(0, 100),
+        contentType: c.req.header('content-type')
+      },
+      ...requestContext
+    });
+
+    // Try to parse JSON
+    let json;
+    try {
+      json = JSON.parse(rawBody);
+    } catch (parseError) {
+      Logger.error('JSON parsing failed', {
+        operation: 'heartbeat.json_parse',
+        error: parseError as Error,
+        metadata: { 
+          bodyLength: rawBody.length,
+          bodyPreview: rawBody.substring(0, 200),
+          contentType: c.req.header('content-type')
+        },
+        ...requestContext
+      });
+      return c.json({ 
+        message: 'Invalid JSON in request body', 
+        statusCode: 400,
+        details: (parseError as Error).message
+      }, 400);
+    }
+
     const body = HeartbeatSchema.parse(json);
 
     const db = getDb(c.env);

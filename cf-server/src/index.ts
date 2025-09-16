@@ -13,6 +13,24 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.onError((err, c) => {
   const requestContext = Logger.getRequestContext(c);
   
+  // Handle JSON parsing errors specifically
+  if (err instanceof SyntaxError && err.message.includes('JSON')) {
+    Logger.error('Global JSON parsing error caught', {
+      operation: 'app.json_parse_error',
+      error: err,
+      metadata: { 
+        errorMessage: err.message,
+        contentType: c.req.header('content-type')
+      },
+      ...requestContext
+    });
+    return c.json({ 
+      message: 'Invalid JSON in request body', 
+      statusCode: 400,
+      details: err.message
+    }, 400);
+  }
+  
   // Handle Zod errors as 400 Bad Request
   if ((err as any).name === 'ZodError') {
     Logger.error('Global validation error caught', {

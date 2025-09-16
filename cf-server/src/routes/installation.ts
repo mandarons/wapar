@@ -21,7 +21,42 @@ installationRoutes.post('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
   try {
-    const body = await c.req.json();
+    // Get raw body text first for debugging
+    const rawBody = await c.req.text();
+    
+    // Log raw body for debugging (truncated for security)
+    Logger.info('Installation request received', {
+      operation: 'installation.request',
+      metadata: { 
+        bodyLength: rawBody.length,
+        bodyPreview: rawBody.substring(0, 100),
+        contentType: c.req.header('content-type')
+      },
+      ...requestContext
+    });
+
+    // Try to parse JSON
+    let body;
+    try {
+      body = JSON.parse(rawBody);
+    } catch (parseError) {
+      Logger.error('JSON parsing failed', {
+        operation: 'installation.json_parse',
+        error: parseError as Error,
+        metadata: { 
+          bodyLength: rawBody.length,
+          bodyPreview: rawBody.substring(0, 200),
+          contentType: c.req.header('content-type')
+        },
+        ...requestContext
+      });
+      return c.json({ 
+        message: 'Invalid JSON in request body', 
+        statusCode: 400,
+        details: (parseError as Error).message
+      }, 400);
+    }
+
     const validatedData = installationSchema.parse(body);
     
     const db = getDb(c.env);
