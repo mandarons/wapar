@@ -3,9 +3,7 @@
   "version": "0.1.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "docker:local": "yarn --cwd server build && docker build --tag wapar ."
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mandarons/wapar.git"

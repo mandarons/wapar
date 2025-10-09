@@ -4,7 +4,7 @@ Quick start:
 
 1. Install deps
 ```bash
-cd server/workers-app
+cd server
 bun install
 ```
 
