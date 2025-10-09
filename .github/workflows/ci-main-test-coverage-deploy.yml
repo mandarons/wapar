@@ -1,4 +1,6 @@
 name: CI - Main
+permissions:
+  contents: read
 
 on:
     push:
