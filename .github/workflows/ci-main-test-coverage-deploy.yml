@@ -10,30 +10,26 @@ on:
     workflow_dispatch:
 jobs:
     cache-server-install:
-        container:
-            image: mandarons/node-lts
-            options: >-
-                --user=root
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
               uses: actions/checkout@v4
-            - name: Set up Node.js environment
-              uses: actions/setup-node@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
               with:
-                  node-version: 20.11.0
-            - name: Cache yarn dependencies
+                  bun-version: latest
+            - name: Cache bun dependencies
               uses: actions/cache@v4
               id: cache-dependencies
               with:
                   path: server/node_modules
-                  key: ${{ runner.os }}-yarn-server-${{ hashFiles('server/yarn.lock') }}
+                  key: ${{ runner.os }}-bun-server-${{ hashFiles('server/bun.lockb') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-server-
+                      ${{ runner.os }}-bun-server-
             - name: Install Dependencies
-              if: steps.cache-dependencies.outputs.cache-hit != 'true' || steps.cache-cypress-binary.outputs.cache-hit != 'true'
+              if: steps.cache-dependencies.outputs.cache-hit != 'true'
               run: |
-                  yarn install --cwd server --frozen-lockfile
+                  cd server && bun install --frozen-lockfile
 
     cache-app-install:
         runs-on: ubuntu-latest
@@ -58,7 +54,7 @@ jobs:
                   cd app && bun install --frozen-lockfile
 
     build:
-        needs: [cache-app-install]
+        needs: [cache-app-install, test-server]
         runs-on: ubuntu-latest
         steps:
             - name: Check Out Repo
@@ -86,49 +82,29 @@ jobs:
             #     path: build
             #     retention-days: 1
 
-    test:
-        container:
-            image: mandarons/node-lts
-            options: >-
-                --user=root
-        services:
-            postgres:
-                image: postgres:15-alpine
-                env:
-                    POSTGRES_DB: wapardev
-                    POSTGRES_USER: waparuser
-                    POSTGRES_PASSWORD: wapar-user
-                    POSTGRES_HOST_AUTH_METHOD: trust
-                options: >-
-                    --health-cmd pg_isready
-                    --health-interval 10s
-                    --health-timeout 5s
-                    --health-retries 5
+    test-server:
         needs: cache-server-install
         runs-on: ubuntu-latest
         steps:
             - name: Checkout source code
               uses: actions/checkout@v4
-            - name: Setup Node.js environment
-              uses: actions/setup-node@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
               with:
-                  node-version: 20.11.0
-            - name: Restore yarn-server depdendencies
+                  bun-version: latest
+            - name: Restore bun-server dependencies
               uses: actions/cache@v4
               with:
                   path: server/node_modules
-                  key: ${{ runner.os }}-yarn-server-${{ hashFiles('server/yarn.lock') }}
+                  key: ${{ runner.os }}-bun-server-${{ hashFiles('server/bun.lockb') }}
                   restore-keys: |
-                      ${{ runner.os }}-yarn-server-
-            # - name: Setup tmate session
-            #   uses: mxschmitt/action-tmate@v3
-            - name: initialize DB
+                      ${{ runner.os }}-bun-server-
+            - name: Generate Drizzle migrations
               run: |
-                  PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS pgcrypto" && 
-                  PGPASSWORD=wapar-user psql -h "postgres" -U waparuser -d wapardev -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""
+                  cd server && bun run db:generate
             - name: Run server Tests
               run: |
-                  yarn --cwd server test:ci
+                  cd server && bun run test --run
             # - name: Upload coverage artifacts
             #   uses: actions/upload-artifact@v3
             #   with:
