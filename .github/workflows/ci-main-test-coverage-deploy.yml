@@ -6,7 +6,6 @@ on:
         paths:
             - 'app/**'
             - 'server/**'
-            - 'Dockerfile'
             - '.github/workflows/**'
     workflow_dispatch:
 jobs:
@@ -41,25 +40,22 @@ jobs:
         steps:
             - name: Checkout source code
               uses: actions/checkout@v4
-            - name: Set up Node.js environment
-              uses: actions/setup-node@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
               with:
-                  node-version: 20.11.0
-            - uses: pnpm/action-setup@v2
-              with:
-                  version: 8
-            - name: Cache pnpm dependencies
+                  bun-version: latest
+            - name: Cache bun dependencies
               uses: actions/cache@v4
               id: cache-dependencies
               with:
                   path: app/node_modules
-                  key: ${{ runner.os }}-pnpm-app-${{ hashFiles('app/pnpm-lock.yaml') }}
+                  key: ${{ runner.os }}-bun-app-${{ hashFiles('app/bun.lockb') }}
                   restore-keys: |
-                      ${{ runner.os }}-pnpm-app-
+                      ${{ runner.os }}-bun-app-
             - name: Install Dependencies
               if: steps.cache-dependencies.outputs.cache-hit != 'true'
               run: |
-                  pnpm install --prefix app --frozen-lockfile
+                  cd app && bun install --frozen-lockfile
 
     build:
         needs: [cache-app-install]
@@ -67,23 +63,20 @@ jobs:
         steps:
             - name: Check Out Repo
               uses: actions/checkout@v4
-            - name: Setup Node.js environment
-              uses: actions/setup-node@v4
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
               with:
-                  node-version: 20.11.0
-            - uses: pnpm/action-setup@v2
-              with:
-                  version: 8
-            - name: Restore pnpm-app depdendencies
+                  bun-version: latest
+            - name: Restore bun-app dependencies
               uses: actions/cache@v4
               with:
                   path: app/node_modules
-                  key: ${{ runner.os }}-pnpm-app-${{ hashFiles('app/pnpm-lock.yaml') }}
+                  key: ${{ runner.os }}-bun-app-${{ hashFiles('app/bun.lockb') }}
                   restore-keys: |
-                      ${{ runner.os }}-pnpm-app-
+                      ${{ runner.os }}-bun-app-
             - name: Build
               run: |
-                  pnpm --prefix app build
+                  cd app && bun run build
               env:
                   PUBLIC_URL: '.'
             # - name: Upload build artifacts

@@ -4,13 +4,13 @@
 
 This is a **serverless application analytics platform** migrated from Node.js/PostgreSQL to Cloudflare Workers/D1. Three main components:
 
-- **`cf-server/`**: Hono-based Cloudflare Workers API backend with D1 database
+- **`server/`**: Hono-based Cloudflare Workers API backend with D1 database
 - **`app/`**: SvelteKit frontend with geographic visualization  
 - **`scripts/`**: PostgreSQL→D1 migration utilities
 
 ## Key Development Workflows
 
-### Workers Backend (`cf-server/`)
+### Workers Backend (`server/`)
 ```bash
 # Initial D1 database setup (required before first run)
 bunx wrangler d1 execute wapar-db --file=./schema.sql
@@ -28,10 +28,10 @@ bun run deploy  # Runs db:deploy + wrangler deploy
 ```
 
 ### Frontend (`app/`)
-Uses **pnpm** (not npm/yarn):
+Uses **bun** (not npm/yarn/pnpm):
 ```bash
-pnpm dev     # SvelteKit dev server
-pnpm build   # Build for Cloudflare Pages
+bun dev     # SvelteKit dev server
+bun build   # Build for Cloudflare Pages
 ```
 
 ## Testing Patterns (Non-Standard)
@@ -52,7 +52,7 @@ const result = await fetch(`${base}/api/installation`, {...});
 
 ## Data Patterns
 
-### Database Schema (`cf-server/src/db/schema.ts`)
+### Database Schema (`server/src/db/schema.ts`)
 - **Text primary keys** (UUIDs), not auto-increment
 - **Separate index definitions** from table schema
 - **ISO string timestamps** stored as TEXT in SQLite
@@ -75,9 +75,9 @@ Uses `svgmap` library in `+page.svelte` for installation mapping.
 
 ## Key Files for Patterns
 
-- `cf-server/src/index.ts` - Hono app setup, global error handling
-- `cf-server/tests/utils.ts` - In-process testing utilities  
-- `cf-server/src/db/schema.ts` - Drizzle schema with separate indexes
+- `server/src/index.ts` - Hono app setup, global error handling
+- `server/tests/utils.ts` - In-process testing utilities  
+- `server/src/db/schema.ts` - Drizzle schema with separate indexes
 - `app/src/routes/+page.server.ts` - Multi-source data fetching
 - `scripts/migrate-to-d1.ts` - PostgreSQL migration patterns
 

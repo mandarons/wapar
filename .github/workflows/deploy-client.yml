@@ -9,42 +9,42 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: Set up Node.js environment
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 18.14.0
-      - name: Cache yarn dependencies
-        uses: actions/cache@v3
+          bun-version: latest
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
         id: cache-dependencies
         with:
-          path: web/node_modules
-          key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('web/yarn.lock') }}
+          path: app/node_modules
+          key: ${{ runner.os }}-bun-app-client-${{ hashFiles('app/bun.lockb') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-web-client-
+            ${{ runner.os }}-bun-app-client-
       - name: Install Dependencies
         if: steps.cache-dependencies.outputs.cache-hit != 'true'
         run: |
-          yarn install --cwd web --frozen-lockfile
+          cd app && bun install --frozen-lockfile
   build-and-deploy:
     needs: [cache-dependencies]
     runs-on: ubuntu-latest
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v4
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 18.14.0
-      - name: Restore yarn-web-client depdendencies
-        uses: actions/cache@v3
+          bun-version: latest
+      - name: Restore bun-app-client dependencies
+        uses: actions/cache@v4
         with:
-          path: web/node_modules
-          key: ${{ runner.os }}-yarn-web-client-${{ hashFiles('web/yarn.lock') }}
+          path: app/node_modules
+          key: ${{ runner.os }}-bun-app-client-${{ hashFiles('app/bun.lockb') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-web-client-
+            ${{ runner.os }}-bun-app-client-
       - name: Build
         run: |
-          yarn --cwd web build
+          cd app && bun run build
         env:
           PUBLIC_URL: "."
       - name: Publish
@@ -52,4 +52,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy --project-name=wapar web/out
+          command: pages deploy --project-name=wapar app/.svelte-kit/output/client
