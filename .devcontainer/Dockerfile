@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/javascript-node:0-18
+FROM mcr.microsoft.com/devcontainers/typescript-node:22-bookworm
 
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
@@ -22,6 +22,5 @@ RUN \
     rm allure-commandline-2.20.1.zip
 
 ENV PATH "/allure/allure-2.20.1/bin:${PATH}"
-RUN npm i -g @nestjs/cli
 USER node
 RUN npx playwright install --with-deps

@@ -2,27 +2,37 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
 {
 	"name": "Wapar",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "app",
+	"context": ".",
+	"dockerFile": "Dockerfile",
+	// "dockerComposeFile": "docker-compose.yml",
+	// "service": "app",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "features": {
-  "ghcr.io/devcontainers/features/github-cli:1": {}
-  },
-	"extensions": [
-		"visualstudioexptteam.vscodeintellicode",
-		"redhat.vscode-yaml",
-		"esbenp.prettier-vscode",
-		"GitHub.vscode-pull-request-github",
-		"hbenl.vscode-mocha-test-adapter",
-		"bradlc.vscode-tailwindcss",
-		"mhutchie.git-graph",
-		"ms-playwright.playwright"
-	],
+	"features": {
+  		"ghcr.io/devcontainers/features/github-cli:1": {},
+  		"ghcr.io/devcontainer-community/devcontainer-features/bun.sh:1": {},
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "lts"
+		}
+  	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"visualstudioexptteam.vscodeintellicode",
+				"redhat.vscode-yaml",
+				"esbenp.prettier-vscode",
+				"GitHub.vscode-pull-request-github",
+				"hbenl.vscode-mocha-test-adapter",
+				"bradlc.vscode-tailwindcss",
+				"mhutchie.git-graph",
+				"ms-playwright.playwright"
+			]
+		}
+	},
 	"mounts": [
 		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg,type=bind,consistency=cached",
 		"source=/usr/local/share/ca-certificates,target=/usr/local/share/ca-certificates,type=bind,consistency=cached"
 	],
-	"postCreateCommand": "sudo update-ca-certificates"
+	"postCreateCommand": "sudo update-ca-certificates && bun install -g wrangler"
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
