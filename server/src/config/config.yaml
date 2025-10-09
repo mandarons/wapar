@@ -1,9 +1,0 @@
-server:
-  port: 3000
-  refreshDemographicsInterval: '0 0 24 * * *' #every 24 hours
-database:
-  host: postgres
-  port: 5432
-  name: wapardev
-  username: waparuser
-  password: wapar-user
