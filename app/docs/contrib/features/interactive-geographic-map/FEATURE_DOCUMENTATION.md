@@ -7,6 +7,7 @@ This enhancement adds interactive geographic intelligence to the Wapar analytics
 ## User Experience
 
 ### Desktop Layout
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Application Installations                     │
@@ -30,6 +31,7 @@ This enhancement adds interactive geographic intelligence to the Wapar analytics
 ```
 
 ### Mobile Layout
+
 ```
 ┌─────────────────────────────────────┐
 │   Application Installations         │
@@ -52,6 +54,7 @@ This enhancement adds interactive geographic intelligence to the Wapar analytics
 ```
 
 ### Country Detail Modal
+
 ```
 ┌─────────────────────────────────────┐
 │  United States (US)              ✕  │
@@ -70,18 +73,21 @@ This enhancement adds interactive geographic intelligence to the Wapar analytics
 ## Interactions
 
 ### 1. Click Country on Map
+
 1. User clicks any colored country on the map
 2. Country receives visual highlight (green stroke)
 3. Modal appears with detailed country statistics
 4. Previous highlights are cleared
 
 ### 2. Click Country in Sidebar
+
 1. User clicks a country button in the Top 10 list
 2. Map scrolls/pans to that country (if needed)
 3. Country receives visual highlight on map
 4. Modal appears with detailed statistics
 
 ### 3. Hover Effects
+
 - **Map countries**: Subtle brightness increase + green stroke preview
 - **Sidebar buttons**: Background color change, smooth transition
 - **All interactions**: Pointer cursor indicates clickability
@@ -89,6 +95,7 @@ This enhancement adds interactive geographic intelligence to the Wapar analytics
 ## Statistics Displayed
 
 ### Per-Country Modal
+
 1. **Total Installations**
    - Raw count of installations from that country
    - Formatted with thousand separators (1,234)
@@ -113,6 +120,7 @@ This enhancement adds interactive geographic intelligence to the Wapar analytics
    - Shows "X of Y" format
 
 ### Top 10 Sidebar
+
 - Rank (1-10)
 - Country code (ISO 2-letter)
 - Installation count (formatted)
@@ -121,19 +129,20 @@ This enhancement adds interactive geographic intelligence to the Wapar analytics
 ## Technical Details
 
 ### Component Structure
+
 ```svelte
 <script>
   // Reactive calculations
   $: sortedCountries = [...data].sort()
   $: top10Countries = sortedCountries.slice(0, 10)
-  
+
   // Event handlers
   function handleCountryClick(code) { ... }
   function highlightCountryOnMap(code) { ... }
   function showCountryDetails(code) { ... }
-  
+
   // svgmap initialization with callback
-  mapObj = new svgMap({ 
+  mapObj = new svgMap({
     ...,
     callback: handleCountryClick
   })
@@ -155,32 +164,35 @@ This enhancement adds interactive geographic intelligence to the Wapar analytics
 ```
 
 ### CSS Enhancements
+
 ```css
 .country-highlighted {
-  stroke: #0FBA81 !important;      /* Primary green */
-  stroke-width: 2 !important;
-  filter: brightness(1.2);
+	stroke: #0fba81 !important; /* Primary green */
+	stroke-width: 2 !important;
+	filter: brightness(1.2);
 }
 
 .svgMap-country {
-  cursor: pointer;
-  transition: all 0.2s ease;
+	cursor: pointer;
+	transition: all 0.2s ease;
 }
 
 .svgMap-country:hover {
-  filter: brightness(1.1);
-  stroke: #0FBA81;
-  stroke-width: 1.5;
+	filter: brightness(1.1);
+	stroke: #0fba81;
+	stroke-width: 1.5;
 }
 ```
 
 ### Responsive Breakpoints
+
 - **Mobile** (`< lg`): Stacked vertical layout, sidebar below map
 - **Desktop** (`≥ lg`): Side-by-side layout, 25/75 split
 
 ## Data Requirements
 
 ### Input Data Structure
+
 ```typescript
 {
   totalInstallations: number,
@@ -194,17 +206,20 @@ This enhancement adds interactive geographic intelligence to the Wapar analytics
 ```
 
 ### Supported Country Codes
+
 Currently mapped: US, GB, DE, FR, CA, AU, NL, SE, NO, DK, FI, BE, CH, AT, ES, IT, PL, RU, BR, IN, CN, JP, KR, SG, NZ, IE, PT, GR, CZ, RO, HU
 
 Additional codes display as-is (e.g., "JP" instead of "Japan").
 
 ## Browser Support
+
 - Modern browsers with ES6+ support
 - Svelte 4 compatible browsers
 - CSS Grid and Flexbox support required
 - Touch events for mobile devices
 
 ## Accessibility
+
 - Keyboard navigable (sidebar buttons)
 - Semantic HTML (buttons, headings)
 - Screen reader friendly labels
@@ -212,6 +227,7 @@ Additional codes display as-is (e.g., "JP" instead of "Japan").
 - Modal dismissible via close button
 
 ## Performance
+
 - Reactive calculations cached by Svelte
 - DOM queries scoped to map region
 - CSS transitions hardware-accelerated
@@ -219,13 +235,16 @@ Additional codes display as-is (e.g., "JP" instead of "Japan").
 - No external API calls on interaction
 
 ## Testing
+
 Playwright e2e tests cover:
+
 - Top 10 sidebar visibility
 - Interactive map presence
 - Country item rendering
 - Existing functionality preservation
 
 ## Future Enhancements
+
 1. **Historical Data**: Show growth trends if API provides historical data
 2. **Filters**: Filter by region, app type, or engagement threshold
 3. **Export**: Download country statistics as CSV/JSON
@@ -235,6 +254,7 @@ Playwright e2e tests cover:
 7. **Analytics**: Track which countries users click most
 
 ## Integration Notes
+
 - Uses existing Skeleton UI theme and components
 - No new dependencies added
 - Works with existing API endpoint structure
