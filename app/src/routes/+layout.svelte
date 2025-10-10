@@ -1,6 +1,8 @@
 <script lang="ts">
 	import '../app.postcss';
-	import { AppShell, AppBar } from '@skeletonlabs/skeleton';
+	import { AppShell, AppBar, Modal, initializeStores } from '@skeletonlabs/skeleton';
+
+	initializeStores();
 </script>
 
 <!-- App Shell -->
@@ -24,3 +26,5 @@
 	<!-- Page Route Content -->
 	<slot />
 </AppShell>
+
+<Modal />
