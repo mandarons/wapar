@@ -3,6 +3,7 @@
 ## For Developers
 
 ### Main Implementation File
+
 **Location:** `app/src/routes/+page.svelte`
 
 ### Key Functions
@@ -14,21 +15,21 @@ $: top10Countries = sortedCountries.slice(0, 10);
 
 // Handle country click from map
 function handleCountryClick(countryCode: string) {
-  showCountryDetails(countryCode);
+	showCountryDetails(countryCode);
 }
 
 // Handle country click from sidebar
 function highlightCountryOnMap(countryCode: string) {
-  const svgElement = document.querySelector(`[data-id="${countryCode}"]`);
-  // Remove previous highlights
-  // Add new highlight
-  // Show modal
+	const svgElement = document.querySelector(`[data-id="${countryCode}"]`);
+	// Remove previous highlights
+	// Add new highlight
+	// Show modal
 }
 
 // Display country statistics modal
 function showCountryDetails(countryCode: string) {
-  // Calculate stats
-  // Trigger Skeleton modal
+	// Calculate stats
+	// Trigger Skeleton modal
 }
 ```
 
@@ -36,10 +37,10 @@ function showCountryDetails(countryCode: string) {
 
 ```typescript
 const modal: ModalSettings = {
-  type: 'alert',
-  title: `${countryName} (${countryCode})`,
-  body: `<div class="space-y-3">...</div>`,
-  buttonTextCancel: 'Close'
+	type: 'alert',
+	title: `${countryName} (${countryCode})`,
+	body: `<div class="space-y-3">...</div>`,
+	buttonTextCancel: 'Close'
 };
 modalStore.trigger(modal);
 ```
@@ -49,22 +50,22 @@ modalStore.trigger(modal);
 ```css
 /* Highlighted country */
 .country-highlighted {
-  stroke: #0FBA81 !important;
-  stroke-width: 2 !important;
-  filter: brightness(1.2);
+	stroke: #0fba81 !important;
+	stroke-width: 2 !important;
+	filter: brightness(1.2);
 }
 
 /* All map countries */
 .svgMap-country {
-  cursor: pointer;
-  transition: all 0.2s ease;
+	cursor: pointer;
+	transition: all 0.2s ease;
 }
 
 /* Hover effect */
 .svgMap-country:hover {
-  filter: brightness(1.1);
-  stroke: #0FBA81;
-  stroke-width: 1.5;
+	filter: brightness(1.1);
+	stroke: #0fba81;
+	stroke-width: 1.5;
 }
 ```
 
@@ -123,14 +124,15 @@ top10Countries: Array<{ countryCode: string, count: number }>
 ### Test Data Requirements
 
 Minimum viable data:
+
 ```json
 {
-  "totalInstallations": 100,
-  "monthlyActive": 50,
-  "countryToCount": [
-    { "countryCode": "US", "count": 50 },
-    { "countryCode": "GB", "count": 30 }
-  ]
+	"totalInstallations": 100,
+	"monthlyActive": 50,
+	"countryToCount": [
+		{ "countryCode": "US", "count": 50 },
+		{ "countryCode": "GB", "count": 30 }
+	]
 }
 ```
 
@@ -142,6 +144,7 @@ npm run test:e2e
 ```
 
 Tests verify:
+
 - ✓ Top 10 sidebar is visible
 - ✓ Interactive map element present
 - ✓ Country items render correctly
@@ -195,6 +198,7 @@ Tests verify:
 ### Metrics Available
 
 Per Country:
+
 - Total installations (count)
 - Global percentage (%)
 - Monthly active users (estimated)
@@ -202,12 +206,14 @@ Per Country:
 - Global ranking (#)
 
 Global:
+
 - Top 10 countries list
 - Geographic distribution (via map)
 
 ### Future Enhancements
 
 Not in current scope:
+
 - Historical growth trends
 - Country flags
 - Search/filter
@@ -237,6 +243,7 @@ npm run build    # Production build
 ### Deployment
 
 No special deployment steps. Feature is:
+
 - ✅ Backward compatible
 - ✅ No database changes
 - ✅ No API changes
@@ -272,6 +279,7 @@ A: Verify countryToCount array has data from API.
 ### Debug Mode
 
 Check browser console for:
+
 - Network errors (API calls)
 - JavaScript errors
 - Svelte warnings
@@ -279,6 +287,7 @@ Check browser console for:
 ### Browser Support
 
 Minimum requirements:
+
 - Chrome 90+
 - Firefox 88+
 - Safari 14+

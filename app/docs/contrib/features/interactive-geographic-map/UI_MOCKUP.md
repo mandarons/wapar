@@ -149,6 +149,7 @@
 ### Country Button (Top 10 List)
 
 **Default State:**
+
 ```
 ┌─────────────────────────┐
 │ #3  DE      150  (12.2%)│ ← Soft gray background
@@ -156,6 +157,7 @@
 ```
 
 **Hover State:**
+
 ```
 ┌─────────────────────────┐
 │ #3  DE      150  (12.2%)│ ← Primary green background
@@ -164,6 +166,7 @@
 ```
 
 **Active/Selected State:**
+
 ```
 ╔═════════════════════════╗
 ║ #3  DE      150  (12.2%)║ ← Filled primary green
@@ -173,12 +176,14 @@
 ### Map Country
 
 **Default State:**
+
 ```
 Country colored by installation count
 Light red to dark red gradient
 ```
 
 **Hover State:**
+
 ```
 Country brightened slightly
 Green stroke preview (1.5px)
@@ -186,6 +191,7 @@ Cursor: pointer
 ```
 
 **Selected State:**
+
 ```
 Bright green stroke (2px)
 Increased brightness (1.2x)
@@ -212,7 +218,7 @@ Max: #050000 (near black)
 
 ```
 Mobile:     < 640px   (sm)  - Stacked layout
-Tablet:     640-1024  (md)  - Stacked layout  
+Tablet:     640-1024  (md)  - Stacked layout
 Desktop:    ≥ 1024px  (lg)  - Side-by-side layout
 
 Layout Changes at 1024px:

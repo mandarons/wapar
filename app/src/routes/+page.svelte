@@ -278,4 +278,18 @@
 		stroke: #0fba81;
 		stroke-width: 1.5;
 	}
+
+	/* Fix modal background transparency */
+	:global(.modal) {
+		background-color: rgba(0, 0, 0, 0.8) !important;
+	}
+
+	:global(.modal-content) {
+		background-color: rgb(var(--color-surface-900)) !important;
+		border: 1px solid rgb(var(--color-surface-700)) !important;
+	}
+
+	:global(.modal .card) {
+		background-color: rgb(var(--color-surface-900)) !important;
+	}
 </style>
