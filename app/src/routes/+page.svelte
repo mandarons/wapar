@@ -279,17 +279,12 @@
 		stroke-width: 1.5;
 	}
 
-	/* Fix modal background transparency */
-	:global(.modal) {
-		background-color: rgba(0, 0, 0, 0.8) !important;
-	}
-
-	:global(.modal-content) {
-		background-color: rgb(var(--color-surface-900)) !important;
-		border: 1px solid rgb(var(--color-surface-700)) !important;
-	}
-
-	:global(.modal .card) {
-		background-color: rgb(var(--color-surface-900)) !important;
-	}
+	   /* Apple-style modal box: white with 10% transparency and rounded corners */
+	   :global(.modal-content), :global(.modal .card) {
+		   background: rgba(255, 255, 255, 0.9) !important; /* 10% transparency over white */
+		   border-radius: 24px !important; /* Apple-style rounded corners */
+		   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+		   border: none !important;
+		   backdrop-filter: blur(8px);
+	   }
 </style>
