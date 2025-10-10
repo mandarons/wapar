@@ -50,10 +50,10 @@ declare module 'svgmap' {
 		showZoomReset?: boolean;
 		callback?: (id: string, value: number, element: HTMLElement) => void;
 	}
-	
+
 	class svgMap {
 		constructor(options: SVGMapOptions);
 	}
-	
+
 	export default svgMap;
 }
