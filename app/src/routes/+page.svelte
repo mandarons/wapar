@@ -292,9 +292,9 @@
 		stroke-width: 1.5;
 	}
 
-	   /* Apple-style modal box: white with 10% transparency and rounded corners */
+	   /* Apple-style modal box: white with 90% opacity (10% transparency) and rounded corners */
 	   :global(.modal-content), :global(.modal .card) {
-		   background: rgba(255, 255, 255, 0.9) !important; /* 10% transparency over white */
+		   background: rgba(255, 255, 255, 0.9) !important; /* 90% opacity (10% transparency) over white */
 		   border-radius: 24px !important; /* Apple-style rounded corners */
 		   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
 		   border: none !important;
