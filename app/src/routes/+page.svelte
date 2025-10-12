@@ -103,6 +103,9 @@
 					</div>
 				</div>
 			`,
+			modalClasses:
+				'!bg-white !text-slate-900 rounded-3xl shadow-2xl border border-slate-200 px-6 py-6',
+			backdropClasses: '!bg-black/40 backdrop-blur-sm',
 			buttonTextCancel: 'Close'
 		};
 		modalStore.trigger(modal);
