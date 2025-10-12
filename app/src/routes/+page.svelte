@@ -13,8 +13,13 @@
 		haBouncie: { total: number };
 	};
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let mapObj: any = null;
+	// Minimal interface for svgmap object (add methods/properties as needed)
+	interface SvgMap {
+		// Add properties/methods as used in this file, e.g. destroy(), etc.
+		destroy?: () => void;
+		// Add more as needed
+	}
+	let mapObj: SvgMap | null = null;
 	const modalStore = getModalStore();
 
 	// Calculate top countries and statistics
