@@ -121,6 +121,11 @@
 	}
 
 	function highlightCountryOnMap(countryCode: string) {
+		// Validate countryCode to prevent CSS injection
+		if (!/^[A-Za-z0-9]{2,3}$/.test(countryCode)) {
+			console.warn('Invalid country code:', countryCode);
+			return;
+		}
 		// Find the SVG element for the country and add visual highlight
 		const svgElement = document.querySelector(`[data-id="${countryCode}"]`);
 		if (svgElement) {
