@@ -30,10 +30,9 @@ test('should display interactive map', async ({ page }) => {
 
 test('should have clickable country items in top 10 list', async ({ page }) => {
 	await page.goto('/');
-	// Wait for data to load
-	await page.waitForTimeout(1000);
-	// Check if at least one country item exists
+	// Wait for at least one country item to appear
 	const countryItems = page.locator('[data-testid^="country-item-"]');
+	await expect(countryItems.first()).toBeVisible();
 	const count = await countryItems.count();
 	expect(count).toBeGreaterThan(0);
 	expect(count).toBeLessThanOrEqual(10);
