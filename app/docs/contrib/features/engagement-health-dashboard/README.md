@@ -7,7 +7,7 @@ Visual dashboard showing app engagement health using monthly active vs total ins
 ## Health Indicators
 
 - 🟢 **Excellent** (>50%): High user engagement
-- 🟡 **Good** (25-50%): Moderate user engagement  
+- 🟡 **Good** (25-50%): Moderate user engagement
 - 🔴 **Needs Attention** (<25%): Low user engagement
 
 ## Preview
@@ -30,6 +30,7 @@ Engagement Ratio = (Monthly Active / Total Installations) × 100
 ## Testing
 
 5 comprehensive tests added covering:
+
 - Dashboard visibility
 - Health indicator display
 - Ratio calculation and format

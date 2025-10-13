@@ -7,22 +7,24 @@ The Engagement Health Dashboard provides a visual representation of application 
 ## Feature Description
 
 ### Purpose
+
 - Provide at-a-glance engagement health assessment
 - Help identify engagement trends and potential issues
 - Offer actionable insights through visual health indicators
 
 ### Calculation
+
 ```
 Engagement Ratio = (Monthly Active / Total Installations) × 100
 ```
 
 ### Health Indicators
 
-| Indicator | Ratio Range | Status | Description |
-|-----------|------------|--------|-------------|
-| 🟢 | >50% | Excellent | High user engagement |
-| 🟡 | 25-50% | Good | Moderate user engagement |
-| 🔴 | <25% | Needs Attention | Low user engagement |
+| Indicator | Ratio Range | Status          | Description              |
+| --------- | ----------- | --------------- | ------------------------ |
+| 🟢        | >50%        | Excellent       | High user engagement     |
+| 🟡        | 25-50%      | Good            | Moderate user engagement |
+| 🔴        | <25%        | Needs Attention | Low user engagement      |
 
 ## User Interface
 
@@ -59,28 +61,46 @@ Engagement Ratio = (Monthly Active / Total Installations) × 100
 ## Technical Implementation
 
 ### Files Modified
+
 - `app/src/routes/+page.svelte` - Main UI component
 - `app/tests/test.ts` - Test coverage
 
 ### Key Code Elements
 
 #### Reactive Calculations
-```typescript
-$: engagementRatio = data.totalInstallations > 0 
-  ? (data.monthlyActive / data.totalInstallations) * 100 
-  : 0;
 
-$: healthStatus = engagementRatio > 50 
-  ? { color: 'text-green-600', bgColor: 'bg-green-100', indicator: '🟢', 
-      label: 'Excellent', description: 'High user engagement' }
-  : engagementRatio >= 25 
-  ? { color: 'text-yellow-600', bgColor: 'bg-yellow-100', indicator: '🟡', 
-      label: 'Good', description: 'Moderate user engagement' }
-  : { color: 'text-red-600', bgColor: 'bg-red-100', indicator: '🔴', 
-      label: 'Needs Attention', description: 'Low user engagement' };
+```typescript
+$: engagementRatio =
+	data.totalInstallations > 0 ? (data.monthlyActive / data.totalInstallations) * 100 : 0;
+
+$: healthStatus =
+	engagementRatio > 50
+		? {
+				color: 'text-green-600',
+				bgColor: 'bg-green-100',
+				indicator: '🟢',
+				label: 'Excellent',
+				description: 'High user engagement'
+			}
+		: engagementRatio >= 25
+			? {
+					color: 'text-yellow-600',
+					bgColor: 'bg-yellow-100',
+					indicator: '🟡',
+					label: 'Good',
+					description: 'Moderate user engagement'
+				}
+			: {
+					color: 'text-red-600',
+					bgColor: 'bg-red-100',
+					indicator: '🔴',
+					label: 'Needs Attention',
+					description: 'Low user engagement'
+				};
 ```
 
 #### Test IDs
+
 - `engagement-health-dashboard` - Main dashboard container
 - `health-indicator` - Emoji indicator
 - `engagement-ratio` - Percentage display
@@ -91,6 +111,7 @@ $: healthStatus = engagementRatio > 50
 ## Test Coverage
 
 ### Test Scenarios
+
 1. Dashboard visibility test
 2. Health indicator emoji validation
 3. Engagement ratio format validation
@@ -98,6 +119,7 @@ $: healthStatus = engagementRatio > 50
 5. Breakdown metrics visibility
 
 ### Edge Cases Handled
+
 - Zero installations (prevents division by zero)
 - Boundary conditions (exactly 25%, exactly 50%)
 - Large numbers with thousand separators
@@ -105,16 +127,19 @@ $: healthStatus = engagementRatio > 50
 ## Design Decisions
 
 ### Color Scheme
+
 - **Green (Excellent)**: `text-green-600` / `bg-green-100`
 - **Yellow (Good)**: `text-yellow-600` / `bg-yellow-100`
 - **Red (Needs Attention)**: `text-red-600` / `bg-red-100`
 
 ### Layout
+
 - Centered design with max-width constraint
 - Responsive spacing using Tailwind utilities
 - Consistent with existing app design patterns
 
 ### Typography
+
 - Large, bold percentage for emphasis
 - Clear hierarchy with varying text sizes
 - Readable font weights
