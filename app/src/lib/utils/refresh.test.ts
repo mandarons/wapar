@@ -1,30 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-// Helper functions to test
-export function getRelativeTime(date: Date): string {
-	const now = new Date();
-	const diffMs = now.getTime() - date.getTime();
-	const diffMinutes = Math.floor(diffMs / 60000);
-	const diffHours = Math.floor(diffMs / 3600000);
-	const diffDays = Math.floor(diffMs / 86400000);
-
-	if (diffMinutes < 1) return 'just now';
-	if (diffMinutes === 1) return '1 minute ago';
-	if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
-	if (diffHours === 1) return '1 hour ago';
-	if (diffHours < 24) return `${diffHours} hours ago`;
-	if (diffDays === 1) return '1 day ago';
-	return `${diffDays} days ago`;
-}
-
-export function calculateDataFreshness(lastUpdated: Date): 'fresh' | 'moderate' | 'stale' {
-	const now = new Date();
-	const diffMinutes = Math.floor((now.getTime() - lastUpdated.getTime()) / 60000);
-
-	if (diffMinutes < 5) return 'fresh';
-	if (diffMinutes < 15) return 'moderate';
-	return 'stale';
-}
+import {
+	getRelativeTime,
+	calculateDataFreshness,
+	REFRESH_INTERVALS,
+	getFreshnessColor,
+	getFreshnessIndicator
+} from './refresh';
+import type { DataFreshness } from './refresh';
 
 describe('getRelativeTime', () => {
 	beforeEach(() => {
@@ -142,46 +124,42 @@ describe('calculateDataFreshness', () => {
 		const oneHourAgo = new Date(now.getTime() - 3600000);
 		expect(calculateDataFreshness(oneHourAgo)).toBe('stale');
 	});
+
+	it('returns valid DataFreshness type values', () => {
+		const now = new Date();
+		vi.setSystemTime(now);
+
+		const results: DataFreshness[] = [
+			calculateDataFreshness(new Date(now.getTime() - 1000)),
+			calculateDataFreshness(new Date(now.getTime() - 300000)),
+			calculateDataFreshness(new Date(now.getTime() - 900000))
+		];
+
+		results.forEach((result) => {
+			expect(['fresh', 'moderate', 'stale']).toContain(result);
+		});
+	});
 });
 
 describe('Refresh intervals', () => {
 	it('validates refresh interval values', () => {
-		const intervals = {
-			'5min': 300000,
-			'15min': 900000,
-			'30min': 1800000,
-			'1hour': 3600000
-		};
-
-		expect(intervals['5min']).toBe(5 * 60 * 1000);
-		expect(intervals['15min']).toBe(15 * 60 * 1000);
-		expect(intervals['30min']).toBe(30 * 60 * 1000);
-		expect(intervals['1hour']).toBe(60 * 60 * 1000);
+		expect(REFRESH_INTERVALS.FIVE_MIN).toBe(5 * 60 * 1000);
+		expect(REFRESH_INTERVALS.FIFTEEN_MIN).toBe(15 * 60 * 1000);
+		expect(REFRESH_INTERVALS.THIRTY_MIN).toBe(30 * 60 * 1000);
+		expect(REFRESH_INTERVALS.ONE_HOUR).toBe(60 * 60 * 1000);
 	});
 });
 
 describe('Data freshness indicator colors', () => {
 	it('maps freshness states to correct colors', () => {
-		const colorMap = {
-			fresh: 'text-green-600',
-			moderate: 'text-yellow-600',
-			stale: 'text-red-600'
-		};
-
-		expect(colorMap.fresh).toBe('text-green-600');
-		expect(colorMap.moderate).toBe('text-yellow-600');
-		expect(colorMap.stale).toBe('text-red-600');
+		expect(getFreshnessColor('fresh')).toBe('text-green-600');
+		expect(getFreshnessColor('moderate')).toBe('text-yellow-600');
+		expect(getFreshnessColor('stale')).toBe('text-red-600');
 	});
 
 	it('maps freshness states to correct emojis', () => {
-		const emojiMap = {
-			fresh: '🟢',
-			moderate: '🟡',
-			stale: '🔴'
-		};
-
-		expect(emojiMap.fresh).toBe('🟢');
-		expect(emojiMap.moderate).toBe('🟡');
-		expect(emojiMap.stale).toBe('🔴');
+		expect(getFreshnessIndicator('fresh')).toBe('🟢');
+		expect(getFreshnessIndicator('moderate')).toBe('🟡');
+		expect(getFreshnessIndicator('stale')).toBe('🔴');
 	});
 });
