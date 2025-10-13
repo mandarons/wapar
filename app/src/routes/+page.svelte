@@ -3,6 +3,14 @@
 	import 'svgmap/dist/svgMap.min.css';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
+	import {
+		getRelativeTime,
+		calculateDataFreshness,
+		getFreshnessColor,
+		getFreshnessIndicator,
+		REFRESH_INTERVALS,
+		type DataFreshness
+	} from '$lib/utils/refresh';
 
 	export let data: {
 		totalInstallations: number;
@@ -23,17 +31,19 @@
 	const modalStore = getModalStore();
 
 	// Auto-refresh state
-	let refreshInterval: number = 300000; // 5 minutes default
+	let refreshInterval: number = REFRESH_INTERVALS.FIVE_MIN;
 	let intervalId: number | null = null;
 	let lastUpdated: Date = new Date();
 	let isRefreshing = false;
 	let isTabVisible = true;
-	let dataFreshness: 'fresh' | 'moderate' | 'stale' = 'fresh';
+	let dataFreshness: DataFreshness = 'fresh';
+	let fetchError: string | null = null;
 
 	// Fetch data from API
 	async function fetchData() {
 		try {
 			isRefreshing = true;
+			fetchError = null;
 			const waparRes = await fetch('https://wapar-api.mandarons.com/api/usage');
 			const waparData = await waparRes.json();
 			const haRes = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
@@ -46,9 +56,10 @@
 			};
 
 			lastUpdated = new Date();
-			updateDataFreshness();
+			dataFreshness = calculateDataFreshness(lastUpdated);
 		} catch (error) {
 			console.error('Error fetching data:', error);
+			fetchError = 'Failed to refresh data. Please try again later.';
 		} finally {
 			isRefreshing = false;
 		}
@@ -56,38 +67,8 @@
 
 	// Manual refresh
 	async function handleManualRefresh() {
+		fetchError = null;
 		await fetchData();
-	}
-
-	// Update data freshness indicator
-	function updateDataFreshness() {
-		const now = new Date();
-		const diffMinutes = Math.floor((now.getTime() - lastUpdated.getTime()) / 60000);
-
-		if (diffMinutes < 5) {
-			dataFreshness = 'fresh';
-		} else if (diffMinutes < 15) {
-			dataFreshness = 'moderate';
-		} else {
-			dataFreshness = 'stale';
-		}
-	}
-
-	// Get relative time string
-	function getRelativeTime(date: Date): string {
-		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMinutes = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-
-		if (diffMinutes < 1) return 'just now';
-		if (diffMinutes === 1) return '1 minute ago';
-		if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
-		if (diffHours === 1) return '1 hour ago';
-		if (diffHours < 24) return `${diffHours} hours ago`;
-		if (diffDays === 1) return '1 day ago';
-		return `${diffDays} days ago`;
 	}
 
 	// Handle visibility change
@@ -96,7 +77,7 @@
 			isTabVisible = !document.hidden;
 			if (isTabVisible && intervalId) {
 				// Resume auto-refresh when tab becomes visible
-				updateDataFreshness();
+				dataFreshness = calculateDataFreshness(lastUpdated);
 			}
 		}
 	}
@@ -111,7 +92,7 @@
 			if (isTabVisible) {
 				fetchData();
 			}
-			updateDataFreshness();
+			dataFreshness = calculateDataFreshness(lastUpdated);
 		}, refreshInterval);
 	}
 
@@ -273,12 +254,11 @@
 		// Initialize auto-refresh
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		startAutoRefresh();
-		updateDataFreshness();
+		dataFreshness = calculateDataFreshness(lastUpdated);
 
-		// Update relative time display every 30 seconds
+		// Update relative time display and freshness every 30 seconds
 		relativeTimeIntervalId = window.setInterval(() => {
-			relativeTimeDisplay = getRelativeTime(lastUpdated);
-			updateDataFreshness();
+			dataFreshness = calculateDataFreshness(lastUpdated);
 		}, 30000);
 
 		// Initialize map
@@ -341,25 +321,20 @@
 		}
 	});
 
-	// Update relative time display periodically
-	let relativeTimeDisplay = '';
+	// Reactive values
 	$: relativeTimeDisplay = getRelativeTime(lastUpdated);
-
-	// Update freshness indicator color
-	$: freshnessColor =
-		dataFreshness === 'fresh'
-			? 'text-green-600'
-			: dataFreshness === 'moderate'
-				? 'text-yellow-600'
-				: 'text-red-600';
-
-	$: freshnessIndicator =
-		dataFreshness === 'fresh' ? '🟢' : dataFreshness === 'moderate' ? '🟡' : '🔴';
+	$: freshnessColor = getFreshnessColor(dataFreshness);
+	$: freshnessIndicator = getFreshnessIndicator(dataFreshness);
 </script>
 
 <!-- Auto-Refresh Controls -->
 <section class="body-font text-gray-600 border-b border-gray-200">
 	<div class="container mx-auto px-5 py-4">
+		{#if fetchError}
+			<div class="mb-3 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm">
+				⚠️ {fetchError}
+			</div>
+		{/if}
 		<div class="flex flex-col sm:flex-row justify-between items-center gap-4">
 			<!-- Data Freshness Indicator -->
 			<div class="flex items-center gap-2" data-testid="freshness-indicator">
@@ -382,10 +357,10 @@
 						on:change={() => handleIntervalChange(refreshInterval)}
 						class="btn variant-ghost-surface text-sm px-3 py-1 rounded border border-gray-300"
 					>
-						<option value={300000}>5 min</option>
-						<option value={900000}>15 min</option>
-						<option value={1800000}>30 min</option>
-						<option value={3600000}>1 hour</option>
+						<option value={REFRESH_INTERVALS.FIVE_MIN}>5 min</option>
+						<option value={REFRESH_INTERVALS.FIFTEEN_MIN}>15 min</option>
+						<option value={REFRESH_INTERVALS.THIRTY_MIN}>30 min</option>
+						<option value={REFRESH_INTERVALS.ONE_HOUR}>1 hour</option>
 					</select>
 				</div>
 
