@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import 'svgmap/dist/svgMap.min.css';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
@@ -21,6 +21,105 @@
 	}
 	let mapObj: SvgMap | null = null;
 	const modalStore = getModalStore();
+
+	// Auto-refresh state
+	let refreshInterval: number = 300000; // 5 minutes default
+	let intervalId: number | null = null;
+	let lastUpdated: Date = new Date();
+	let isRefreshing = false;
+	let isTabVisible = true;
+	let dataFreshness: 'fresh' | 'moderate' | 'stale' = 'fresh';
+
+	// Fetch data from API
+	async function fetchData() {
+		try {
+			isRefreshing = true;
+			const waparRes = await fetch('https://wapar-api.mandarons.com/api/usage');
+			const waparData = await waparRes.json();
+			const haRes = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
+			const haData = await haRes.json();
+
+			data = {
+				...waparData,
+				totalInstallations: haData.bouncie.total + waparData.iCloudDocker.total,
+				haBouncie: haData.bouncie
+			};
+
+			lastUpdated = new Date();
+			updateDataFreshness();
+		} catch (error) {
+			console.error('Error fetching data:', error);
+		} finally {
+			isRefreshing = false;
+		}
+	}
+
+	// Manual refresh
+	async function handleManualRefresh() {
+		await fetchData();
+	}
+
+	// Update data freshness indicator
+	function updateDataFreshness() {
+		const now = new Date();
+		const diffMinutes = Math.floor((now.getTime() - lastUpdated.getTime()) / 60000);
+
+		if (diffMinutes < 5) {
+			dataFreshness = 'fresh';
+		} else if (diffMinutes < 15) {
+			dataFreshness = 'moderate';
+		} else {
+			dataFreshness = 'stale';
+		}
+	}
+
+	// Get relative time string
+	function getRelativeTime(date: Date): string {
+		const now = new Date();
+		const diffMs = now.getTime() - date.getTime();
+		const diffMinutes = Math.floor(diffMs / 60000);
+		const diffHours = Math.floor(diffMs / 3600000);
+		const diffDays = Math.floor(diffMs / 86400000);
+
+		if (diffMinutes < 1) return 'just now';
+		if (diffMinutes === 1) return '1 minute ago';
+		if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+		if (diffHours === 1) return '1 hour ago';
+		if (diffHours < 24) return `${diffHours} hours ago`;
+		if (diffDays === 1) return '1 day ago';
+		return `${diffDays} days ago`;
+	}
+
+	// Handle visibility change
+	function handleVisibilityChange() {
+		if (typeof document !== 'undefined') {
+			isTabVisible = !document.hidden;
+			if (isTabVisible && intervalId) {
+				// Resume auto-refresh when tab becomes visible
+				updateDataFreshness();
+			}
+		}
+	}
+
+	// Start auto-refresh
+	function startAutoRefresh() {
+		if (intervalId) {
+			clearInterval(intervalId);
+		}
+
+		intervalId = window.setInterval(() => {
+			if (isTabVisible) {
+				fetchData();
+			}
+			updateDataFreshness();
+		}, refreshInterval);
+	}
+
+	// Handle interval change
+	function handleIntervalChange(newInterval: number) {
+		refreshInterval = newInterval;
+		startAutoRefresh();
+	}
 
 	// Calculate top countries and statistics
 	$: sortedCountries = [...data.countryToCount].sort((a, b) => b.count - a.count);
@@ -167,7 +266,22 @@
 		}
 	}
 
+	// Timer for updating relative time display
+	let relativeTimeIntervalId: number | null = null;
+
 	onMount(async () => {
+		// Initialize auto-refresh
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+		startAutoRefresh();
+		updateDataFreshness();
+
+		// Update relative time display every 30 seconds
+		relativeTimeIntervalId = window.setInterval(() => {
+			relativeTimeDisplay = getRelativeTime(lastUpdated);
+			updateDataFreshness();
+		}, 30000);
+
+		// Initialize map
 		if (!mapObj) {
 			const module = await import('svgmap');
 			const svgMap = module.default;
@@ -213,7 +327,89 @@
 			});
 		}
 	});
+
+	onDestroy(() => {
+		// Clean up auto-refresh
+		if (intervalId) {
+			clearInterval(intervalId);
+		}
+		if (relativeTimeIntervalId) {
+			clearInterval(relativeTimeIntervalId);
+		}
+		if (typeof document !== 'undefined') {
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+		}
+	});
+
+	// Update relative time display periodically
+	let relativeTimeDisplay = '';
+	$: relativeTimeDisplay = getRelativeTime(lastUpdated);
+
+	// Update freshness indicator color
+	$: freshnessColor =
+		dataFreshness === 'fresh'
+			? 'text-green-600'
+			: dataFreshness === 'moderate'
+				? 'text-yellow-600'
+				: 'text-red-600';
+
+	$: freshnessIndicator =
+		dataFreshness === 'fresh' ? '🟢' : dataFreshness === 'moderate' ? '🟡' : '🔴';
 </script>
+
+<!-- Auto-Refresh Controls -->
+<section class="body-font text-gray-600 border-b border-gray-200">
+	<div class="container mx-auto px-5 py-4">
+		<div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+			<!-- Data Freshness Indicator -->
+			<div class="flex items-center gap-2" data-testid="freshness-indicator">
+				<span class="text-2xl">{freshnessIndicator}</span>
+				<div class="text-sm">
+					<span class="font-medium {freshnessColor}">Last Updated:</span>
+					<span class="ml-1" data-testid="last-updated-time">{relativeTimeDisplay}</span>
+				</div>
+			</div>
+
+			<!-- Refresh Controls -->
+			<div class="flex items-center gap-4">
+				<!-- Interval Selector -->
+				<div class="flex items-center gap-2">
+					<label for="refresh-interval" class="text-sm font-medium">Auto-refresh:</label>
+					<select
+						id="refresh-interval"
+						data-testid="refresh-interval-selector"
+						bind:value={refreshInterval}
+						on:change={() => handleIntervalChange(refreshInterval)}
+						class="btn variant-ghost-surface text-sm px-3 py-1 rounded border border-gray-300"
+					>
+						<option value={300000}>5 min</option>
+						<option value={900000}>15 min</option>
+						<option value={1800000}>30 min</option>
+						<option value={3600000}>1 hour</option>
+					</select>
+				</div>
+
+				<!-- Manual Refresh Button -->
+				<button
+					data-testid="manual-refresh-button"
+					on:click={handleManualRefresh}
+					disabled={isRefreshing}
+					class="btn variant-filled-primary text-sm px-4 py-2 rounded {isRefreshing
+						? 'opacity-50 cursor-not-allowed'
+						: ''}"
+				>
+					{#if isRefreshing}
+						<span class="inline-block animate-spin mr-2">⟳</span>
+						Refreshing...
+					{:else}
+						<span class="mr-2">🔄</span>
+						Refresh Now
+					{/if}
+				</button>
+			</div>
+		</div>
+	</div>
+</section>
 
 <section class="body-font text-gray-600">
 	<div class="container mx-auto px-5 py-5">
