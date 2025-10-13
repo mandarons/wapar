@@ -26,6 +26,34 @@
 	$: sortedCountries = [...data.countryToCount].sort((a, b) => b.count - a.count);
 	$: top10Countries = sortedCountries.slice(0, 10);
 
+	// Calculate engagement health metrics
+	$: engagementRatio =
+		data.totalInstallations > 0 ? (data.monthlyActive / data.totalInstallations) * 100 : 0;
+	$: healthStatus =
+		engagementRatio > 50
+			? {
+					color: 'text-green-600',
+					bgColor: 'bg-green-100',
+					indicator: '🟢',
+					label: 'Excellent',
+					description: 'High user engagement'
+				}
+			: engagementRatio >= 25
+				? {
+						color: 'text-yellow-600',
+						bgColor: 'bg-yellow-100',
+						indicator: '🟡',
+						label: 'Good',
+						description: 'Moderate user engagement'
+					}
+				: {
+						color: 'text-red-600',
+						bgColor: 'bg-red-100',
+						indicator: '🔴',
+						label: 'Needs Attention',
+						description: 'Low user engagement'
+					};
+
 	// Get country name from country code (using basic mapping for common codes)
 	function getCountryName(code: string): string {
 		const countryNames: { [key: string]: string } = {
@@ -226,6 +254,71 @@
 	</div>
 </section>
 
+<!-- Engagement Health Dashboard -->
+<section class="body-font text-gray-600">
+	<div class="container mx-auto px-5 py-5">
+		<div class="mb-5 flex w-full flex-col text-center">
+			<h2 class="title-font mb-2 text-xl font-medium text-gray-900 sm:text-2xl">
+				Engagement Health
+			</h2>
+			<p class="text-sm text-gray-600">Monthly active vs total installations</p>
+		</div>
+		<div class="flex justify-center">
+			<div class="w-full max-w-2xl">
+				<div
+					class="card p-6 {healthStatus.bgColor} rounded-lg shadow-md"
+					data-testid="engagement-health-dashboard"
+				>
+					<div class="flex flex-col items-center space-y-4">
+						<!-- Health Indicator -->
+						<div class="text-6xl" data-testid="health-indicator">
+							{healthStatus.indicator}
+						</div>
+
+						<!-- Engagement Ratio -->
+						<div class="text-center">
+							<div class="{healthStatus.color} text-5xl font-bold" data-testid="engagement-ratio">
+								{engagementRatio.toFixed(1)}%
+							</div>
+							<p class="text-lg font-medium {healthStatus.color} mt-2" data-testid="health-status">
+								{healthStatus.label}
+							</p>
+							<p class="text-sm text-gray-700 mt-1">
+								{healthStatus.description}
+							</p>
+						</div>
+
+						<!-- Breakdown -->
+						<div class="w-full border-t border-gray-300 pt-4 mt-4">
+							<div class="flex justify-around text-center">
+								<div>
+									<div
+										class="text-2xl font-semibold text-gray-900"
+										data-testid="monthly-active-count"
+									>
+										{data.monthlyActive.toLocaleString()}
+									</div>
+									<p class="text-xs text-gray-600">Monthly Active</p>
+								</div>
+								<div class="text-3xl text-gray-400">÷</div>
+								<div>
+									<div
+										class="text-2xl font-semibold text-gray-900"
+										data-testid="total-installations-count"
+									>
+										{data.totalInstallations.toLocaleString()}
+									</div>
+									<p class="text-xs text-gray-600">Total Installations</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
 <!-- Map and Top Countries Section -->
 <div class="container mx-auto px-5 pb-20">
 	<div class="flex flex-col lg:flex-row gap-6 items-start">
@@ -292,12 +385,13 @@
 		stroke-width: 1.5;
 	}
 
-	   /* Apple-style modal box: white with 90% opacity (10% transparency) and rounded corners */
-	   :global(.modal-content), :global(.modal .card) {
-		   background: rgba(255, 255, 255, 0.9) !important; /* 90% opacity (10% transparency) over white */
-		   border-radius: 24px !important; /* Apple-style rounded corners */
-		   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-		   border: none !important;
-		   backdrop-filter: blur(8px);
-	   }
+	/* Apple-style modal box: white with 90% opacity (10% transparency) and rounded corners */
+	:global(.modal-content),
+	:global(.modal .card) {
+		background: rgba(255, 255, 255, 0.9) !important; /* 90% opacity (10% transparency) over white */
+		border-radius: 24px !important; /* Apple-style rounded corners */
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+		border: none !important;
+		backdrop-filter: blur(8px);
+	}
 </style>
