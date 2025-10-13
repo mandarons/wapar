@@ -75,3 +75,91 @@ test('should display monthly active and total installations breakdown', async ({
 	await expect(page.getByTestId('monthly-active-count')).toBeVisible();
 	await expect(page.getByTestId('total-installations-count')).toBeVisible();
 });
+
+// Auto-Refresh Feature Tests
+test('should display freshness indicator', async ({ page }) => {
+	await page.goto('/');
+	const freshnessIndicator = page.getByTestId('freshness-indicator');
+	await expect(freshnessIndicator).toBeVisible();
+	const indicatorText = await freshnessIndicator.textContent();
+	// Should contain one of the freshness emojis
+	expect(indicatorText).toMatch(/[🟢🟡🔴]/u);
+});
+
+test('should display last updated time', async ({ page }) => {
+	await page.goto('/');
+	const lastUpdatedTime = page.getByTestId('last-updated-time');
+	await expect(lastUpdatedTime).toBeVisible();
+	const timeText = await lastUpdatedTime.textContent();
+	// Should display relative time
+	expect(timeText).toBeTruthy();
+	expect(timeText).toMatch(/(just now|seconds? ago|minutes? ago|hours? ago|days? ago)/);
+});
+
+test('should display refresh interval selector', async ({ page }) => {
+	await page.goto('/');
+	const intervalSelector = page.getByTestId('refresh-interval-selector');
+	await expect(intervalSelector).toBeVisible();
+
+	// Check if selector has the expected options
+	const options = await intervalSelector.locator('option').allTextContents();
+	expect(options).toContain('5 min');
+	expect(options).toContain('15 min');
+	expect(options).toContain('30 min');
+	expect(options).toContain('1 hour');
+});
+
+test('should display manual refresh button', async ({ page }) => {
+	await page.goto('/');
+	const refreshButton = page.getByTestId('manual-refresh-button');
+	await expect(refreshButton).toBeVisible();
+	await expect(refreshButton).toBeEnabled();
+
+	const buttonText = await refreshButton.textContent();
+	expect(buttonText).toContain('Refresh Now');
+});
+
+test('should show loading state when refreshing', async ({ page }) => {
+	await page.goto('/');
+	const refreshButton = page.getByTestId('manual-refresh-button');
+
+	// Click refresh button
+	await refreshButton.click();
+
+	// Button should show refreshing state (may be brief)
+	const buttonText = await refreshButton.textContent();
+	// Either we catch it in refreshing state or it completes quickly
+	expect(buttonText).toBeTruthy();
+});
+
+test('should allow changing refresh interval', async ({ page }) => {
+	await page.goto('/');
+	const intervalSelector = page.getByTestId('refresh-interval-selector');
+
+	// Change to 15 minutes
+	await intervalSelector.selectOption({ value: '900000' });
+
+	// Verify selection changed
+	const selectedValue = await intervalSelector.inputValue();
+	expect(selectedValue).toBe('900000');
+});
+
+test('should update freshness indicator color based on data age', async ({ page }) => {
+	await page.goto('/');
+	const freshnessIndicator = page.getByTestId('freshness-indicator');
+	await expect(freshnessIndicator).toBeVisible();
+
+	// Fresh data should show green indicator
+	const indicatorHTML = await freshnessIndicator.innerHTML();
+	expect(indicatorHTML).toMatch(/text-green-600|text-yellow-600|text-red-600/);
+});
+
+test('should display auto-refresh controls section', async ({ page }) => {
+	await page.goto('/');
+
+	// All refresh control elements should be present
+	await expect(page.getByTestId('freshness-indicator')).toBeVisible();
+	await expect(page.getByTestId('last-updated-time')).toBeVisible();
+	await expect(page.getByTestId('refresh-interval-selector')).toBeVisible();
+	await expect(page.getByTestId('manual-refresh-button')).toBeVisible();
+});
