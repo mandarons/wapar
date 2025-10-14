@@ -257,8 +257,12 @@ test('should display trend chart or empty state', async ({ page }) => {
 	const chart = page.getByTestId('trend-chart');
 	const emptyState = page.getByTestId('trend-chart-empty');
 	
-	const chartVisible = await chart.isVisible().catch(() => false);
-	const emptyVisible = await emptyState.isVisible().catch(() => false);
+	// Check if elements exist first
+	const chartCount = await chart.count();
+	const emptyStateCount = await emptyState.count();
+	
+	const chartVisible = chartCount > 0 && await chart.isVisible();
+	const emptyVisible = emptyStateCount > 0 && await emptyState.isVisible();
 	
 	expect(chartVisible || emptyVisible).toBe(true);
 });
@@ -332,10 +336,9 @@ test('should have clear data button', async ({ page }) => {
 test('should show confirmation dialog when clearing data', async ({ page }) => {
 	await page.goto('/');
 	
-	// Wait for the page to load
-	await page.waitForLoadState('networkidle');
-	
+	// Wait for the clear button to be ready (client-side only, no network)
 	const clearBtn = page.getByTestId('clear-data-btn');
+	await clearBtn.waitFor({ state: 'visible' });
 	await clearBtn.click();
 	
 	const confirmDialog = page.getByTestId('confirm-clear');
