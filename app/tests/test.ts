@@ -163,3 +163,89 @@ test('should display auto-refresh controls section', async ({ page }) => {
 	await expect(page.getByTestId('refresh-interval-selector')).toBeVisible();
 	await expect(page.getByTestId('manual-refresh-button')).toBeVisible();
 });
+
+// Advanced Analytics Dashboard Tests
+test('should display conversion rate card', async ({ page }) => {
+	await page.goto('/');
+	const card = page.getByTestId('conversion-rate-card');
+	await expect(card).toBeVisible();
+
+	const value = page.getByTestId('conversion-rate-value');
+	await expect(value).toBeVisible();
+	const valueText = await value.textContent();
+	expect(valueText).toMatch(/\d+\.\d+%/);
+});
+
+test('should display geographic diversity index card', async ({ page }) => {
+	await page.goto('/');
+	const card = page.getByTestId('diversity-index-card');
+	await expect(card).toBeVisible();
+
+	const value = page.getByTestId('diversity-index-value');
+	await expect(value).toBeVisible();
+	const valueText = await value.textContent();
+	expect(valueText).toMatch(/\d+\.\d+%/);
+});
+
+test('should display engagement quality score card', async ({ page }) => {
+	await page.goto('/');
+	const card = page.getByTestId('quality-score-card');
+	await expect(card).toBeVisible();
+
+	const value = page.getByTestId('quality-score-value');
+	await expect(value).toBeVisible();
+	const valueText = await value.textContent();
+	expect(valueText).toMatch(/\d+\.\d+%/);
+});
+
+test('should display market penetration score card', async ({ page }) => {
+	await page.goto('/');
+	const card = page.getByTestId('penetration-score-card');
+	await expect(card).toBeVisible();
+
+	const value = page.getByTestId('penetration-score-value');
+	await expect(value).toBeVisible();
+	const valueText = await value.textContent();
+	expect(valueText).toMatch(/\d+\.\d+/);
+});
+
+test('should show Advanced Analytics section heading', async ({ page }) => {
+	await page.goto('/');
+	const heading = page.locator('text=Advanced Analytics');
+	await expect(heading).toBeVisible();
+});
+
+test('should display performance insights section', async ({ page }) => {
+	await page.goto('/');
+	const insightsHeading = page.locator('text=📊 Performance Insights');
+	await expect(insightsHeading).toBeVisible();
+});
+
+test('should display comparative benchmarks section', async ({ page }) => {
+	await page.goto('/');
+	const benchmarksHeading = page.locator('text=📈 Comparative Benchmarks');
+	await expect(benchmarksHeading).toBeVisible();
+});
+
+test('should show all four advanced metric cards', async ({ page }) => {
+	await page.goto('/');
+
+	await expect(page.getByTestId('conversion-rate-card')).toBeVisible();
+	await expect(page.getByTestId('diversity-index-card')).toBeVisible();
+	await expect(page.getByTestId('quality-score-card')).toBeVisible();
+	await expect(page.getByTestId('penetration-score-card')).toBeVisible();
+});
+
+test('should display benchmark progress bar', async ({ page }) => {
+	await page.goto('/');
+	const progressBar = page.locator('.bg-blue-600.h-2.rounded-full');
+	await expect(progressBar).toBeVisible();
+});
+
+test('should show benchmark comparison values', async ({ page }) => {
+	await page.goto('/');
+	// Look for the benchmark text
+	await expect(page.locator('text=Typical SaaS')).toBeVisible();
+	await expect(page.locator('text=Good Performance')).toBeVisible();
+	await expect(page.locator('text=Excellent')).toBeVisible();
+});
