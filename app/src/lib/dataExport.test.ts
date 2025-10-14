@@ -30,15 +30,13 @@ describe('dataExport', () => {
 
 	let mockLink: HTMLAnchorElement;
 	let clickSpy: ReturnType<typeof vi.fn>;
-	let urlCreateMock: ReturnType<typeof vi.fn>;
-	let urlRevokeMock: ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
 		// Setup URL mocks first
-		urlCreateMock = vi.fn().mockReturnValue('blob:mock-url');
-		urlRevokeMock = vi.fn();
-		global.URL.createObjectURL = urlCreateMock;
-		global.URL.revokeObjectURL = urlRevokeMock;
+		const urlCreateMock = vi.fn().mockReturnValue('blob:mock-url');
+		const urlRevokeMock = vi.fn();
+		global.URL.createObjectURL = urlCreateMock as unknown as typeof URL.createObjectURL;
+		global.URL.revokeObjectURL = urlRevokeMock as unknown as typeof URL.revokeObjectURL;
 
 		// Mock document.createElement and link click
 		mockLink = {

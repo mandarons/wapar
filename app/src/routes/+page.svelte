@@ -18,6 +18,12 @@
 		formatPercentage,
 		formatScore
 	} from '$lib/analytics';
+	import { historicalDataService, type DataSnapshot } from '$lib/historicalData';
+	import { calculateAllGrowthMetrics } from '$lib/trendAnalysis';
+	import TrendChart from '$lib/components/TrendChart.svelte';
+	import GrowthMetrics from '$lib/components/GrowthMetrics.svelte';
+	import MilestoneTracker from '$lib/components/MilestoneTracker.svelte';
+	import DataManagement from '$lib/components/DataManagement.svelte';
 
 	export let data: {
 		totalInstallations: number;
@@ -46,6 +52,37 @@
 	let dataFreshness: DataFreshness = 'fresh';
 	let fetchError: string | null = null;
 
+	// Historical data state
+	let historicalSnapshots: DataSnapshot[] = [];
+	$: growthMetrics = calculateAllGrowthMetrics(historicalSnapshots);
+
+	// Load historical data on mount
+	function loadHistoricalData() {
+		historicalSnapshots = historicalDataService.getAllSnapshots();
+	}
+
+	// Save current data as a snapshot
+	function saveSnapshot() {
+		const timestamp = new Date().toISOString();
+		
+		// Only save one snapshot per day
+		if (!historicalDataService.shouldSaveSnapshot(timestamp)) {
+			return;
+		}
+
+		const snapshot: DataSnapshot = {
+			timestamp,
+			totalInstallations: data.totalInstallations,
+			monthlyActive: data.monthlyActive,
+			iCloudDocker: data.iCloudDocker.total,
+			haBouncie: data.haBouncie.total,
+			countryToCount: data.countryToCount
+		};
+
+		historicalDataService.saveSnapshot(snapshot);
+		loadHistoricalData(); // Refresh the view
+	}
+
 	// Fetch data from API
 	async function fetchData() {
 		try {
@@ -64,6 +101,9 @@
 
 			lastUpdated = new Date();
 			dataFreshness = calculateDataFreshness(lastUpdated);
+
+			// Save snapshot after successful data fetch
+			saveSnapshot();
 		} catch (error) {
 			console.error('Error fetching data:', error);
 			fetchError = 'Failed to refresh data. Please try again later.';
@@ -267,6 +307,10 @@
 	let relativeTimeIntervalId: number | null = null;
 
 	onMount(async () => {
+		// Load historical data and save initial snapshot
+		loadHistoricalData();
+		saveSnapshot();
+
 		// Initialize auto-refresh
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		startAutoRefresh();
@@ -764,6 +808,56 @@
 		</div>
 	</div>
 </div>
+
+<!-- Historical Trend Analysis -->
+<section class="body-font text-gray-600 border-t border-gray-200 bg-gray-50">
+	<div class="container mx-auto px-5 py-10">
+		<div class="mb-8 flex w-full flex-col text-center">
+			<h2 class="title-font mb-2 text-xl font-medium text-gray-900 sm:text-2xl">
+				📈 Historical Trend Analysis
+			</h2>
+			<p class="text-sm text-gray-600">Growth trends, velocity metrics, and milestone tracking</p>
+		</div>
+
+		<!-- Main content -->
+		<div class="space-y-6">
+			<!-- Trend Chart -->
+			<TrendChart 
+				snapshots={historicalSnapshots} 
+				title="Installation Growth Over Time"
+				showMonthlyActive={true} 
+			/>
+
+			<!-- Growth Metrics and Milestone Tracker in 2-column grid -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+				<GrowthMetrics
+					daily={growthMetrics.daily}
+					weekly={growthMetrics.weekly}
+					monthly={growthMetrics.monthly}
+					velocity={growthMetrics.velocity}
+				/>
+				<MilestoneTracker 
+					snapshots={historicalSnapshots}
+					currentTotal={data.totalInstallations}
+				/>
+			</div>
+
+			<!-- Data Management -->
+			<DataManagement onDataImported={loadHistoricalData} />
+		</div>
+
+		{#if historicalSnapshots.length === 0}
+			<div class="mt-8 text-center bg-blue-50 border border-blue-200 rounded-lg p-6">
+				<div class="text-4xl mb-4">🚀</div>
+				<h3 class="text-lg font-semibold text-gray-800 mb-2">Start Building Your History</h3>
+				<p class="text-gray-600 max-w-2xl mx-auto">
+					Historical data is automatically saved once per day when you visit this dashboard. 
+					Come back tomorrow to see your first growth metrics and trend analysis!
+				</p>
+			</div>
+		{/if}
+	</div>
+</section>
 
 <div class="fixed bottom-0 w-full">
 	<div class="flex items-center justify-between p-4">
