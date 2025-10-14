@@ -249,3 +249,95 @@ test('should show benchmark comparison values', async ({ page }) => {
 	await expect(page.locator('text=Good Performance')).toBeVisible();
 	await expect(page.locator('text=Excellent')).toBeVisible();
 });
+
+// Historical Trend Analysis Tests
+test('should display trend chart or empty state', async ({ page }) => {
+	await page.goto('/');
+	// Either the chart or the empty state should be visible
+	const chart = page.getByTestId('trend-chart');
+	const emptyState = page.getByTestId('trend-chart-empty');
+	
+	const chartVisible = await chart.isVisible().catch(() => false);
+	const emptyVisible = await emptyState.isVisible().catch(() => false);
+	
+	expect(chartVisible || emptyVisible).toBe(true);
+});
+
+test('should display growth metrics component', async ({ page }) => {
+	await page.goto('/');
+	const growthMetrics = page.getByTestId('growth-metrics');
+	await expect(growthMetrics).toBeVisible();
+});
+
+test('should display daily growth card', async ({ page }) => {
+	await page.goto('/');
+	const dailyCard = page.getByTestId('daily-growth-card');
+	await expect(dailyCard).toBeVisible();
+});
+
+test('should display weekly growth card', async ({ page }) => {
+	await page.goto('/');
+	const weeklyCard = page.getByTestId('weekly-growth-card');
+	await expect(weeklyCard).toBeVisible();
+});
+
+test('should display monthly growth card', async ({ page }) => {
+	await page.goto('/');
+	const monthlyCard = page.getByTestId('monthly-growth-card');
+	await expect(monthlyCard).toBeVisible();
+});
+
+test('should display velocity card', async ({ page }) => {
+	await page.goto('/');
+	const velocityCard = page.getByTestId('velocity-card');
+	await expect(velocityCard).toBeVisible();
+});
+
+test('should display milestone tracker', async ({ page }) => {
+	await page.goto('/');
+	const milestoneTracker = page.getByTestId('milestone-tracker');
+	await expect(milestoneTracker).toBeVisible();
+});
+
+test('should display data management section', async ({ page }) => {
+	await page.goto('/');
+	const dataManagement = page.getByTestId('data-management');
+	await expect(dataManagement).toBeVisible();
+});
+
+test('should have export JSON button', async ({ page }) => {
+	await page.goto('/');
+	const exportBtn = page.getByTestId('export-json-btn');
+	await expect(exportBtn).toBeVisible();
+});
+
+test('should have export CSV button', async ({ page }) => {
+	await page.goto('/');
+	const exportBtn = page.getByTestId('export-csv-btn');
+	await expect(exportBtn).toBeVisible();
+});
+
+test('should have import button', async ({ page }) => {
+	await page.goto('/');
+	const importBtn = page.getByTestId('import-btn');
+	await expect(importBtn).toBeVisible();
+});
+
+test('should have clear data button', async ({ page }) => {
+	await page.goto('/');
+	const clearBtn = page.getByTestId('clear-data-btn');
+	await expect(clearBtn).toBeVisible();
+});
+
+test('should show confirmation dialog when clearing data', async ({ page }) => {
+	await page.goto('/');
+	
+	// Wait for the page to load
+	await page.waitForLoadState('networkidle');
+	
+	const clearBtn = page.getByTestId('clear-data-btn');
+	await clearBtn.click();
+	
+	const confirmDialog = page.getByTestId('confirm-clear');
+	await expect(confirmDialog).toBeVisible();
+});
