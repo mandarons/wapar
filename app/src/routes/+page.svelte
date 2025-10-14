@@ -11,6 +11,13 @@
 		REFRESH_INTERVALS,
 		type DataFreshness
 	} from '$lib/utils/refresh';
+	import {
+		calculateAllMetrics,
+		getPerformanceRating,
+		getDiversityRating,
+		formatPercentage,
+		formatScore
+	} from '$lib/analytics';
 
 	export let data: {
 		totalInstallations: number;
@@ -133,6 +140,15 @@
 						label: 'Needs Attention',
 						description: 'Low user engagement'
 					};
+
+	// Advanced Analytics Calculations
+	$: advancedMetrics = calculateAllMetrics(
+		data.monthlyActive,
+		data.totalInstallations,
+		data.countryToCount
+	);
+	$: penetrationRating = getPerformanceRating(advancedMetrics.marketPenetrationScore);
+	$: diversityRating = getDiversityRating(advancedMetrics.geographicDiversityIndex);
 
 	// Get country name from country code (using basic mapping for common codes)
 	function getCountryName(code: string): string {
@@ -483,6 +499,226 @@
 								</div>
 							</div>
 						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Advanced Analytics Dashboard -->
+<section class="body-font text-gray-600 border-t border-gray-200">
+	<div class="container mx-auto px-5 py-10">
+		<div class="mb-8 flex w-full flex-col text-center">
+			<h2 class="title-font mb-2 text-xl font-medium text-gray-900 sm:text-2xl">
+				Advanced Analytics
+			</h2>
+			<p class="text-sm text-gray-600">Sophisticated performance metrics and market insights</p>
+		</div>
+
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+			<!-- Install-to-Activity Conversion Rate -->
+			<div
+				class="card p-6 bg-blue-50 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+				data-testid="conversion-rate-card"
+			>
+				<div class="flex flex-col space-y-3">
+					<div class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+						Conversion Rate
+					</div>
+					<div class="text-4xl font-bold text-blue-600" data-testid="conversion-rate-value">
+						{formatPercentage(advancedMetrics.installToActivityRate)}
+					</div>
+					<div class="text-xs text-gray-600">
+						Install-to-activity conversion showing active user engagement
+					</div>
+					<div class="mt-2 pt-3 border-t border-blue-200">
+						<div class="text-xs text-gray-500">
+							<span class="font-semibold">Industry Benchmark:</span> 20-30%
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Geographic Diversity Index -->
+			<div
+				class="card p-6 bg-purple-50 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+				data-testid="diversity-index-card"
+			>
+				<div class="flex flex-col space-y-3">
+					<div class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+						Geographic Diversity
+					</div>
+					<div class="text-4xl font-bold text-purple-600" data-testid="diversity-index-value">
+						{(advancedMetrics.geographicDiversityIndex * 100).toFixed(1)}%
+					</div>
+					<div class="text-xs {diversityRating.color} font-medium">
+						{diversityRating.label}: {diversityRating.description}
+					</div>
+					<div class="mt-2 pt-3 border-t border-purple-200">
+						<div class="text-xs text-gray-500">
+							<span class="font-semibold">Distribution:</span> Across {data.countryToCount.length} countries
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Engagement Quality Score -->
+			<div
+				class="card p-6 bg-teal-50 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+				data-testid="quality-score-card"
+			>
+				<div class="flex flex-col space-y-3">
+					<div class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+						Engagement Quality
+					</div>
+					<div class="text-4xl font-bold text-teal-600" data-testid="quality-score-value">
+						{(advancedMetrics.engagementQualityScore * 100).toFixed(1)}%
+					</div>
+					<div class="text-xs text-gray-600">
+						Composite score combining engagement rate and market diversity
+					</div>
+					<div class="mt-2 pt-3 border-t border-teal-200">
+						<div class="text-xs text-gray-500">
+							<span class="font-semibold">Formula:</span> Engagement × (1 + Diversity)
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Market Penetration Score -->
+			<div
+				class="card p-6 {penetrationRating.bgColor} rounded-lg shadow-md hover:shadow-lg transition-shadow"
+				data-testid="penetration-score-card"
+			>
+				<div class="flex flex-col space-y-3">
+					<div class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+						Market Penetration
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="text-3xl">{penetrationRating.indicator}</span>
+						<span
+							class="text-4xl font-bold {penetrationRating.color}"
+							data-testid="penetration-score-value"
+						>
+							{formatScore(advancedMetrics.marketPenetrationScore)}
+						</span>
+					</div>
+					<div class="text-xs {penetrationRating.color} font-medium">
+						{penetrationRating.label}: {penetrationRating.description}
+					</div>
+					<div class="mt-2 pt-3 border-t border-gray-300">
+						<div class="text-xs text-gray-500">
+							<span class="font-semibold">Benchmark:</span> vs SaaS industry standards
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Performance Insights -->
+		<div class="mt-8 bg-white rounded-lg shadow-md p-6 border border-gray-200">
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">📊 Performance Insights</h3>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+				<div class="flex items-start space-x-3">
+					<span class="text-2xl">💡</span>
+					<div>
+						<p class="font-semibold text-gray-900">Engagement Analysis</p>
+						<p class="text-gray-600">
+							{#if advancedMetrics.installToActivityRate > 50}
+								Your app demonstrates excellent user retention, significantly exceeding industry
+								standards of 20-30% engagement.
+							{:else if advancedMetrics.installToActivityRate >= 25}
+								Your app shows solid engagement rates within industry benchmarks. Consider
+								strategies to increase active user retention.
+							{:else}
+								Engagement rate is below industry averages. Focus on user activation and retention
+								strategies to improve monthly active users.
+							{/if}
+						</p>
+					</div>
+				</div>
+
+				<div class="flex items-start space-x-3">
+					<span class="text-2xl">🌍</span>
+					<div>
+						<p class="font-semibold text-gray-900">Market Distribution</p>
+						<p class="text-gray-600">
+							{#if advancedMetrics.geographicDiversityIndex >= 0.7}
+								Excellent geographic distribution reduces market risk and indicates broad appeal
+								across multiple regions.
+							{:else if advancedMetrics.geographicDiversityIndex >= 0.5}
+								Good market diversification with room to expand into additional geographic markets.
+							{:else}
+								Market concentration in few countries presents opportunity for geographic expansion.
+							{/if}
+						</p>
+					</div>
+				</div>
+
+				<div class="flex items-start space-x-3">
+					<span class="text-2xl">⭐</span>
+					<div>
+						<p class="font-semibold text-gray-900">Quality Score</p>
+						<p class="text-gray-600">
+							The engagement quality score of {(
+								advancedMetrics.engagementQualityScore * 100
+							).toFixed(0)}% reflects combined strength of user engagement and geographic reach.
+						</p>
+					</div>
+				</div>
+
+				<div class="flex items-start space-x-3">
+					<span class="text-2xl">🎯</span>
+					<div>
+						<p class="font-semibold text-gray-900">Competitive Position</p>
+						<p class="text-gray-600">
+							{#if advancedMetrics.marketPenetrationScore >= 80}
+								Outstanding market performance placing you in the top tier of Home Assistant
+								integrations.
+							{:else if advancedMetrics.marketPenetrationScore >= 60}
+								Above-average market position with strong foundation for continued growth.
+							{:else}
+								Opportunity to improve market position through enhanced user engagement and
+								retention.
+							{/if}
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Comparative Benchmarks -->
+		<div
+			class="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-md p-6 border border-blue-200"
+		>
+			<h3 class="text-lg font-semibold text-gray-900 mb-4">📈 Comparative Benchmarks</h3>
+			<div class="space-y-3">
+				<div class="flex items-center justify-between">
+					<span class="text-sm font-medium text-gray-700">Your Engagement Rate:</span>
+					<span class="text-sm font-bold text-blue-600">
+						{formatPercentage(advancedMetrics.installToActivityRate)}
+					</span>
+				</div>
+				<div class="w-full bg-gray-200 rounded-full h-2">
+					<div
+						class="bg-blue-600 h-2 rounded-full transition-all duration-500"
+						style="width: {Math.min(advancedMetrics.installToActivityRate, 100)}%"
+					></div>
+				</div>
+
+				<div class="grid grid-cols-3 gap-2 mt-4 text-xs text-center">
+					<div class="bg-white rounded p-2 border border-gray-200">
+						<div class="font-semibold text-gray-900">Typical SaaS</div>
+						<div class="text-red-600 font-bold">20-30%</div>
+					</div>
+					<div class="bg-white rounded p-2 border border-gray-200">
+						<div class="font-semibold text-gray-900">Good Performance</div>
+						<div class="text-yellow-600 font-bold">40-50%</div>
+					</div>
+					<div class="bg-white rounded p-2 border border-gray-200">
+						<div class="font-semibold text-gray-900">Excellent</div>
+						<div class="text-green-600 font-bold">&gt;50%</div>
 					</div>
 				</div>
 			</div>
