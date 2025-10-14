@@ -65,19 +65,16 @@ The dashboard is organized into several sections:
 Four color-coded cards displaying key metrics:
 
 1. **Conversion Rate Card** (Blue)
-
    - Large percentage display
    - Industry benchmark reference
    - Description of metric
 
 2. **Geographic Diversity Card** (Purple)
-
    - Diversity percentage
    - Rating label and description
    - Country distribution count
 
 3. **Engagement Quality Card** (Teal)
-
    - Quality score percentage
    - Formula explanation
    - Composite metric description

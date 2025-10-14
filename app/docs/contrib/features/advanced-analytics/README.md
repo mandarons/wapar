@@ -16,12 +16,12 @@ A sophisticated analytics dashboard that calculates and visualizes advanced perf
 
 ## Key Metrics
 
-| Metric                    | What It Measures                                       | Good Performance |
-| ------------------------- | ------------------------------------------------------ | ---------------- |
-| **Conversion Rate**       | % of installations that are monthly active             | >40%             |
-| **Geographic Diversity**  | How well distributed across countries (HHI)            | >60%             |
-| **Engagement Quality**    | Composite score: engagement × (1 + diversity)          | >70%             |
-| **Market Penetration**    | Performance vs industry benchmarks (0-100 scale)       | >80              |
+| Metric                   | What It Measures                                 | Good Performance |
+| ------------------------ | ------------------------------------------------ | ---------------- |
+| **Conversion Rate**      | % of installations that are monthly active       | >40%             |
+| **Geographic Diversity** | How well distributed across countries (HHI)      | >60%             |
+| **Engagement Quality**   | Composite score: engagement × (1 + diversity)    | >70%             |
+| **Market Penetration**   | Performance vs industry benchmarks (0-100 scale) | >80              |
 
 ## Files
 
