@@ -22,7 +22,7 @@ The Advanced Analytics Dashboard provides sophisticated performance metrics and 
 
 **Description**: Measures what percentage of total installations are monthly active users. Higher percentages indicate better user retention and engagement.
 
-**Industry Benchmark**: Typical SaaS applications achieve 20-30% engagement
+**Industry Benchmark**: Typical SaaS applications achieve 20-30% engagement (based on common industry observations and SaaS metrics research)
 
 #### 2. Geographic Diversity Index
 
