@@ -25,9 +25,9 @@ A sophisticated analytics dashboard that calculates and visualizes advanced perf
 
 ## Files
 
-- `app/src/lib/analytics.ts` - Core calculation library (293 lines)
+- `app/src/lib/analytics.ts` - Core calculation library (293 lines including JSDoc)
 - `app/src/lib/analytics.test.ts` - Unit tests (48 tests, 100% coverage)
-- `app/src/routes/+page.svelte` - Dashboard UI (integrated)
+- `app/src/routes/+page.svelte` - Dashboard UI (~200 lines for dashboard section)
 - `app/tests/test.ts` - E2E tests (11 new tests)
 
 ## Usage
@@ -60,15 +60,15 @@ bun run test
 - ✅ Client-side calculations only
 - ✅ Reactive caching by Svelte
 - ✅ Minimal DOM updates
-- ✅ Lightweight (~250 lines total)
+- ✅ Lightweight (~500 lines including tests and UI)
 
 ## Industry Benchmarks
 
-Based on typical SaaS application metrics:
+Based on typical SaaS application metrics and industry observations:
 
-- **Typical**: 20-30% engagement
-- **Good**: 40-50% engagement
-- **Excellent**: >50% engagement
+- **Typical**: 20-30% engagement (industry standard for SaaS applications)
+- **Good**: 40-50% engagement (above average performance)
+- **Excellent**: >50% engagement (top-tier applications)
 
 ## Development
 
