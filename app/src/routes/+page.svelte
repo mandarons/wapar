@@ -24,6 +24,9 @@
 	import GrowthMetrics from '$lib/components/GrowthMetrics.svelte';
 	import MilestoneTracker from '$lib/components/MilestoneTracker.svelte';
 	import DataManagement from '$lib/components/DataManagement.svelte';
+	import MarketShareChart from '$lib/components/MarketShareChart.svelte';
+	import AppComparisonCards from '$lib/components/AppComparisonCards.svelte';
+	import GeographicAppAnalysis from '$lib/components/GeographicAppAnalysis.svelte';
 
 	export let data: {
 		totalInstallations: number;
@@ -55,6 +58,10 @@
 	// Historical data state
 	let historicalSnapshots: DataSnapshot[] = [];
 	$: growthMetrics = calculateAllGrowthMetrics(historicalSnapshots);
+
+	// Market share chart state
+	let chartType: 'pie' | 'doughnut' | 'bar' = 'pie';
+	let marketShareChartRef: MarketShareChart | null = null;
 
 	// Load historical data on mount
 	function loadHistoricalData() {
@@ -385,6 +392,14 @@
 	$: relativeTimeDisplay = getRelativeTime(lastUpdated);
 	$: freshnessColor = getFreshnessColor(dataFreshness);
 	$: freshnessIndicator = getFreshnessIndicator(dataFreshness);
+
+	// Export market share chart
+	function handleExportChart() {
+		if (marketShareChartRef) {
+			const timestamp = new Date().toISOString().split('T')[0];
+			marketShareChartRef.exportChart(`market-share-${timestamp}.png`);
+		}
+	}
 </script>
 
 <!-- Auto-Refresh Controls -->
@@ -481,6 +496,82 @@
 				</h2>
 				<p class="leading-relaxed">Home Assistant - Bouncie</p>
 			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Market Share & App Comparison Section -->
+<section class="body-font text-gray-600 border-t border-gray-200 bg-gradient-to-br from-gray-50 to-blue-50">
+	<div class="container mx-auto px-5 py-10">
+		<div class="mb-8 flex w-full flex-col text-center">
+			<h2 class="title-font mb-2 text-xl font-medium text-gray-900 sm:text-2xl">
+				📊 Market Share & App Comparison
+			</h2>
+			<p class="text-sm text-gray-600">Competitive analysis and market distribution insights</p>
+		</div>
+
+		<!-- App Comparison Cards -->
+		<div class="mb-8">
+			<AppComparisonCards
+				iCloudDockerTotal={data.iCloudDocker.total}
+				haBouncieTotal={data.haBouncie.total}
+			/>
+		</div>
+
+		<!-- Market Share Chart with Controls -->
+		<div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+			<div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+				<h3 class="text-lg font-semibold text-gray-900">Market Share Visualization</h3>
+				
+				<!-- Chart Controls -->
+				<div class="flex flex-wrap items-center gap-3">
+					<!-- Chart Type Selector -->
+					<div class="flex items-center gap-2">
+						<label for="chart-type" class="text-sm font-medium text-gray-700">Chart Type:</label>
+						<select
+							id="chart-type"
+							bind:value={chartType}
+							class="btn variant-ghost-surface text-sm px-3 py-1 rounded border border-gray-300"
+							data-testid="chart-type-selector"
+						>
+							<option value="pie">🥧 Pie Chart</option>
+							<option value="doughnut">🍩 Doughnut Chart</option>
+							<option value="bar">📊 Bar Chart</option>
+						</select>
+					</div>
+
+					<!-- Export Button -->
+					<button
+						on:click={handleExportChart}
+						class="btn variant-filled-primary text-sm px-4 py-2 rounded"
+						data-testid="export-chart-button"
+					>
+						<span class="mr-2">💾</span>
+						Export Chart
+					</button>
+				</div>
+			</div>
+
+			<!-- Chart Container -->
+			<div class="w-full max-w-2xl mx-auto" style="height: 400px;">
+				<MarketShareChart
+					bind:this={marketShareChartRef}
+					iCloudDockerTotal={data.iCloudDocker.total}
+					haBouncieTotal={data.haBouncie.total}
+					{chartType}
+					showLegend={true}
+					title=""
+				/>
+			</div>
+		</div>
+
+		<!-- Geographic App Analysis -->
+		<div class="mt-8">
+			<GeographicAppAnalysis
+				iCloudDockerTotal={data.iCloudDocker.total}
+				haBouncieTotal={data.haBouncie.total}
+				countryToCount={data.countryToCount}
+			/>
 		</div>
 	</div>
 </section>
