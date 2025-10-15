@@ -6,9 +6,9 @@
 
 	$: totalInstallations = iCloudDockerTotal + haBouncieTotal;
 	$: iCloudPercentage =
-		totalInstallations > 0 ? ((iCloudDockerTotal / totalInstallations) * 100).toFixed(1) : '50.0';
+		totalInstallations > 0 ? ((iCloudDockerTotal / totalInstallations) * 100).toFixed(1) : '0.0';
 	$: bounciePercentage =
-		totalInstallations > 0 ? ((haBouncieTotal / totalInstallations) * 100).toFixed(1) : '50.0';
+		totalInstallations > 0 ? ((haBouncieTotal / totalInstallations) * 100).toFixed(1) : '0.0';
 
 	function formatGrowth(growth: number | null): string {
 		if (growth === null) return 'N/A';
