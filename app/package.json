@@ -47,6 +47,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"chart.js": "^4.5.1",
+		"chartjs-plugin-datalabels": "^2.2.0",
 		"svgmap": "^2.10.1"
 	}
 }
