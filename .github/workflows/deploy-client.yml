@@ -18,7 +18,7 @@ jobs:
         id: cache-dependencies
         with:
           path: app/node_modules
-          key: ${{ runner.os }}-bun-app-client-${{ hashFiles('app/bun.lockb') }}
+          key: ${{ runner.os }}-bun-app-client-${{ hashFiles('app/bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-app-client-
       - name: Install Dependencies
@@ -39,7 +39,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: app/node_modules
-          key: ${{ runner.os }}-bun-app-client-${{ hashFiles('app/bun.lockb') }}
+          key: ${{ runner.os }}-bun-app-client-${{ hashFiles('app/bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-app-client-
       - name: Build
