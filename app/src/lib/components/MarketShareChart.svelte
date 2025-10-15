@@ -41,8 +41,8 @@
 	let chart: Chart | null = null;
 
 	$: totalInstallations = iCloudDockerTotal + haBouncieTotal;
-	$: iCloudPercentage = totalInstallations > 0 ? (iCloudDockerTotal / totalInstallations) * 100 : 50;
-	$: bounciePercentage = totalInstallations > 0 ? (haBouncieTotal / totalInstallations) * 100 : 50;
+	$: iCloudPercentage = totalInstallations > 0 ? (iCloudDockerTotal / totalInstallations) * 100 : 0;
+	$: bounciePercentage = totalInstallations > 0 ? (haBouncieTotal / totalInstallations) * 100 : 0;
 
 	function createChart() {
 		if (!canvas) return;

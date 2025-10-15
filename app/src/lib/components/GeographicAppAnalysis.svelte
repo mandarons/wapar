@@ -21,8 +21,8 @@
 			count: country.count,
 			iCloudEstimate,
 			bouncieEstimate,
-			iCloudPercentage: (iCloudEstimate / iCloudDockerTotal) * 100,
-			bounciePercentage: (bouncieEstimate / haBouncieTotal) * 100
+			iCloudPercentage: iCloudDockerTotal > 0 ? (iCloudEstimate / iCloudDockerTotal) * 100 : 0,
+			bounciePercentage: haBouncieTotal > 0 ? (bouncieEstimate / haBouncieTotal) * 100 : 0
 		};
 	});
 
