@@ -179,8 +179,8 @@
 		link.click();
 	}
 
-	// Recreate chart when type changes
-	$: if (canvas && (chartType || iCloudDockerTotal || haBouncieTotal)) {
+	// Recreate chart when chartType, iCloudDockerTotal, or haBouncieTotal changes
+	$: if (canvas && chartType !== undefined && iCloudDockerTotal !== undefined && haBouncieTotal !== undefined) {
 		createChart();
 	}
 
