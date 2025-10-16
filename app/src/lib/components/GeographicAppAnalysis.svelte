@@ -12,10 +12,14 @@
 	// Calculate estimated app-specific country distribution
 	// Since we don't have per-country app breakdowns, we'll use proportional estimation
 	$: estimatedCountryData = countryToCount.map((country) => {
-		const iCloudEstimate = Math.round(
-			(country.count * iCloudDockerTotal) / totalInstallations
-		);
-		const bouncieEstimate = Math.round((country.count * haBouncieTotal) / totalInstallations);
+		let iCloudEstimate = 0;
+		let bouncieEstimate = 0;
+		if (totalInstallations > 0) {
+			iCloudEstimate = Math.round(
+				(country.count * iCloudDockerTotal) / totalInstallations
+			);
+			bouncieEstimate = Math.round((country.count * haBouncieTotal) / totalInstallations);
+		}
 		return {
 			countryCode: country.countryCode,
 			count: country.count,
