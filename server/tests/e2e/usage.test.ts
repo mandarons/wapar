@@ -40,7 +40,7 @@ describe(ENDPOINT, async () => {
     });
     
     it('should return non-empty data', async () => {
-      // Create installations with geo data - one icloud and one ha-bouncie
+      // Create installations with geo data - one icloud-drive-docker and one ha-bouncie
       const installation1Data = dataUtils.createInstallationRecordWithGeo('icloud-drive-docker');
       const install1Res = await fetch(`${server}/api/installation`, {
         method: 'POST',
