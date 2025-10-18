@@ -185,6 +185,24 @@ describe(ENDPOINT, () => {
     expect(res.status).toBe(400);
   });
 
+  it('POST should fail for invalid installation ID format', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        installationId: 'invalid-id-not-a-uuid',
+        data: { test: true }
+      })
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toBe('Validation failed');
+    expect(body.issues).toBeDefined();
+    expect(body.issues.length).toBeGreaterThan(0);
+    expect(body.issues[0].message).toContain('UUID');
+  });
+
   it('GET should return 404', async () => {
     const base = getBase();
     const res = await fetch(`${base}${ENDPOINT}`);

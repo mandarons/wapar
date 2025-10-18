@@ -9,7 +9,7 @@ const installationSchema = z.object({
   appName: z.string().min(1),
   appVersion: z.string().min(1),
   ipAddress: z.string().optional(),
-  previousId: z.string().optional(),
+  previousId: z.string().uuid("Previous ID must be a valid UUID").optional(),
   data: z.string().optional(),
   countryCode: z.string().optional(),
   region: z.string().optional(),
