@@ -6,7 +6,7 @@ const INSTALL_ENDPOINT = '/api/installation';
 const HEARTBEAT_ENDPOINT = '/api/heartbeat';
 
 function randomAppName() {
-  const apps = ['icloud-drive-docker', 'ha-bouncie'];
+  const apps = ['icloud-drive-docker', 'icloud-docker', 'ha-bouncie'];
   return apps[Math.floor(Math.random() * apps.length)];
 }
 function randomVersion() {
@@ -105,5 +105,43 @@ describe(ENDPOINT, () => {
     const base = getBase();
     const res = await fetch(`${base}${ENDPOINT}`, { method: 'DELETE' });
     expect(res.status).toBe(404);
+  });
+
+  it('should count both icloud-docker and icloud-drive-docker installations', async () => {
+    const base = getBase();
+    
+    // Get initial counts
+    const initialRes = await fetch(`${base}${ENDPOINT}`);
+    const initialBody = await initialRes.json();
+    const initialICloudTotal = initialBody.iCloudDocker.total;
+    
+    // Create one installation with legacy name
+    const legacyRes = await fetch(`${base}${INSTALL_ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appName: 'icloud-drive-docker', appVersion: '1.0.0' })
+    });
+    const legacyBody = await legacyRes.json();
+    const legacyId = legacyBody.id as string;
+    
+    // Create one installation with current name
+    const currentRes = await fetch(`${base}${INSTALL_ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appName: 'icloud-docker', appVersion: '2.0.0' })
+    });
+    const currentBody = await currentRes.json();
+    const currentId = currentBody.id as string;
+    
+    // Wait for both installations to be created
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id IN ('${legacyId}', '${currentId}')`, 2);
+    
+    // Fetch usage data
+    const res = await fetch(`${base}${ENDPOINT}`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    
+    // Verify that both installations are counted in iCloudDocker.total
+    expect(body.iCloudDocker.total).toBeGreaterThanOrEqual(initialICloudTotal + 2);
   });
 });

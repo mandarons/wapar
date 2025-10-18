@@ -88,8 +88,40 @@ describe(ENDPOINT, async () => {
       expect(body.totalInstallations).toBe(2);
       expect(body.countryToCount.length).toBe(2);
       expect(body.monthlyActive).toBe(2);
-      expect(body.iCloudDocker.total).toBe(1);
-      expect(body.haBouncie.total).toBe(1);
+      // Both 'icloud-drive-docker' and 'icloud-docker' are counted as iCloudDocker
+      expect(body.iCloudDocker.total).toBe(2);
+      expect(body.haBouncie.total).toBe(0);
+    });
+    
+    it('should count both icloud-docker and icloud-drive-docker installations', async () => {
+      // Create one installation with legacy name
+      const legacyData = dataUtils.createInstallationRecord('icloud-drive-docker');
+      const legacyRes = await fetch(`${server}/api/installation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(legacyData),
+      });
+      const legacyInstallation = await legacyRes.json();
+      
+      // Create one installation with current name
+      const currentData = dataUtils.createInstallationRecord('icloud-docker');
+      const currentRes = await fetch(`${server}/api/installation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(currentData),
+      });
+      const currentInstallation = await currentRes.json();
+      
+      const res = await fetch(`${server}${ENDPOINT}`, {
+        method: 'GET',
+      });
+      
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.totalInstallations).toBe(2);
+      // Verify that both installations are counted as iCloudDocker
+      expect(body.iCloudDocker.total).toBe(2);
+      expect(body.haBouncie.total).toBe(0);
     });
     
     it('should return error in case of internal failure', async () => {
