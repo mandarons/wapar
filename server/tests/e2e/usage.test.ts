@@ -40,8 +40,8 @@ describe(ENDPOINT, async () => {
     });
     
     it('should return non-empty data', async () => {
-      // Create installations with geo data
-      const installation1Data = dataUtils.createInstallationRecordWithGeo(dataUtils.appsList[0]);
+      // Create installations with geo data - one icloud and one ha-bouncie
+      const installation1Data = dataUtils.createInstallationRecordWithGeo('icloud-drive-docker');
       const install1Res = await fetch(`${server}/api/installation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -49,7 +49,7 @@ describe(ENDPOINT, async () => {
       });
       const installation1 = await install1Res.json();
       
-      const installation2Data = dataUtils.createInstallationRecordWithGeo(dataUtils.appsList[1]);
+      const installation2Data = dataUtils.createInstallationRecordWithGeo('ha-bouncie');
       const install2Res = await fetch(`${server}/api/installation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,9 +88,8 @@ describe(ENDPOINT, async () => {
       expect(body.totalInstallations).toBe(2);
       expect(body.countryToCount.length).toBe(2);
       expect(body.monthlyActive).toBe(2);
-      // Both 'icloud-drive-docker' and 'icloud-docker' are counted as iCloudDocker
-      expect(body.iCloudDocker.total).toBe(2);
-      expect(body.haBouncie.total).toBe(0);
+      expect(body.iCloudDocker.total).toBe(1);
+      expect(body.haBouncie.total).toBe(1);
     });
     
     it('should count both icloud-docker and icloud-drive-docker installations', async () => {
