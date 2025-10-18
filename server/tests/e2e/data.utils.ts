@@ -16,7 +16,7 @@ export interface IHeartbeatRecordAttributes {
 
 let worker: Unstable_DevWorker;
 
-const appsList = ['icloud-drive-docker', 'ha-bouncie'] as const;
+const appsList = ['icloud-drive-docker', 'icloud-docker', 'ha-bouncie'] as const;
 
 const randomAppName = () => faker.helpers.arrayElement(appsList);
 const randomAppVersion = () => `${faker.number.int({ min: 1, max: 9 })}.${faker.number.int({ min: 0, max: 9 })}.${faker.number.int({ min: 0, max: 9 })}`;

@@ -4,7 +4,7 @@ import { getBase, queryOne } from './utils';
 const ENDPOINT = '/api/installation';
 
 function randomAppName() {
-  const apps = ['icloud-drive-docker', 'ha-bouncie'];
+  const apps = ['icloud-drive-docker', 'icloud-docker', 'ha-bouncie'];
   return apps[Math.floor(Math.random() * apps.length)];
 }
 function randomVersion() {

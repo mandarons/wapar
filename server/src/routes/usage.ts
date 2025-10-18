@@ -65,7 +65,10 @@ usageRoutes.get('/', async (c) => {
       return result[0]?.count ?? 0;
     };
 
-    const iCloudDockerTotal = await getAppCount('icloud-drive-docker');
+    // Query both legacy and current app names to support backward compatibility
+    const iCloudDockerLegacy = await getAppCount('icloud-drive-docker');
+    const iCloudDockerCurrent = await getAppCount('icloud-docker');
+    const iCloudDockerTotal = iCloudDockerLegacy + iCloudDockerCurrent;
     const haBouncieTotal = await getAppCount('ha-bouncie');
 
     const responseData = {
