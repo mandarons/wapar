@@ -12,62 +12,26 @@ heartbeatRoutes.post('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
   try {
-    // Get raw body text first for debugging
-    const rawBody = await c.req.text();
-    const contentType = c.req.header('content-type') || '';
-    
-    // Log raw body for debugging (truncated for security)
-    Logger.info('Heartbeat request received', {
-      operation: 'heartbeat.request',
-      metadata: { 
-        bodyLength: rawBody.length,
-        bodyPreview: rawBody.substring(0, 100),
-        contentType: contentType
-      },
-      ...requestContext
-    });
-
-    // Parse body based on content type
+    // Parse JSON body directly
     let parsedBody;
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-      // Parse form-encoded data
-      const formData = new URLSearchParams(rawBody);
-      parsedBody = {
-        installationId: formData.get('installationId'),
-        data: formData.get('data') ? JSON.parse(formData.get('data')!) : undefined
-      };
-      
-      Logger.info('Parsed form-encoded data', {
-        operation: 'heartbeat.form_parse',
+    try {
+      parsedBody = await c.req.json();
+    } catch (parseError) {
+      Logger.error('JSON parsing failed', {
+        operation: 'heartbeat.json_parse',
+        error: parseError as Error,
         metadata: { 
-          installationId: parsedBody.installationId,
-          hasData: !!parsedBody.data
+          contentType: c.req.header('content-type')
         },
         ...requestContext
       });
-    } else {
-      // Default to JSON parsing
-      try {
-        parsedBody = JSON.parse(rawBody);
-      } catch (parseError) {
-        Logger.error('JSON parsing failed', {
-          operation: 'heartbeat.json_parse',
-          error: parseError as Error,
-          metadata: { 
-            bodyLength: rawBody.length,
-            bodyPreview: rawBody.substring(0, 200),
-            contentType: contentType
-          },
-          ...requestContext
-        });
-        return c.json({ 
-          message: 'Invalid JSON in request body', 
-          statusCode: 400,
-          details: (parseError as Error).message
-        }, 400);
-      }
+      return c.json({ 
+        message: 'Invalid JSON in request body', 
+        statusCode: 400,
+        details: (parseError as Error).message
+      }, 400);
     }
-
+    
     const body = HeartbeatSchema.parse(parsedBody);
 
     const db = getDb(c.env);

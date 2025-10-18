@@ -21,69 +21,27 @@ installationRoutes.post('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
   try {
-    // Get raw body text first for debugging
-    const rawBody = await c.req.text();
-    const contentType = c.req.header('content-type') || '';
-    
-    // Log raw body for debugging (truncated for security)
-    Logger.info('Installation request received', {
-      operation: 'installation.request',
-      metadata: { 
-        bodyLength: rawBody.length,
-        bodyPreview: rawBody.substring(0, 100),
-        contentType: contentType
-      },
-      ...requestContext
-    });
-
-    // Parse body based on content type
-    let parsedBody;
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-      // Parse form-encoded data
-      const formData = new URLSearchParams(rawBody);
-      parsedBody = {
-        appName: formData.get('appName'),
-        appVersion: formData.get('appVersion'),
-        ipAddress: formData.get('ipAddress'),
-        previousId: formData.get('previousId'),
-        data: formData.get('data'),
-        countryCode: formData.get('countryCode'),
-        region: formData.get('region')
-      };
-      
-      Logger.info('Parsed form-encoded data', {
-        operation: 'installation.form_parse',
+    // Parse JSON body directly
+    let body;
+    try {
+      body = await c.req.json();
+    } catch (parseError) {
+      Logger.error('JSON parsing failed', {
+        operation: 'installation.json_parse',
+        error: parseError as Error,
         metadata: { 
-          appName: parsedBody.appName,
-          appVersion: parsedBody.appVersion,
-          hasData: !!parsedBody.data
+          contentType: c.req.header('content-type')
         },
         ...requestContext
       });
-    } else {
-      // Default to JSON parsing
-      try {
-        parsedBody = JSON.parse(rawBody);
-      } catch (parseError) {
-        Logger.error('JSON parsing failed', {
-          operation: 'installation.json_parse',
-          error: parseError as Error,
-          metadata: { 
-            bodyLength: rawBody.length,
-            bodyPreview: rawBody.substring(0, 200),
-            contentType: contentType
-          },
-          ...requestContext
-        });
-        return c.json({ 
-          message: 'Invalid JSON in request body', 
-          statusCode: 400,
-          details: (parseError as Error).message
-        }, 400);
-      }
+      return c.json({ 
+        message: 'Invalid JSON in request body', 
+        statusCode: 400,
+        details: (parseError as Error).message
+      }, 400);
     }
-
-    const validatedData = installationSchema.parse(parsedBody);
+    
+    const validatedData = installationSchema.parse(body);
     
     const db = getDb(c.env);
     const installationId = crypto.randomUUID();
