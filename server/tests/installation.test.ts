@@ -35,6 +35,25 @@ describe(ENDPOINT, () => {
     expect(res.status).toBe(400);
   });
 
+  it('POST should fail for invalid previousId format', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        appName: randomAppName(), 
+        appVersion: randomVersion(),
+        previousId: 'invalid-previous-id-not-uuid'
+      })
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toBe('Validation failed');
+    expect(body.issues).toBeDefined();
+    expect(body.issues.length).toBeGreaterThan(0);
+    expect(body.issues[0].message).toContain('UUID');
+  });
+
   it('GET should return 404', async () => {
     const base = getBase();
     const res = await fetch(`${base}${ENDPOINT}`);
