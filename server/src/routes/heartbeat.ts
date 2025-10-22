@@ -8,6 +8,19 @@ import { Logger } from '../utils/logger';
 
 export const heartbeatRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
+/**
+ * Heartbeat endpoint
+ * 
+ * Supports both JSON and form-encoded requests for backward compatibility.
+ * 
+ * @see FORM_ENCODING_SUPPORT.md for detailed documentation
+ * 
+ * Modern clients should use JSON format (Content-Type: application/json)
+ * Form-encoded support maintained for older icloud-docker versions (< 2.0.0)
+ * 
+ * IMPORTANT: For form-encoded requests, the 'data' field must be a valid JSON string
+ * that will be parsed. Invalid JSON will cause a 500 error.
+ */
 heartbeatRoutes.post('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
@@ -30,11 +43,13 @@ heartbeatRoutes.post('/', async (c) => {
     // Parse body based on content type
     let parsedBody;
     if (contentType.includes('application/x-www-form-urlencoded')) {
-      // Parse form-encoded data
+      // Parse form-encoded data (legacy support for older icloud-docker clients)
+      // NOTE: data field must be a valid JSON string if provided
       const formData = new URLSearchParams(rawBody);
+      const dataStr = formData.get('data');
       parsedBody = {
-        installationId: formData.get('installationId'),
-        data: formData.get('data') ? JSON.parse(formData.get('data')!) : undefined
+        installationId: formData.get('installationId') || undefined,
+        data: dataStr ? JSON.parse(dataStr) : undefined
       };
       
       Logger.info('Parsed form-encoded data', {
@@ -46,7 +61,7 @@ heartbeatRoutes.post('/', async (c) => {
         ...requestContext
       });
     } else {
-      // Default to JSON parsing
+      // Default to JSON parsing (recommended for all new clients)
       try {
         parsedBody = JSON.parse(rawBody);
       } catch (parseError) {

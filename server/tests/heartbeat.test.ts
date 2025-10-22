@@ -220,4 +220,122 @@ describe(ENDPOINT, () => {
     const res = await fetch(`${base}${ENDPOINT}`, { method: 'DELETE' });
     expect(res.status).toBe(404);
   });
+
+  // Form-encoded request tests (for backward compatibility with older icloud-docker versions)
+  it('POST with form-encoded data should succeed', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    const formData = new URLSearchParams({
+      installationId: installationId
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBe(installationId);
+
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${installationId}'`, 1);
+    const countRow = await d1QueryOne<{ count: number }>(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${installationId}'`);
+    expect(Number(countRow?.count ?? 0)).toBe(1);
+  });
+
+  it('POST with form-encoded data including JSON data field should succeed', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    const testData = {
+      sessionId: 'session-456',
+      metrics: { cpu: 45, memory: 80 }
+    };
+    const formData = new URLSearchParams({
+      installationId: installationId,
+      data: JSON.stringify(testData)
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBe(installationId);
+
+    // Verify data was stored correctly
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${installationId}'`, 1);
+    const stored = await d1QueryOne<{ data: string }>(`SELECT data FROM Heartbeat WHERE installation_id = '${installationId}'`);
+    expect(stored?.data).toBeDefined();
+    const parsedData = JSON.parse(stored?.data ?? '');
+    expect(parsedData).toEqual(testData);
+  });
+
+  it('POST with form-encoded data should fail for invalid JSON in data field', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    const formData = new URLSearchParams({
+      installationId: installationId,
+      data: 'not-valid-json{'  // Invalid JSON
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    
+    // Should fail due to JSON parsing error in form-encoded data field
+    expect(res.status).toBe(500);
+  });
+
+  it('POST with form-encoded data should fail for non-existent installation', async () => {
+    const base = getBase();
+    const formData = new URLSearchParams({
+      installationId: crypto.randomUUID()
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    
+    expect(res.status).toBe(404);
+  });
+
+  it('POST with form-encoded data should fail for invalid installationId format', async () => {
+    const base = getBase();
+    const formData = new URLSearchParams({
+      installationId: 'not-a-valid-uuid'
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toBe('Validation failed');
+  });
+
+  it('POST with form-encoded data should fail for missing installationId', async () => {
+    const base = getBase();
+    const formData = new URLSearchParams({
+      data: JSON.stringify({ test: true })
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    
+    expect(res.status).toBe(400);
+  });
 });
