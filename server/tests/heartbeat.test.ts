@@ -288,8 +288,10 @@ describe(ENDPOINT, () => {
       body: formData.toString()
     });
     
-    // Should fail due to JSON parsing error in form-encoded data field
-    expect(res.status).toBe(500);
+    // Should fail with 400 due to JSON parsing error in form-encoded data field
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toBe('Invalid JSON in form-encoded data field');
   });
 
   it('POST with form-encoded data should fail for non-existent installation', async () => {
