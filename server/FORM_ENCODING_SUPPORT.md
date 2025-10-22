@@ -100,14 +100,14 @@ curl -X POST https://wapar-api.mandarons.com/api/heartbeat \
 installationId=550e8400-e29b-41d4-a716-446655440000&data={"key":"value"}
 ```
 
-**Invalid Form-Encoded (will cause 500 error):**
+**Invalid Form-Encoded (will cause 400 error):**
 ```
 installationId=550e8400-e29b-41d4-a716-446655440000&data={invalid-json
 ```
 
 ### Backward Compatibility
 
-Form-encoded support is maintained for backward compatibility with older versions of the icloud-docker client (versions < 2.0.0). 
+Form-encoded support is maintained for backward compatibility with older versions of the icloud-docker client. 
 
 **For new integrations:** Always use JSON format (`Content-Type: application/json`) as it:
 - Supports nested objects natively
@@ -117,8 +117,8 @@ Form-encoded support is maintained for backward compatibility with older version
 
 ### Client Usage
 
-#### Older icloud-docker Clients (< 2.0.0)
-These clients use form-encoded requests:
+#### Older icloud-docker Clients
+Some older versions use form-encoded requests:
 ```python
 # Legacy approach
 response = requests.post(
@@ -128,8 +128,8 @@ response = requests.post(
 )
 ```
 
-#### Modern icloud-docker Clients (>= 2.0.0)
-These clients use JSON requests:
+#### Modern icloud-docker Clients
+Current versions use JSON requests:
 ```python
 # Modern approach (recommended)
 response = requests.post(

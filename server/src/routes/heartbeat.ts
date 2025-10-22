@@ -47,9 +47,33 @@ heartbeatRoutes.post('/', async (c) => {
       // NOTE: data field must be a valid JSON string if provided
       const formData = new URLSearchParams(rawBody);
       const dataStr = formData.get('data');
+      
+      // Parse the data field if present, with proper error handling
+      let parsedData = undefined;
+      if (dataStr) {
+        try {
+          parsedData = JSON.parse(dataStr);
+        } catch (parseError) {
+          Logger.error('Form-encoded data field JSON parsing failed', {
+            operation: 'heartbeat.form_data_parse',
+            error: parseError as Error,
+            metadata: { 
+              dataPreview: dataStr.substring(0, 100),
+              installationId: formData.get('installationId')
+            },
+            ...requestContext
+          });
+          return c.json({ 
+            message: 'Invalid JSON in form-encoded data field', 
+            statusCode: 400,
+            details: (parseError as Error).message
+          }, 400);
+        }
+      }
+      
       parsedBody = {
         installationId: formData.get('installationId') || undefined,
-        data: dataStr ? JSON.parse(dataStr) : undefined
+        data: parsedData
       };
       
       Logger.info('Parsed form-encoded data', {
