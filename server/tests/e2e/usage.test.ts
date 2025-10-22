@@ -41,7 +41,10 @@ describe(ENDPOINT, async () => {
     
     it('should return non-empty data', async () => {
       // Create installations with geo data - one icloud-drive-docker and one ha-bouncie
+      // Use fixed country codes to ensure we get 2 distinct countries
       const installation1Data = dataUtils.createInstallationRecordWithGeo('icloud-drive-docker');
+      installation1Data.countryCode = 'US';
+      installation1Data.region = 'CA';
       const install1Res = await fetch(`${server}/api/installation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,6 +53,8 @@ describe(ENDPOINT, async () => {
       const installation1 = await install1Res.json();
       
       const installation2Data = dataUtils.createInstallationRecordWithGeo('ha-bouncie');
+      installation2Data.countryCode = 'GB';
+      installation2Data.region = 'England';
       const install2Res = await fetch(`${server}/api/installation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
