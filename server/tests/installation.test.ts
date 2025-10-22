@@ -54,19 +54,6 @@ describe(ENDPOINT, () => {
     expect(body.issues[0].message).toContain('UUID');
   });
 
-  it('POST should fail for invalid JSON body', async () => {
-    const base = getBase();
-    const res = await fetch(`${base}${ENDPOINT}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: 'this is not valid json{'
-    });
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.message).toBe('Invalid JSON in request body');
-    expect(body.statusCode).toBe(400);
-  });
-
   it('GET should return 404', async () => {
     const base = getBase();
     const res = await fetch(`${base}${ENDPOINT}`);

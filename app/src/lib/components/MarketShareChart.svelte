@@ -58,7 +58,7 @@
 		const config: ChartConfiguration = {
 			type: chartType,
 			data: {
-				labels: ['iCloud Drive Docker', 'Home Assistant - Bouncie'],
+				labels: ['iCloud Docker', 'Home Assistant - Bouncie'],
 				datasets: [
 					{
 						label: 'Installations',
