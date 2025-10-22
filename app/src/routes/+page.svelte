@@ -485,7 +485,7 @@
 				>
 					{data.iCloudDocker.total}
 				</h2>
-				<p class="leading-relaxed">iCloud Drive Docker</p>
+				<p class="leading-relaxed">iCloud Docker</p>
 			</div>
 			<div class="w-1/2 p-4">
 				<h2

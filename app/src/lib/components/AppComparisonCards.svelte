@@ -32,7 +32,7 @@
 </script>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="app-comparison-cards">
-	<!-- iCloud Drive Docker Card -->
+	<!-- iCloud Docker Card -->
 	<div
 		class="card bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg hover:shadow-xl transition-shadow border border-blue-200 p-6"
 		data-testid="icloud-docker-card"
@@ -40,7 +40,7 @@
 		<div class="flex flex-col space-y-4">
 			<!-- Header -->
 			<div class="flex items-center justify-between">
-				<h3 class="text-lg font-bold text-blue-900">iCloud Drive Docker</h3>
+				<h3 class="text-lg font-bold text-blue-900">iCloud Docker</h3>
 				<span class="text-3xl">☁️</span>
 			</div>
 
@@ -176,7 +176,7 @@
 				<p class="font-semibold text-gray-900">Market Leader</p>
 				<p class="text-gray-600 text-sm">
 					{#if iCloudDockerTotal > haBouncieTotal}
-						iCloud Drive Docker leads with {(
+						iCloud Docker leads with {(
 							parseFloat(iCloudPercentage) - parseFloat(bounciePercentage)
 						).toFixed(1)}% more market share
 					{:else if haBouncieTotal > iCloudDockerTotal}
