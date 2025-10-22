@@ -17,6 +17,16 @@ const installationSchema = z.object({
 
 export const installationRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
+/**
+ * Installation endpoint
+ * 
+ * Supports both JSON and form-encoded requests for backward compatibility.
+ * 
+ * @see FORM_ENCODING_SUPPORT.md for detailed documentation
+ * 
+ * Modern clients should use JSON format (Content-Type: application/json)
+ * Form-encoded support maintained for older icloud-docker versions (< 2.0.0)
+ */
 installationRoutes.post('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
@@ -39,16 +49,16 @@ installationRoutes.post('/', async (c) => {
     // Parse body based on content type
     let parsedBody;
     if (contentType.includes('application/x-www-form-urlencoded')) {
-      // Parse form-encoded data
+      // Parse form-encoded data (legacy support for older icloud-docker clients)
       const formData = new URLSearchParams(rawBody);
       parsedBody = {
-        appName: formData.get('appName'),
-        appVersion: formData.get('appVersion'),
-        ipAddress: formData.get('ipAddress'),
-        previousId: formData.get('previousId'),
-        data: formData.get('data'),
-        countryCode: formData.get('countryCode'),
-        region: formData.get('region')
+        appName: formData.get('appName') || undefined,
+        appVersion: formData.get('appVersion') || undefined,
+        ipAddress: formData.get('ipAddress') || undefined,
+        previousId: formData.get('previousId') || undefined,
+        data: formData.get('data') || undefined,
+        countryCode: formData.get('countryCode') || undefined,
+        region: formData.get('region') || undefined
       };
       
       Logger.info('Parsed form-encoded data', {
@@ -61,7 +71,7 @@ installationRoutes.post('/', async (c) => {
         ...requestContext
       });
     } else {
-      // Default to JSON parsing
+      // Default to JSON parsing (recommended for all new clients)
       try {
         parsedBody = JSON.parse(rawBody);
       } catch (parseError) {

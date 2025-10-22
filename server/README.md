@@ -29,6 +29,9 @@ Routes:
 - POST /api/heartbeat
 - GET /api/usage
 
+**Request Format Support:**
+Both `/api/installation` and `/api/heartbeat` endpoints support JSON and form-encoded requests for backward compatibility. See [FORM_ENCODING_SUPPORT.md](./FORM_ENCODING_SUPPORT.md) for detailed documentation.
+
 Scheduled job:
 - Hourly cron to enrich IP geo info.
 
