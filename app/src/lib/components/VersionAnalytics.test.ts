@@ -111,4 +111,3 @@ describe('VersionAnalytics Component Tests', () => {
 		});
 	});
 });
-
