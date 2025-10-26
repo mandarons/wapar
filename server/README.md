@@ -28,9 +28,41 @@ Routes:
 - POST /api/installation
 - POST /api/heartbeat
 - GET /api/usage
+- GET /api/version-analytics
 
 **Request Format Support:**
 Both `/api/installation` and `/api/heartbeat` endpoints support JSON and form-encoded requests for backward compatibility. See [FORM_ENCODING_SUPPORT.md](./FORM_ENCODING_SUPPORT.md) for detailed documentation.
+
+## API Endpoints
+
+### GET /api/version-analytics
+
+Returns comprehensive app version distribution analytics.
+
+**Response:**
+```json
+{
+  "versionDistribution": [
+    { "version": "2.1.0", "count": 450, "percentage": 45.0 },
+    { "version": "2.0.5", "count": 350, "percentage": 35.0 },
+    { "version": "1.9.8", "count": 200, "percentage": 20.0 }
+  ],
+  "latestVersion": "2.1.0",
+  "outdatedInstallations": 550,
+  "upgradeRate": {
+    "last7Days": 15,
+    "last30Days": 78
+  }
+}
+```
+
+**Fields:**
+- `versionDistribution`: Array of version objects with count and percentage
+- `latestVersion`: Most common version (null if no data)
+- `outdatedInstallations`: Count of installations not on latest version
+- `upgradeRate`: Number of installations updated in last 7 and 30 days
+
+**Performance:** Average response time ~13ms
 
 Scheduled job:
 - Hourly cron to enrich IP geo info.
