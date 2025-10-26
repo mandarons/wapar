@@ -2,6 +2,7 @@ name = "wapar-api"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
+# Production environment (default) - deployed from main branch
 [triggers]
 crons = ["0 * * * *"]
 
@@ -10,18 +11,40 @@ binding = "DB"
 database_name = "wapar-db"
 database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40"
 
-[dev]
-port = 8787
-
 [vars]
 # Drizzle configuration for production
 DRIZZLE_LOG = "false"
 
+[observability.logs]
+enabled = true
+
+# Local development environment
 [env.dev]
-d1_databases = [ { binding = "DB", database_name = "wapar-db", database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40" } ]
+port = 8787
+
+[env.dev.d1_databases]
+binding = "DB"
+database_name = "wapar-db"
+database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40"
 
 [env.dev.vars]
 DRIZZLE_LOG = "true"
 
-[observability.logs]
+# Staging environment - deployed from PRs
+# Note: You'll need to create a staging D1 database and update the database_id
+[env.staging]
+# Disable cron jobs in staging
+# triggers.crons is not supported per environment, so crons only run in production
+
+[env.staging.d1_databases]
+binding = "DB"
+database_name = "wapar-db-staging"
+# TODO: Create staging D1 database with: wrangler d1 create wapar-db-staging
+# Then update this ID with the returned database_id
+database_id = "STAGING_DB_ID_PLACEHOLDER"
+
+[env.staging.vars]
+DRIZZLE_LOG = "true"
+
+[env.staging.observability.logs]
 enabled = true

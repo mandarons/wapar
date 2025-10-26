@@ -1,8 +1,12 @@
 import type { PageServerLoad } from './$types';
+import { env } from '$env/dynamic/public';
+
+// Default to production API, can be overridden with PUBLIC_API_URL environment variable
+const API_URL = env.PUBLIC_API_URL || 'https://wapar-api.mandarons.com';
 
 export const load: PageServerLoad = async () => {
 	try {
-		let res = await fetch('https://wapar-api.mandarons.com/api/usage');
+		let res = await fetch(`${API_URL}/api/usage`);
 		const waparData = await res.json();
 		res = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
 		const haData = await res.json();
