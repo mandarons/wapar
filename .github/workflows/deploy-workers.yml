@@ -76,7 +76,7 @@ jobs:
         if: steps.set-env.outputs.environment == 'production'
         run: bun run db:deploy:remote
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
 
       - name: Deploy database schema (staging)
         if: steps.set-env.outputs.environment == 'staging'
@@ -84,14 +84,14 @@ jobs:
           # Deploy schema to staging D1 database
           bunx wrangler d1 execute wapar-db-staging --remote --file=./schema.sql
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
 
       # Deploy Workers
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: deploy --env ${{ steps.set-env.outputs.environment }}
           workingDirectory: server
 
@@ -101,7 +101,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const deploymentUrl = 'https://wapar-api-staging.${{ secrets.CLOUDFLARE_SUBDOMAIN }}.workers.dev';
+            const deploymentUrl = 'https://wapar-api-staging.${{ secrets.CF_SUBDOMAIN }}.workers.dev';
             const comment = `## 🚀 Staging Deployment
             
             Your changes have been deployed to the staging environment!

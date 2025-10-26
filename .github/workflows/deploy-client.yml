@@ -73,7 +73,7 @@ jobs:
         id: set-api-url
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "api_url=https://wapar-api-staging.${{ secrets.CLOUDFLARE_SUBDOMAIN }}.workers.dev" >> $GITHUB_OUTPUT
+            echo "api_url=https://wapar-api-staging.${{ secrets.CF_SUBDOMAIN }}.workers.dev" >> $GITHUB_OUTPUT
             echo "environment=preview" >> $GITHUB_OUTPUT
           else
             echo "api_url=https://wapar-api.mandarons.com" >> $GITHUB_OUTPUT
@@ -103,13 +103,13 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         env:
-          CLOUDFLARE_SUBDOMAIN: ${{ secrets.CLOUDFLARE_SUBDOMAIN }}
+          CF_SUBDOMAIN: ${{ secrets.CF_SUBDOMAIN }}
         with:
           script: |
             const branchName = context.payload.pull_request.head.ref;
             const safeBranchName = branchName.toLowerCase().replace(/[^a-z0-9]/g, '-');
             const previewUrl = `https://${safeBranchName}.wapar.pages.dev`;
-            const subdomain = process.env.CLOUDFLARE_SUBDOMAIN;
+            const subdomain = process.env.CF_SUBDOMAIN;
             const apiUrl = `https://wapar-api-staging.${subdomain}.workers.dev`;
             
             const comment = `## 🎨 Frontend Preview Deployment
