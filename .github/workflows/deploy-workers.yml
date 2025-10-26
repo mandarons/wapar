@@ -87,14 +87,23 @@ jobs:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
 
       # Deploy Workers
-      - name: Deploy to Cloudflare Workers
+      - name: Deploy to Cloudflare Workers (production)
+        if: steps.set-env.outputs.environment == 'production'
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: deploy --env ${{ steps.set-env.outputs.environment }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
           workingDirectory: server
 
+      - name: Deploy to Cloudflare Workers (staging)
+        if: steps.set-env.outputs.environment == 'staging'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --env staging
+          workingDirectory: server
       # Comment on PR with deployment info
       - name: Comment on PR
         if: github.event_name == 'pull_request'
