@@ -49,6 +49,7 @@ async function initializeTestDatabase() {
   )`);
   
   await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_app_name ON Installation(app_name)`);
+  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_app_version ON Installation(app_version)`);
   await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_country_code ON Installation(country_code)`);
   
   await d1Exec(`CREATE TABLE IF NOT EXISTS Heartbeat (

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { installationRoutes } from './routes/installation';
 import { heartbeatRoutes } from './routes/heartbeat';
 import { usageRoutes } from './routes/usage';
+import { versionAnalyticsRoutes } from './routes/version-analytics';
 import { handleValidationError, handleGenericError } from './utils/errors';
 import { scheduled } from './jobs/enrich-ip';
 import { Logger } from './utils/logger';
@@ -204,6 +205,7 @@ app.post('/__test/run-scheduled', async (c) => {
 app.route('/api/installation', installationRoutes);
 app.route('/api/heartbeat', heartbeatRoutes);
 app.route('/api/usage', usageRoutes);
+app.route('/api/version-analytics', versionAnalyticsRoutes);
 
 export default app;
 export { scheduled };
