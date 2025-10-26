@@ -90,7 +90,7 @@ PUBLIC_API_URL=http://localhost:8787
 
 If you follow the `IMPLEMENTATION_CHECKLIST.md`, everything will work automatically:
 1. Run `./scripts/setup-staging.sh` to create staging DB
-2. Set GitHub secrets (including `CLOUDFLARE_SUBDOMAIN`)
+2. Set GitHub secrets (including `CF_SUBDOMAIN`)
 3. Create a PR
 4. Frontend preview will automatically use staging backend
 

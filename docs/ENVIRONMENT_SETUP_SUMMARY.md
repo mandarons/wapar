@@ -66,9 +66,9 @@
    ```
 
 2. **Configure GitHub Secrets** (in repository Settings → Secrets and variables → Actions):
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
-   - `CLOUDFLARE_SUBDOMAIN`
+   - `CF_API_TOKEN`
+   - `CF_ACCOUNT_ID`
+   - `CF_SUBDOMAIN`
    - `CF_API_TOKEN`
    - `CF_ACCOUNT_ID`
 
