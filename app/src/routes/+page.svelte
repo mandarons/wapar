@@ -27,6 +27,7 @@
 	import MarketShareChart from '$lib/components/MarketShareChart.svelte';
 	import AppComparisonCards from '$lib/components/AppComparisonCards.svelte';
 	import GeographicAppAnalysis from '$lib/components/GeographicAppAnalysis.svelte';
+	import VersionAnalytics from '$lib/components/VersionAnalytics.svelte';
 
 	export let data: {
 		totalInstallations: number;
@@ -35,6 +36,16 @@
 		countryToCount: { countryCode: string; count: number }[];
 		iCloudDocker: { total: number };
 		haBouncie: { total: number };
+		versionAnalytics?: {
+			versionDistribution: Array<{
+				version: string;
+				count: number;
+				percentage: number;
+			}>;
+			latestVersion: string | null;
+			outdatedInstallations: number;
+			upgradeRate: { last7Days: number; last30Days: number };
+		};
 	};
 
 	// Minimal interface for svgmap object (add methods/properties as needed)
@@ -573,6 +584,18 @@
 				countryToCount={data.countryToCount}
 			/>
 		</div>
+
+		<!-- Version Analytics -->
+		{#if data.versionAnalytics}
+			<div class="mt-8">
+				<VersionAnalytics
+					versionDistribution={data.versionAnalytics.versionDistribution}
+					latestVersion={data.versionAnalytics.latestVersion}
+					outdatedInstallations={data.versionAnalytics.outdatedInstallations}
+					upgradeRate={data.versionAnalytics.upgradeRate}
+				/>
+			</div>
+		{/if}
 	</div>
 </section>
 
