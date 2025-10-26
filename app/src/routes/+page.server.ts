@@ -6,9 +6,26 @@ export const load: PageServerLoad = async () => {
 		const waparData = await res.json();
 		res = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
 		const haData = await res.json();
+		
+		// Fetch version analytics
+		let versionAnalytics;
+		try {
+			const versionRes = await fetch('https://wapar-api.mandarons.com/api/version-analytics');
+			versionAnalytics = await versionRes.json();
+		} catch (error) {
+			console.warn('Failed to fetch version analytics:', error);
+			versionAnalytics = {
+				versionDistribution: [],
+				latestVersion: null,
+				outdatedInstallations: 0,
+				upgradeRate: { last7Days: 0, last30Days: 0 }
+			};
+		}
+		
 		const data = { ...waparData };
 		data.totalInstallations = haData.bouncie.total + data.iCloudDocker.total;
 		data.haBouncie = haData.bouncie;
+		data.versionAnalytics = versionAnalytics;
 		return data;
 	} catch (error) {
 		// Return mock data for development/testing
@@ -32,7 +49,17 @@ export const load: PageServerLoad = async () => {
 				{ countryCode: 'ES', count: 10 }
 			],
 			iCloudDocker: { total: 555 },
-			haBouncie: { total: 445 }
+			haBouncie: { total: 445 },
+			versionAnalytics: {
+				versionDistribution: [
+					{ version: '2.1.0', count: 250, percentage: 45.0 },
+					{ version: '2.0.5', count: 200, percentage: 36.0 },
+					{ version: '1.9.8', count: 105, percentage: 19.0 }
+				],
+				latestVersion: '2.1.0',
+				outdatedInstallations: 305,
+				upgradeRate: { last7Days: 15, last30Days: 78 }
+			}
 		};
 	}
 };
