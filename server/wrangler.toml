@@ -41,7 +41,7 @@ binding = "DB"
 database_name = "wapar-db-staging"
 # TODO: Create staging D1 database with: wrangler d1 create wapar-db-staging
 # Then update this ID with the returned database_id
-database_id = "STAGING_DB_ID_PLACEHOLDER"
+database_id = "0f9df445-0c2e-4229-80c6-543bdb0e3770"
 
 [env.staging.vars]
 DRIZZLE_LOG = "true"
