@@ -1,0 +1,131 @@
+name: Staging (PR) Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Backend Tests
+      - name: Install server dependencies
+        run: cd server && (bun install --frozen-lockfile || bun install)
+
+      - name: Generate Drizzle migrations
+        run: cd server && bun run db:generate
+
+      - name: Run server tests
+        run: cd server && bun run test --run
+
+      # Frontend Tests
+      - name: Cache frontend dependencies
+        uses: actions/cache@v4
+        id: cache-app
+        with:
+          path: app/node_modules
+          key: ${{ runner.os }}-bun-app-${{ hashFiles('app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-app-
+
+      - name: Install frontend dependencies
+        if: steps.cache-app.outputs.cache-hit != 'true'
+        run: cd app && bun install --frozen-lockfile
+
+      - name: Run frontend tests
+        run: cd app && bun test
+
+      # Deploy Backend to Staging
+      - name: Deploy database schema to staging
+        run: cd server && bunx wrangler d1 execute wapar-db-staging --env staging --file=./schema.sql
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy Workers to staging
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --env staging
+          workingDirectory: server
+
+      # Deploy Frontend to Staging
+      - name: Set staging API URL
+        id: api-url
+        run: |
+          SUBDOMAIN="${{ secrets.CLOUDFLARE_SUBDOMAIN }}"
+          echo "API_URL=https://wapar-api-staging.${SUBDOMAIN}" >> $GITHUB_OUTPUT
+
+      - name: Build frontend for staging
+        run: cd app && bun run build
+        env:
+          PUBLIC_URL: "."
+          PUBLIC_API_URL: ${{ steps.api-url.outputs.API_URL }}
+
+      - name: Deploy Pages to staging
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy app/.svelte-kit/output/client --project-name=wapar --branch=${{ github.head_ref }}
+
+      # Post unified PR comment
+      - name: Comment PR with deployment links
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const workerUrl = `https://wapar-api-staging.${{ secrets.CLOUDFLARE_SUBDOMAIN }}`;
+            const pagesUrl = `https://${{ github.head_ref }}.wapar.pages.dev`;
+            
+            const body = `## 🚀 Staging Deployment Complete
+            
+            | Service | URL |
+            |---------|-----|
+            | **Worker API** | ${workerUrl} |
+            | **Pages (Frontend)** | ${pagesUrl} |
+            
+            These deployments are automatically updated with every push to this PR.`;
+            
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existingComment = comments.data.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Staging Deployment Complete')
+            );
+            
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
