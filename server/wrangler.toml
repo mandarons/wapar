@@ -22,7 +22,7 @@ enabled = true
 [env.dev]
 port = 8787
 
-[env.dev.d1_databases]
+[[env.dev.d1_databases]]
 binding = "DB"
 database_name = "wapar-db"
 database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40"
@@ -31,16 +31,13 @@ database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40"
 DRIZZLE_LOG = "true"
 
 # Staging environment - deployed from PRs
-# Note: You'll need to create a staging D1 database and update the database_id
-[env.staging]
 # Note: Cron jobs are only configured for the default (production) environment.
 # Wrangler does not support per-environment cron triggers, so crons do not run in staging.
+[env.staging]
 
-[env.staging.d1_databases]
+[[env.staging.d1_databases]]
 binding = "DB"
 database_name = "wapar-db-staging"
-# TODO: Create staging D1 database with: wrangler d1 create wapar-db-staging
-# Then update this ID with the returned database_id
 database_id = "0f9df445-0c2e-4229-80c6-543bdb0e3770"
 
 [env.staging.vars]
