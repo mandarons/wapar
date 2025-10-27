@@ -14,7 +14,7 @@ if ! command -v bunx &> /dev/null; then
     exit 1
 fi
 
-cd "$(dirname "$0")/server"
+cd "$(dirname "$0")/../server"
 
 echo "📦 Creating staging D1 database..."
 echo ""
