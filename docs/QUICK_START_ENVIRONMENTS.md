@@ -31,7 +31,7 @@ Add these secrets in your GitHub repository (Settings → Secrets and variables 
 |-------------|-------------|------------|
 | `CLOUDFLARE_API_TOKEN` | API token for Workers, D1, and Pages | Dashboard → My Profile → API Tokens → Create Token (Edit Cloudflare Workers + Pages) |
 | `CLOUDFLARE_ACCOUNT_ID` | Your account ID | Dashboard → Workers & Pages → Account ID |
-| `CLOUDFLARE_SUBDOMAIN` | Your workers.dev subdomain | The part before `.workers.dev` in your worker URLs |
+| `CLOUDFLARE_SUBDOMAIN` | Your workers.dev subdomain | Include `.workers.dev` (e.g., `mandarons.workers.dev`) |
 
 ### 3. Commit and Push
 
