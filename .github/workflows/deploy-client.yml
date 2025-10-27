@@ -71,9 +71,11 @@ jobs:
       # Set API URL based on environment
       - name: Set API URL for environment
         id: set-api-url
+        env:
+          CLOUDFLARE_SUBDOMAIN: ${{ secrets.CLOUDFLARE_SUBDOMAIN }}
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "api_url=https://wapar-api-staging.${{ secrets.CF_SUBDOMAIN }}.workers.dev" >> $GITHUB_OUTPUT
+            echo "api_url=https://wapar-api-staging.${CLOUDFLARE_SUBDOMAIN}.workers.dev" >> $GITHUB_OUTPUT
             echo "environment=preview" >> $GITHUB_OUTPUT
           else
             echo "api_url=https://wapar-api.mandarons.com" >> $GITHUB_OUTPUT
@@ -94,8 +96,8 @@ jobs:
         id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy app/.svelte-kit/output/client --project-name=wapar --branch=${{ github.head_ref || github.ref_name }}
       
       # Comment on PR with preview URL
