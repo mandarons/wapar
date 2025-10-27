@@ -27,11 +27,8 @@ jobs:
       - name: Install server dependencies
         run: cd server && (bun install --frozen-lockfile || bun install)
 
-      - name: Generate Drizzle migrations
-        run: cd server && bun run db:generate
-
       - name: Run server tests
-        run: cd server && bun run test --run
+        run: cd server && bun run test --run --reporter=basic
 
       # Frontend Dependencies
       - name: Cache frontend dependencies
@@ -73,4 +70,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy app/.svelte-kit/output/client --project-name=wapar --branch=main
+          command: pages deploy app/.svelte-kit/output/client --project-name=wapar-frontend --branch=main --commit-dirty=true
