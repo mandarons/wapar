@@ -46,7 +46,7 @@ jobs:
         run: cd app && bun install --frozen-lockfile
 
       - name: Run frontend tests
-        run: cd app && bun test
+        run: cd app && bun run test:unit --run
 
       # Deploy Backend to Staging
       - name: Deploy database schema to staging
