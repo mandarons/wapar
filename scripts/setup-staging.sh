@@ -33,7 +33,7 @@ echo ""
 # database_name = "wapar-db-staging"
 # database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-DATABASE_ID=$(echo "$OUTPUT" | grep -oP 'database_id = "\K[^"]+' || true)
+DATABASE_ID=$(echo "$OUTPUT" | awk -F'database_id = "' '/database_id = "/ {print $2}' | awk -F'"' '{print $1}' || true)
 
 if [ -z "$DATABASE_ID" ]; then
     echo "❌ Error: Could not extract database ID from output."
