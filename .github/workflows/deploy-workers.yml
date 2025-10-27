@@ -113,7 +113,7 @@ jobs:
         with:
           script: |
             const subdomain = process.env.CLOUDFLARE_SUBDOMAIN;
-            const deploymentUrl = `https://wapar-api-staging.${subdomain}.workers.dev`;
+            const deploymentUrl = `https://wapar-api-staging.${subdomain}`;
             const comment = `## 🚀 Staging Deployment
             
             Your changes have been deployed to the staging environment!

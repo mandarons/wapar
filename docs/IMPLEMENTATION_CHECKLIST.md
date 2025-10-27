@@ -43,8 +43,8 @@ Add these secrets:
   - How to get: Cloudflare Dashboard → Workers & Pages → Copy Account ID from right sidebar
 
 - [ ] `CLOUDFLARE_SUBDOMAIN`
-  - What it is: If your workers.dev URL is `myapp.example.workers.dev`, use `example`
-  - How to find: Check any existing worker URL or your account subdomain
+  - What it is: Your full workers.dev subdomain (e.g., `mandarons.workers.dev`)
+  - How to find: Check any existing worker URL - it's everything after the worker name
 
 ### 3. Commit and Push Changes
 

@@ -72,9 +72,10 @@ You need to set these **3 secrets** in your GitHub repository:
 
 ### How to Find Subdomain
 
-1. If you have an existing worker at `myapp.example.workers.dev`, use `example`
+1. If you have an existing worker at `myapp.example.workers.dev`, use `example.workers.dev`
 2. Or check in Cloudflare Dashboard → Workers & Pages → any worker URL
-3. Add as `CLOUDFLARE_SUBDOMAIN` secret in GitHub
+3. The subdomain is everything after your worker name (e.g., `mandarons.workers.dev`)
+4. Add as `CLOUDFLARE_SUBDOMAIN` secret in GitHub
 
 ## Action Required
 

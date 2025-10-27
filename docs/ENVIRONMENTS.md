@@ -93,7 +93,7 @@ Add the following secrets to your GitHub repository (Settings → Secrets and va
 
 - `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Workers, D1, and Pages permissions
 - `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
-- `CLOUDFLARE_SUBDOMAIN`: Your workers.dev subdomain (e.g., if your workers.dev URL is `myapp.example.workers.dev`, use `example`)
+- `CLOUDFLARE_SUBDOMAIN`: Your workers.dev subdomain (e.g., `mandarons.workers.dev`)
 
 ### 4. Enable GitHub Actions
 
