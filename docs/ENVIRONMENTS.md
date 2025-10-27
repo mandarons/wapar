@@ -91,14 +91,9 @@ bunx wrangler d1 execute wapar-db-staging --remote --file=./schema.sql
 
 Add the following secrets to your GitHub repository (Settings → Secrets and variables → Actions):
 
-**Required for Workers:**
-- `CF_API_TOKEN`: Cloudflare API token with Workers and D1 permissions
-- `CF_ACCOUNT_ID`: Your Cloudflare account ID
-- `CF_SUBDOMAIN`: Your workers.dev subdomain (e.g., if your workers.dev URL is `myapp.example.workers.dev`, use `example`)
-
-**Required for Pages:**
-- `CF_API_TOKEN`: Cloudflare API token with Pages permissions (can be same as CF_API_TOKEN)
-- `CF_ACCOUNT_ID`: Your Cloudflare account ID (can be same as CF_ACCOUNT_ID)
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Workers, D1, and Pages permissions
+- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
+- `CLOUDFLARE_SUBDOMAIN`: Your workers.dev subdomain (e.g., if your workers.dev URL is `myapp.example.workers.dev`, use `example`)
 
 ### 4. Enable GitHub Actions
 

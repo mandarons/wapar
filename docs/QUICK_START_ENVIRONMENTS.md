@@ -29,11 +29,9 @@ Add these secrets in your GitHub repository (Settings → Secrets and variables 
 
 | Secret Name | Description | How to Get |
 |-------------|-------------|------------|
-| `CF_API_TOKEN` | API token for Workers/D1 | Dashboard → My Profile → API Tokens → Create Token (Edit Cloudflare Workers) |
-| `CF_ACCOUNT_ID` | Your account ID | Dashboard → Workers & Pages → Account ID |
-| `CF_SUBDOMAIN` | Your workers.dev subdomain | The part before `.workers.dev` in your worker URLs |
-| `CF_API_TOKEN` | API token for Pages | Can use same as CF_API_TOKEN |
-| `CF_ACCOUNT_ID` | Your account ID | Can use same as CF_ACCOUNT_ID |
+| `CLOUDFLARE_API_TOKEN` | API token for Workers, D1, and Pages | Dashboard → My Profile → API Tokens → Create Token (Edit Cloudflare Workers + Pages) |
+| `CLOUDFLARE_ACCOUNT_ID` | Your account ID | Dashboard → Workers & Pages → Account ID |
+| `CLOUDFLARE_SUBDOMAIN` | Your workers.dev subdomain | The part before `.workers.dev` in your worker URLs |
 
 ### 3. Commit and Push
 

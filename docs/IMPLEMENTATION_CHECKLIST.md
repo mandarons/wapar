@@ -34,24 +34,17 @@ Go to: **GitHub Repository → Settings → Secrets and variables → Actions �
 
 Add these secrets:
 
-- [ ] `CF_API_TOKEN`
+- [ ] `CLOUDFLARE_API_TOKEN`
   - How to get: Cloudflare Dashboard → My Profile → API Tokens → Create Token
   - Template: "Edit Cloudflare Workers"
-  - Permissions needed: Account.Cloudflare Workers Scripts (Edit), Account.D1 (Edit)
+  - Permissions needed: Account.Cloudflare Workers Scripts (Edit), Account.D1 (Edit), Account.Pages (Edit)
 
-- [ ] `CF_ACCOUNT_ID`
+- [ ] `CLOUDFLARE_ACCOUNT_ID`
   - How to get: Cloudflare Dashboard → Workers & Pages → Copy Account ID from right sidebar
 
-- [ ] `CF_SUBDOMAIN`
+- [ ] `CLOUDFLARE_SUBDOMAIN`
   - What it is: If your workers.dev URL is `myapp.example.workers.dev`, use `example`
   - How to find: Check any existing worker URL or your account subdomain
-
-- [ ] `CF_API_TOKEN`
-  - Can use the same token as `CF_API_TOKEN`
-  - OR create a new one with Pages permissions
-
-- [ ] `CF_ACCOUNT_ID`
-  - Can use the same as `CF_ACCOUNT_ID`
 
 ### 3. Commit and Push Changes
 
