@@ -33,8 +33,8 @@ DRIZZLE_LOG = "true"
 # Staging environment - deployed from PRs
 # Note: You'll need to create a staging D1 database and update the database_id
 [env.staging]
-# Disable cron jobs in staging
-# triggers.crons is not supported per environment, so crons only run in production
+# Note: Cron jobs are only configured for the default (production) environment.
+# Wrangler does not support per-environment cron triggers, so crons do not run in staging.
 
 [env.staging.d1_databases]
 binding = "DB"
