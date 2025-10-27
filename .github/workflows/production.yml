@@ -1,0 +1,76 @@
+name: Production Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule: 
+    - cron: "0 * * * *"
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Backend Tests
+      - name: Install server dependencies
+        run: cd server && (bun install --frozen-lockfile || bun install)
+
+      - name: Generate Drizzle migrations
+        run: cd server && bun run db:generate
+
+      - name: Run server tests
+        run: cd server && bun run test --run
+
+      # Frontend Dependencies
+      - name: Cache frontend dependencies
+        uses: actions/cache@v4
+        id: cache-app
+        with:
+          path: app/node_modules
+          key: ${{ runner.os }}-bun-app-${{ hashFiles('app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-app-
+
+      - name: Install frontend dependencies
+        if: steps.cache-app.outputs.cache-hit != 'true'
+        run: cd app && bun install --frozen-lockfile
+
+      # Deploy Backend
+      - name: Deploy database schema to production
+        run: cd server && bun run db:deploy:remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy Workers to production
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+          workingDirectory: server
+
+      # Deploy Frontend
+      - name: Build frontend
+        run: cd app && bun run build
+        env:
+          PUBLIC_URL: "."
+          PUBLIC_API_URL: https://wapar-api.mandarons.com
+
+      - name: Deploy Pages to production
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy app/.svelte-kit/output/client --project-name=wapar --branch=main
