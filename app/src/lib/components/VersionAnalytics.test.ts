@@ -73,8 +73,7 @@ describe('VersionAnalytics Component Tests', () => {
 
 	it('should determine outdated versions correctly', () => {
 		const isOutdated = (version: string, latestVersion: string | null): boolean => {
-			if (!latestVersion || version === latestVersion) return false;
-			return version !== latestVersion;
+			return !!latestVersion && version !== latestVersion;
 		};
 
 		expect(isOutdated('2.0.5', '2.1.0')).toBe(true);
