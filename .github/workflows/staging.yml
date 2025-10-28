@@ -78,7 +78,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy app/.svelte-kit/output/client --project-name=wapar-frontend --branch=${{ github.head_ref }} --commit-dirty=true
+          command: pages deploy app/.svelte-kit/cloudflare --project-name=wapar-frontend --branch=${{ github.head_ref }} --commit-dirty=true
 
       # Post unified PR comment
       - name: Comment PR with deployment links
