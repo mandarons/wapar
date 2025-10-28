@@ -63,11 +63,6 @@ jobs:
       - name: Install server dependencies (if needed)
         run: cd server && (bun install --frozen-lockfile || true)
 
-      - name: Deploy database schema to production
-        run: cd server && bun run db:deploy:remote
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
       - name: Deploy Workers to production
         uses: cloudflare/wrangler-action@v3
         with:
