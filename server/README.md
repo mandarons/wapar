@@ -62,7 +62,7 @@ Returns comprehensive app version distribution analytics.
 - `outdatedInstallations`: Count of installations not on latest version
 - `upgradeRate`: Number of installations updated in last 7 and 30 days
 
-**Performance:** Average response time ~13ms
+**Performance:** Optimized for fast response times (<500ms)
 
 Scheduled job:
 - Hourly cron to enrich IP geo info.
