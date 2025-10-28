@@ -58,7 +58,7 @@ Returns comprehensive app version distribution analytics.
 
 **Fields:**
 - `versionDistribution`: Array of version objects with count and percentage
-- `latestVersion`: Most common version (null if no data)
+- `latestVersion`: Version with highest installation count (null if no data)
 - `outdatedInstallations`: Count of installations not on latest version
 - `upgradeRate`: Number of installations updated in last 7 and 30 days
 
