@@ -54,7 +54,8 @@ describe(ENDPOINT, () => {
 
     // Wait for installations to be created
     await waitForCount(
-      `SELECT COUNT(1) as count FROM Installation WHERE id IN ('${id1}', '${id2}', '${id3}', '${id4}')`, 
+      'SELECT COUNT(1) as count FROM Installation WHERE id IN (?, ?, ?, ?)',
+      [id1, id2, id3, id4],
       4
     );
 
