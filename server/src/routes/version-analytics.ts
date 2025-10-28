@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getDb } from '../db/client';
 import { installations } from '../db/schema';
-import { count, desc, gte, sql } from 'drizzle-orm';
+import { count, desc, gte } from 'drizzle-orm';
 import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 
