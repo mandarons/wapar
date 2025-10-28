@@ -112,13 +112,33 @@ export async function d1QueryOne<T = any>(sql: string, params: unknown[] = []): 
 // Alias for compatibility with installation tests
 export const queryOne = d1QueryOne;
 
-export async function waitForCount(sqlCountQuery: string, expected: number, timeoutMs = 12000, intervalMs = 200): Promise<void> {
+export async function waitForCount(sqlCountQuery: string, params: unknown[] | number = [], expectedOrTimeout?: number, timeoutMs = 12000, intervalMs = 200): Promise<void> {
+  // Handle overloaded signatures for backward compatibility
+  let expected: number;
+  let timeout: number;
+  let interval: number;
+  let queryParams: unknown[];
+  
+  if (typeof params === 'number') {
+    // Old signature: waitForCount(query, expected, timeout?, interval?)
+    expected = params;
+    timeout = typeof expectedOrTimeout === 'number' ? expectedOrTimeout : timeoutMs;
+    interval = intervalMs;
+    queryParams = [];
+  } else {
+    // New signature: waitForCount(query, params, expected, timeout?, interval?)
+    queryParams = params;
+    expected = expectedOrTimeout as number;
+    timeout = timeoutMs;
+    interval = intervalMs;
+  }
+  
   const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    const row = await d1QueryOne<{ count: number }>(sqlCountQuery);
+  while (Date.now() - start < timeout) {
+    const row = await d1QueryOne<{ count: number }>(sqlCountQuery, queryParams);
     const count = Number(row?.count ?? 0);
     if (count === expected) return;
-    await new Promise((r) => setTimeout(r, intervalMs));
+    await new Promise((r) => setTimeout(r, interval));
   }
   throw new Error(`Timeout waiting for count=${expected} for query: ${sqlCountQuery}`);
 }

@@ -41,7 +41,7 @@ versionAnalyticsRoutes.get('/', async (c) => {
         : 0
     }));
 
-    // Determine latest version (semantic versioning aware)
+    // Determine latest version (most popular by installation count)
     const latestVersion = versionDistribution.length > 0 
       ? versionDistribution[0].version 
       : null;
