@@ -110,7 +110,8 @@ describe(ENDPOINT, () => {
     const id3 = await createInstallation('3.0.0');
 
     await waitForCount(
-      `SELECT COUNT(1) as count FROM Installation WHERE id IN ('${id1}', '${id2}', '${id3}')`, 
+      'SELECT COUNT(1) as count FROM Installation WHERE id IN (?, ?, ?)',
+      [id1, id2, id3],
       3
     );
 
@@ -143,7 +144,8 @@ describe(ENDPOINT, () => {
     const id5 = await createInstallation('3.8.0');
 
     await waitForCount(
-      `SELECT COUNT(1) as count FROM Installation WHERE id IN ('${id1}', '${id2}', '${id3}', '${id4}', '${id5}')`, 
+      'SELECT COUNT(1) as count FROM Installation WHERE id IN (?, ?, ?, ?, ?)',
+      [id1, id2, id3, id4, id5],
       5
     );
 
@@ -170,7 +172,7 @@ describe(ENDPOINT, () => {
     
     // Create a recent installation (will have recent updatedAt)
     const id1 = await createInstallation('5.0.0');
-    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${id1}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Installation WHERE id = ?', [id1], 1);
 
     const res = await fetch(`${base}${ENDPOINT}`);
     expect(res.status).toBe(200);
@@ -213,7 +215,8 @@ describe(ENDPOINT, () => {
     const id4 = await createInstallation('5.9.0');
 
     await waitForCount(
-      `SELECT COUNT(1) as count FROM Installation WHERE id IN ('${id1}', '${id2}', '${id3}', '${id4}')`, 
+      'SELECT COUNT(1) as count FROM Installation WHERE id IN (?, ?, ?, ?)',
+      [id1, id2, id3, id4],
       4
     );
 
@@ -257,7 +260,8 @@ describe(ENDPOINT, () => {
     const id3 = await createInstallation('7.0.0');
 
     await waitForCount(
-      `SELECT COUNT(1) as count FROM Installation WHERE id IN ('${id1}', '${id2}', '${id3}')`, 
+      'SELECT COUNT(1) as count FROM Installation WHERE id IN (?, ?, ?)',
+      [id1, id2, id3],
       3
     );
 
@@ -285,7 +289,8 @@ describe(ENDPOINT, () => {
     }
 
     await waitForCount(
-      `SELECT COUNT(1) as count FROM Installation WHERE id IN ('${ids.join("','")}')`, 
+      `SELECT COUNT(1) as count FROM Installation WHERE id IN (${ids.map(() => '?').join(', ')})`,
+      ids,
       versions.length
     );
 
