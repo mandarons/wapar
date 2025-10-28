@@ -5,10 +5,26 @@ import { usageRoutes } from './routes/usage';
 import { handleValidationError, handleGenericError } from './utils/errors';
 import { scheduled } from './jobs/enrich-ip';
 import { Logger } from './utils/logger';
+import { ensureMigrations } from './db/migrations';
 
 type Bindings = { DB: D1Database };
 
 const app = new Hono<{ Bindings: Bindings }>();
+
+// Middleware to ensure migrations run on first request
+app.use('*', async (c, next) => {
+  try {
+    await ensureMigrations(c.env.DB);
+  } catch (error) {
+    Logger.error('Failed to run migrations', {
+      operation: 'middleware.migrations',
+      error: error as Error,
+      ...Logger.getRequestContext(c)
+    });
+    // Continue anyway - migrations might already be applied
+  }
+  await next();
+});
 
 app.onError((err, c) => {
   const requestContext = Logger.getRequestContext(c);
