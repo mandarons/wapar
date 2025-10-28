@@ -1,8 +1,8 @@
 import type { PageServerLoad } from './$types';
-import { env } from '$env/dynamic/public';
+import { PUBLIC_API_URL } from '$env/static/public';
 
-// Default to production API, can be overridden with PUBLIC_API_URL environment variable
-const API_URL = env.PUBLIC_API_URL || 'https://wapar-api.mandarons.com';
+// Use the PUBLIC_API_URL set at build time, with fallback to production
+const API_URL = PUBLIC_API_URL || 'https://wapar-api.mandarons.com';
 
 export const load: PageServerLoad = async () => {
 	try {
