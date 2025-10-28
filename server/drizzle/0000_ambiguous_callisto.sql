@@ -24,4 +24,5 @@ CREATE TABLE `Installation` (
 --> statement-breakpoint
 CREATE INDEX `idx_installation_app_name` ON `Installation` (`app_name`);--> statement-breakpoint
 CREATE INDEX `idx_installation_app_version` ON `Installation` (`app_version`);--> statement-breakpoint
-CREATE INDEX `idx_installation_country_code` ON `Installation` (`country_code`);
+CREATE INDEX `idx_installation_country_code` ON `Installation` (`country_code`);--> statement-breakpoint
+CREATE INDEX `idx_installation_updated_at` ON `Installation` (`updated_at`);
