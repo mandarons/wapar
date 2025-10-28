@@ -87,7 +87,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const workerUrl = `https://wapar-api-staging.${{ secrets.CLOUDFLARE_SUBDOMAIN }}`;
-            const pagesUrl = `https://${{ github.head_ref }}.wapar-frontend.pages.dev`;
+            const pagesUrl = `https://${{ github.head_ref }}.wapar-dev.pages.dev`;
             
             const body = `## 🚀 Staging Deployment Complete
             
