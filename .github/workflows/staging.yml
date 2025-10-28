@@ -1,0 +1,203 @@
+name: Staging (PR) Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache server dependencies
+        uses: actions/cache@v4
+        id: cache-server
+        with:
+          path: server/node_modules
+          key: ${{ runner.os }}-bun-server-${{ hashFiles('server/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-server-
+
+      - name: Install server dependencies
+        if: steps.cache-server.outputs.cache-hit != 'true'
+        run: cd server && bun install --frozen-lockfile
+
+      - name: Run server tests
+        run: cd server && bun run test --run --reporter=basic
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache frontend dependencies
+        uses: actions/cache@v4
+        id: cache-app
+        with:
+          path: app/node_modules
+          key: ${{ runner.os }}-bun-app-${{ hashFiles('app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-app-
+
+      - name: Install frontend dependencies
+        if: steps.cache-app.outputs.cache-hit != 'true'
+        run: cd app && bun install --frozen-lockfile
+
+      - name: Run frontend tests
+        run: cd app && bun run test:unit --run --reporter=dot
+
+  deploy-backend:
+    name: Deploy Backend to Staging
+    runs-on: ubuntu-latest
+    needs: test-backend
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache server dependencies
+        uses: actions/cache@v4
+        with:
+          path: server/node_modules
+          key: ${{ runner.os }}-bun-server-${{ hashFiles('server/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-server-
+
+      - name: Install server dependencies (if needed)
+        run: cd server && (bun install --frozen-lockfile || true)
+
+      - name: Deploy database schema to staging
+        run: cd server && bunx wrangler d1 execute wapar-db-staging --env staging --file=./schema.sql
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy Workers to staging
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --env staging
+          workingDirectory: server
+
+  deploy-frontend:
+    name: Deploy Frontend to Staging
+    runs-on: ubuntu-latest
+    needs: test-frontend
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache frontend dependencies
+        uses: actions/cache@v4
+        with:
+          path: app/node_modules
+          key: ${{ runner.os }}-bun-app-${{ hashFiles('app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-app-
+
+      - name: Install frontend dependencies (if needed)
+        run: cd app && (bun install --frozen-lockfile || true)
+
+      - name: Set staging API URL
+        id: api-url
+        run: |
+          SUBDOMAIN="${{ secrets.CLOUDFLARE_SUBDOMAIN }}"
+          echo "API_URL=https://wapar-api-staging.${SUBDOMAIN}" >> $GITHUB_OUTPUT
+
+      - name: Build frontend for staging
+        run: cd app && bun run build
+        env:
+          PUBLIC_URL: "."
+          PUBLIC_API_URL: ${{ steps.api-url.outputs.API_URL }}
+
+      - name: Deploy Pages to staging
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy app/.svelte-kit/cloudflare --project-name=wapar-frontend --branch=${{ github.head_ref }} --commit-dirty=true
+
+  comment-pr:
+    name: Comment on PR
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment PR with deployment links
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const workerUrl = `https://wapar-api-staging.${{ secrets.CLOUDFLARE_SUBDOMAIN }}`;
+            const pagesUrl = `https://${{ github.head_ref }}.wapar-dev.pages.dev`;
+            
+            const body = `## 🚀 Staging Deployment Complete
+            
+            | Service | URL |
+            |---------|-----|
+            | **Worker API** | ${workerUrl} |
+            | **Pages (Frontend)** | ${pagesUrl} |
+            
+            These deployments are automatically updated with every push to this PR.`;
+            
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existingComment = comments.data.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Staging Deployment Complete')
+            );
+            
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
