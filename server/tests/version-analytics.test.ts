@@ -224,11 +224,20 @@ describe(ENDPOINT, () => {
     expect(res.status).toBe(200);
     const body = await res.json();
 
-    // Verify versions are ordered by count (descending)
+    // Verify versions are ordered by semantic version (descending)
+    // This means higher version numbers should appear first (e.g., 2.0.0 before 1.9.0)
     if (body.versionDistribution.length > 1) {
+      // Import version comparison utility
+      const { compareVersions } = await import('../src/utils/version');
+      
       for (let i = 0; i < body.versionDistribution.length - 1; i++) {
-        expect(body.versionDistribution[i].count)
-          .toBeGreaterThanOrEqual(body.versionDistribution[i + 1].count);
+        const currentVersion = body.versionDistribution[i].version;
+        const nextVersion = body.versionDistribution[i + 1].version;
+        
+        // compareVersions returns positive if first arg > second arg
+        // We expect current >= next (descending order)
+        expect(compareVersions(currentVersion, nextVersion))
+          .toBeGreaterThanOrEqual(0);
       }
     }
   });
