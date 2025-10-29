@@ -15,10 +15,6 @@
 	export let installationsLast24h: number = 0;
 	export let installationsLast7d: number = 0;
 
-	// Event dispatchers for pagination
-	import { createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
-
 	/**
 	 * Convert country code to emoji flag
 	 * @param countryCode - ISO 3166-1 alpha-2 country code
@@ -54,20 +50,6 @@
 		return 'Unknown';
 	}
 
-	function handlePrevious() {
-		if (offset > 0) {
-			dispatch('paginate', { offset: Math.max(0, offset - limit) });
-		}
-	}
-
-	function handleNext() {
-		if (offset + limit < total) {
-			dispatch('paginate', { offset: offset + limit });
-		}
-	}
-
-	$: hasNext = offset + limit < total;
-	$: hasPrevious = offset > 0;
 	$: currentPage = Math.floor(offset / limit) + 1;
 	$: totalPages = Math.ceil(total / limit);
 </script>
@@ -114,25 +96,14 @@
 			{/each}
 		</div>
 
-		<!-- Pagination controls -->
-		<div class="flex justify-between items-center mt-4">
-			<button
-				class="btn btn-sm variant-ghost"
-				on:click={handlePrevious}
-				disabled={!hasPrevious}
-			>
-				← Previous
-			</button>
+		<!-- Pagination info (display only) -->
+		<div class="flex justify-center items-center mt-4">
 			<div class="text-sm text-surface-600">
-				Page {currentPage} of {totalPages} ({total} total)
+				Showing {Math.min(offset + 1, total)}-{Math.min(offset + installations.length, total)} of {total} installations
+				{#if totalPages > 1}
+					(Page {currentPage} of {totalPages})
+				{/if}
 			</div>
-			<button
-				class="btn btn-sm variant-ghost"
-				on:click={handleNext}
-				disabled={!hasNext}
-			>
-				Next →
-			</button>
 		</div>
 	{/if}
 </div>
