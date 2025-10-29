@@ -96,6 +96,14 @@ jobs:
           command: deploy --env staging
           workingDirectory: server
 
+      - name: Wait for worker to be ready
+        run: sleep 10
+
+      - name: Seed staging database with dummy data
+        run: node server/scripts/seed-staging.js
+        env:
+          STAGING_API_URL: https://wapar-api-staging.${{ secrets.CLOUDFLARE_SUBDOMAIN }}
+
   deploy-frontend:
     name: Deploy Frontend to Staging
     runs-on: ubuntu-latest

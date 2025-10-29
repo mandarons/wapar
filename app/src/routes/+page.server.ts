@@ -14,7 +14,7 @@ export const load: PageServerLoad = async () => {
 		// Fetch version analytics
 		let versionAnalytics;
 		try {
-			const versionRes = await fetch('https://wapar-api.mandarons.com/api/version-analytics');
+			const versionRes = await fetch(`${API_URL}/api/version-analytics`);
 			versionAnalytics = await versionRes.json();
 		} catch (error) {
 			console.warn('Failed to fetch version analytics:', error);
