@@ -113,25 +113,27 @@ export async function d1QueryOne<T = any>(sql: string, params: unknown[] = []): 
 // Alias for compatibility with installation tests
 export const queryOne = d1QueryOne;
 
-export async function waitForCount(sqlCountQuery: string, params: unknown[] | number = [], expectedOrTimeout?: number, timeoutMs = 12000, intervalMs = 200): Promise<void> {
-  // Handle overloaded signatures for backward compatibility
+// Overloaded function signatures for waitForCount
+export async function waitForCount(sqlCountQuery: string, expected: number, timeoutMs?: number, intervalMs?: number): Promise<void>;
+export async function waitForCount(sqlCountQuery: string, params: unknown[], expected: number, timeoutMs?: number, intervalMs?: number): Promise<void>;
+export async function waitForCount(sqlCountQuery: string, paramsOrExpected: unknown[] | number, expectedOrTimeout?: number, timeoutMsOrInterval?: number, intervalMs?: number): Promise<void> {
+  let queryParams: unknown[];
   let expected: number;
   let timeout: number;
   let interval: number;
-  let queryParams: unknown[];
   
-  if (typeof params === 'number') {
-    // Old signature: waitForCount(query, expected, timeout?, interval?)
-    expected = params;
-    timeout = typeof expectedOrTimeout === 'number' ? expectedOrTimeout : timeoutMs;
-    interval = intervalMs;
+  if (typeof paramsOrExpected === 'number') {
+    // First signature: waitForCount(query, expected, timeout?, interval?)
     queryParams = [];
+    expected = paramsOrExpected;
+    timeout = expectedOrTimeout ?? 12000;
+    interval = timeoutMsOrInterval ?? 200;
   } else {
-    // New signature: waitForCount(query, params, expected, timeout?, interval?)
-    queryParams = params;
+    // Second signature: waitForCount(query, params, expected, timeout?, interval?)
+    queryParams = paramsOrExpected;
     expected = expectedOrTimeout as number;
-    timeout = timeoutMs;
-    interval = intervalMs;
+    timeout = timeoutMsOrInterval ?? 12000;
+    interval = intervalMs ?? 200;
   }
   
   const start = Date.now();

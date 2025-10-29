@@ -17,7 +17,7 @@
 		? Math.max(...versionDistribution.map(v => v.count)) 
 		: 1;
 
-	// Determine if a version is outdated (2 versions behind latest or more)
+	// Determine if a version is outdated (not the latest version)
 	function isOutdated(version: string): boolean {
 		if (!latestVersion || version === latestVersion) return false;
 		
