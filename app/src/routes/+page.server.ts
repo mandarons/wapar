@@ -1,8 +1,7 @@
 import type { PageServerLoad } from './$types';
-import { PUBLIC_API_URL } from '$env/static/public';
 
-// Use the PUBLIC_API_URL set at build time, with fallback to production
-const API_URL = PUBLIC_API_URL || 'https://wapar-api.mandarons.com';
+// Use hardcoded production URL or get from environment at runtime
+const API_URL = process.env.PUBLIC_API_URL || 'https://wapar-api.mandarons.com';
 
 export const load: PageServerLoad = async () => {
 	try {
@@ -26,10 +25,28 @@ export const load: PageServerLoad = async () => {
 			};
 		}
 		
+		// Fetch recent installations
+		let recentInstallationsData;
+		try {
+			const recentRes = await fetch(`${API_URL}/api/recent-installations?limit=20`);
+			recentInstallationsData = await recentRes.json();
+		} catch (error) {
+			console.warn('Failed to fetch recent installations:', error);
+			recentInstallationsData = {
+				installations: [],
+				total: 0,
+				limit: 20,
+				offset: 0,
+				installationsLast24h: 0,
+				installationsLast7d: 0
+			};
+		}
+		
 		const data = { ...waparData };
 		data.totalInstallations = haData.bouncie.total + data.iCloudDocker.total;
 		data.haBouncie = haData.bouncie;
 		data.versionAnalytics = versionAnalytics;
+		data.recentInstallations = recentInstallationsData;
 		return data;
 	} catch (error) {
 		// Return mock data for development/testing
@@ -63,6 +80,14 @@ export const load: PageServerLoad = async () => {
 				latestVersion: '2.1.0',
 				outdatedInstallations: 305,
 				upgradeRate: { last7Days: 15, last30Days: 78 }
+			},
+			recentInstallations: {
+				installations: [],
+				total: 0,
+				limit: 20,
+				offset: 0,
+				installationsLast24h: 0,
+				installationsLast7d: 0
 			}
 		};
 	}

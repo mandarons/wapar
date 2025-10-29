@@ -28,6 +28,7 @@
 	import AppComparisonCards from '$lib/components/AppComparisonCards.svelte';
 	import GeographicAppAnalysis from '$lib/components/GeographicAppAnalysis.svelte';
 	import VersionAnalytics from '$lib/components/VersionAnalytics.svelte';
+	import RecentInstallations from '$lib/components/RecentInstallations.svelte';
 
 	export let data: {
 		totalInstallations: number;
@@ -45,6 +46,21 @@
 			latestVersion: string | null;
 			outdatedInstallations: number;
 			upgradeRate: { last7Days: number; last30Days: number };
+		};
+		recentInstallations?: {
+			installations: Array<{
+				id: string;
+				appName: string;
+				appVersion: string;
+				countryCode: string | null;
+				region: string | null;
+				createdAt: string;
+			}>;
+			total: number;
+			limit: number;
+			offset: number;
+			installationsLast24h: number;
+			installationsLast7d: number;
 		};
 	};
 
@@ -593,6 +609,20 @@
 					latestVersion={data.versionAnalytics.latestVersion}
 					outdatedInstallations={data.versionAnalytics.outdatedInstallations}
 					upgradeRate={data.versionAnalytics.upgradeRate}
+				/>
+			</div>
+		{/if}
+
+		<!-- Recent Installations -->
+		{#if data.recentInstallations}
+			<div class="mt-8">
+				<RecentInstallations
+					installations={data.recentInstallations.installations}
+					total={data.recentInstallations.total}
+					limit={data.recentInstallations.limit}
+					offset={data.recentInstallations.offset}
+					installationsLast24h={data.recentInstallations.installationsLast24h}
+					installationsLast7d={data.recentInstallations.installationsLast7d}
 				/>
 			</div>
 		{/if}
