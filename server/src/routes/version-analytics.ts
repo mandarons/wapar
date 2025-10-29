@@ -4,6 +4,7 @@ import { installations } from '../db/schema';
 import { count, desc, gte } from 'drizzle-orm';
 import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
+import { findLatestVersion, compareVersions } from '../utils/version';
 
 export const versionAnalyticsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -41,10 +42,13 @@ versionAnalyticsRoutes.get('/', async (c) => {
         : 0
     }));
 
-    // Determine latest version (most popular by installation count)
-    const latestVersion = versionDistribution.length > 0 
-      ? versionDistribution[0].version 
-      : null;
+    // Sort version distribution by semantic version (descending)
+    versionDistribution.sort((a, b) => compareVersions(b.version, a.version));
+
+    // Determine latest version using semantic version comparison
+    const latestVersion = findLatestVersion(
+      versionDistribution.map(v => v.version)
+    );
 
     // Count outdated installations (not on latest version)
     const outdatedInstallations = latestVersion
