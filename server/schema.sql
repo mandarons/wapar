@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS Installation (
 );
 CREATE INDEX IF NOT EXISTS idx_installation_app_name ON Installation(app_name);
 CREATE INDEX IF NOT EXISTS idx_installation_country_code ON Installation(country_code);
+CREATE INDEX IF NOT EXISTS idx_installation_created_at ON Installation(created_at);
 
 -- Heartbeat table
 CREATE TABLE IF NOT EXISTS Heartbeat (
