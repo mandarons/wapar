@@ -1,7 +1,10 @@
 import type { PageServerLoad } from './$types';
 
-// Use hardcoded production URL or get from environment at runtime
-const API_URL = process.env.PUBLIC_API_URL || 'https://wapar-api.mandarons.com';
+// Check if process.env exists (Node.js) and has PUBLIC_API_URL, otherwise use production URL
+// This supports both staging (Node.js with env vars) and production (Cloudflare Workers)
+const API_URL = (typeof process !== 'undefined' && process.env?.PUBLIC_API_URL) 
+	? process.env.PUBLIC_API_URL 
+	: 'https://wapar-api.mandarons.com';
 
 export const load: PageServerLoad = async () => {
 	try {
