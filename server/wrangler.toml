@@ -3,14 +3,17 @@ main = "src/index.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Production environment (default) - deployed from main branch
-[triggers]
-crons = ["0 * * * *"]
-
+# D1 database configuration
 [[d1_databases]]
 binding = "DB"
 database_name = "wapar-db"
 database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40"
+# Point to Drizzle's migration folder
+migrations_dir = "drizzle"
+
+# Production environment (default) - deployed from main branch
+[triggers]
+crons = ["0 * * * *"]
 
 [vars]
 # Drizzle configuration for production
@@ -40,6 +43,7 @@ DRIZZLE_LOG = "true"
 binding = "DB"
 database_name = "wapar-db-staging"
 database_id = "0f9df445-0c2e-4229-80c6-543bdb0e3770"
+migrations_dir = "drizzle"
 
 [env.staging.vars]
 DRIZZLE_LOG = "true"
