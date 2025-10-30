@@ -51,14 +51,21 @@ installationRoutes.post('/', async (c) => {
     if (contentType.includes('application/x-www-form-urlencoded')) {
       // Parse form-encoded data (legacy support for older icloud-docker clients)
       const formData = new URLSearchParams(rawBody);
+      
+      // Helper function to get value from form data, supporting both camelCase and snake_case
+      const getFormValue = (camelCase: string, snakeCase: string): string | undefined => {
+        const value = formData.get(camelCase) || formData.get(snakeCase);
+        return value || undefined;
+      };
+      
       parsedBody = {
-        appName: formData.get('appName') || undefined,
-        appVersion: formData.get('appVersion') || undefined,
-        ipAddress: formData.get('ipAddress') || undefined,
-        previousId: formData.get('previousId') || undefined,
-        data: formData.get('data') || undefined,
-        countryCode: formData.get('countryCode') || undefined,
-        region: formData.get('region') || undefined
+        appName: getFormValue('appName', 'app_name'),
+        appVersion: getFormValue('appVersion', 'app_version'),
+        ipAddress: getFormValue('ipAddress', 'ip_address'),
+        previousId: getFormValue('previousId', 'previous_id'),
+        data: getFormValue('data', 'data'),
+        countryCode: getFormValue('countryCode', 'country_code'),
+        region: getFormValue('region', 'region')
       };
       
       Logger.info('Parsed form-encoded data', {
@@ -73,7 +80,18 @@ installationRoutes.post('/', async (c) => {
     } else {
       // Default to JSON parsing (recommended for all new clients)
       try {
-        parsedBody = JSON.parse(rawBody);
+        const rawParsed = JSON.parse(rawBody);
+        
+        // Transform snake_case to camelCase for backward compatibility
+        parsedBody = {
+          appName: rawParsed.appName || rawParsed.app_name,
+          appVersion: rawParsed.appVersion || rawParsed.app_version,
+          ipAddress: rawParsed.ipAddress || rawParsed.ip_address,
+          previousId: rawParsed.previousId || rawParsed.previous_id,
+          data: rawParsed.data,
+          countryCode: rawParsed.countryCode || rawParsed.country_code,
+          region: rawParsed.region
+        };
       } catch (parseError) {
         Logger.error('JSON parsing failed', {
           operation: 'installation.json_parse',
