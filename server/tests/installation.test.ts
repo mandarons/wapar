@@ -171,4 +171,82 @@ describe(ENDPOINT, () => {
     
     expect(res.status).toBe(400);
   });
+
+  // Snake_case field name tests (for backward compatibility)
+  it('POST with JSON and snake_case field names should succeed', async () => {
+    const base = getBase();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        app_name: 'icloud-docker',
+        app_version: '1.5.0'
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBeDefined();
+    expect(String(body.id).length).toBeGreaterThan(0);
+  });
+
+  it('POST with form-encoded snake_case field names should succeed', async () => {
+    const base = getBase();
+    const formData = new URLSearchParams({
+      app_name: 'icloud-docker',
+      app_version: '2.0.0'
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBeDefined();
+  });
+
+  it('POST with mixed camelCase and snake_case (camelCase takes precedence) should succeed', async () => {
+    const base = getBase();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        appName: 'icloud-docker-camel',
+        app_name: 'icloud-docker-snake', // This should be ignored
+        appVersion: '3.0.0',
+        app_version: '2.0.0' // This should be ignored
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBeDefined();
+  });
+
+  it('POST with snake_case and all optional fields should succeed', async () => {
+    const base = getBase();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        app_name: 'icloud-docker',
+        app_version: '1.0.0',
+        ip_address: '10.0.0.1',
+        previous_id: crypto.randomUUID(),
+        country_code: 'CA',
+        region: 'Ontario'
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBeDefined();
+  });
 });
+
