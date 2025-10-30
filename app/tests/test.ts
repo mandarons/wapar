@@ -32,16 +32,19 @@ test('supports manual refresh without auto-refresh controls', async ({ page }) =
 });
 
 test('renders market share tools with neutral styling', async ({ page }) => {
+	await page.getByTestId('tab-distribution').click();
 	await expect(page.locator('text=Distribution insights')).toBeVisible();
 	await expect(page.getByTestId('chart-type-selector')).toBeVisible();
 	await expect(page.getByTestId('export-chart-button')).toBeVisible();
 });
 
 test('keeps geographic list and interactive map accessible', async ({ page }) => {
+	await page.getByTestId('tab-geography').click();
 	const topCountriesHeading = page.locator('text=Top 10 countries');
 	await expect(topCountriesHeading).toBeVisible();
 	const map = page.getByTestId('interactive-map');
 	await expect(map).toBeVisible();
+	await expect(map.locator('svg').first()).toBeVisible();
 
 	const countryItems = page.locator('[data-testid^="country-item-"]');
 	await expect(countryItems.first()).toBeVisible();
