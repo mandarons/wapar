@@ -201,7 +201,6 @@
 		}
 		return svgMapConstructor;
 	}
-
 	async function initialiseMap() {
 		if (typeof document === 'undefined') return;
 		const svgMap = await getSvgMapConstructor();
@@ -242,31 +241,29 @@
 						])
 					)
 				)
-			},
-			callback: (id: string) => handleCountryClick(id)
-		});
-			mapInitialized = true;
-	}
-
-		function destroyMap() {
-			if (mapObj?.destroy) {
-				mapObj.destroy();
-			}
-			mapObj = null;
-			mapInitialized = false;
-		}
-
-		onMount(() => {
-			if (activeTab === MAP_TAB_ID) {
-				initialiseMap();
-			}
-		});
-
-	onDestroy(() => {
-			destroyMap();
+		},
+		callback: (id: string) => handleCountryClick(id)
 	});
+	mapInitialized = true;
+}
 
-	async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
+function destroyMap() {
+	if (mapObj?.destroy) {
+		mapObj.destroy();
+	}
+	mapObj = null;
+	mapInitialized = false;
+}
+
+onMount(() => {
+	if (activeTab === MAP_TAB_ID) {
+		initialiseMap();
+	}
+});
+
+onDestroy(() => {
+	destroyMap();
+});	async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 		try {
 			const response = await fetch(url);
 			if (!response.ok) {
@@ -461,54 +458,31 @@
 				{fetchError}
 			</div>
 		{/if}
-		<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-			<div>
-				<h1 class="text-2xl font-semibold text-gray-900">Install dashboard</h1>
-				<p class="text-sm text-gray-600">
-					Navigate between focused analytics panels to explore adoption from different angles.
-				</p>
-			</div>
-			{#if activeTabDetails}
-				<p class="text-sm text-gray-500 md:max-w-sm">
-					<strong class="font-semibold text-gray-700">{activeTabDetails.label}:</strong>
-					{activeTabDetails.description}
-				</p>
-			{/if}
+	<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+		<div>
+			<h1 class="text-2xl font-semibold text-gray-900">Install dashboard</h1>
+			<p class="text-sm text-gray-600">
+				Navigate between focused analytics panels to explore adoption from different angles.
+			</p>
 		</div>
+		{#if activeTabDetails}
+			<p class="text-sm text-gray-500 md:max-w-sm">
+				<strong class="font-semibold text-gray-700">{activeTabDetails.label}:</strong>
+				{activeTabDetails.description}
+			</p>
+		{/if}
+	</div>
 
-		<div
-			class="mt-6 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-2 shadow-sm"
-			role="tablist"
-			aria-label="Dashboard sections"
-		>
-			{#each visibleTabs as tab, index}
-				<button
-					bind:this={tabRefs[index]}
-					id={`dashboard-tab-${tab.id}`}
-					class={`flex flex-col rounded-md border px-4 py-2 text-left text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:gap-2 ${
-						activeTab === tab.id
-							? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
-							: 'border-transparent bg-white text-gray-700 hover:border-gray-200 hover:bg-gray-50'
-					}`}
-					role="tab"
-					type="button"
-					tabindex={activeTab === tab.id ? 0 : -1}
-					aria-selected={activeTab === tab.id}
-					aria-controls={`dashboard-panel-${tab.id}`}
-					on:click={() => handleTabClick(index)}
-					on:keydown={(event) => handleTabKeydown(event, index)}
-					data-testid={`tab-${tab.id}`}
-					title={tab.description}
-				>
-					<span>{tab.label}</span>
-					{#if activeTab === tab.id}
-						<span class="mt-1 text-xs font-normal text-indigo-100 sm:hidden">{tab.description}</span>
-					{/if}
-				</button>
-			{/each}
-		</div>
-
-		{#each visibleTabs as tab}
+	<div
+		class="mt-6 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-2 shadow-sm"
+		role="tablist"
+		aria-label="Dashboard sections"
+	>
+		{#each visibleTabs as tab, index}
+			<button
+				bind:this={tabRefs[index]}
+				id={`dashboard-tab-${tab.id}`}
+				class={`flex flex-col rounded-md border px-4 py-2 text-left text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:gap-2 ${		{#each visibleTabs as tab}
 			<div
 				id={`dashboard-panel-${tab.id}`}
 				role="tabpanel"
