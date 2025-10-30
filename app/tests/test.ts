@@ -336,9 +336,38 @@ test('should have clear data button', async ({ page }) => {
 test('should show confirmation dialog when clearing data', async ({ page }) => {
 	await page.goto('/');
 	
-	// Wait for the clear button to be ready (client-side only, no network)
+	// Wait for page to load and attempt to fetch data
+	await page.waitForLoadState('networkidle');
+	
+	// Give the page time to save a snapshot after data fetch
+	await page.waitForTimeout(2000);
+	
 	const clearBtn = page.getByTestId('clear-data-btn');
 	await clearBtn.waitFor({ state: 'visible' });
+	
+	// Check if button is enabled (has data)
+	const isDisabled = await clearBtn.isDisabled();
+	
+	if (isDisabled) {
+		// If no data yet, manually add some test data via browser context
+		await page.evaluate(() => {
+			const testSnapshot = {
+				timestamp: new Date().toISOString(),
+				totalInstallations: 100,
+				monthlyActive: 50,
+				iCloudDocker: 60,
+				haBouncie: 40,
+				countryToCount: [{ countryCode: 'US', count: 50 }]
+			};
+			localStorage.setItem('wapar_historical_data', JSON.stringify([testSnapshot]));
+		});
+		
+		// Reload to pick up the new data
+		await page.reload();
+		await clearBtn.waitFor({ state: 'visible' });
+	}
+	
+	// Now the button should be enabled
 	await clearBtn.click();
 	
 	const confirmDialog = page.getByTestId('confirm-clear');
