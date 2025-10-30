@@ -3,230 +3,224 @@
 	import 'svgmap/dist/svgMap.min.css';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
-	import {
-		getRelativeTime,
-		calculateDataFreshness,
-		getFreshnessColor,
-		getFreshnessIndicator,
-		REFRESH_INTERVALS,
-		type DataFreshness
-	} from '$lib/utils/refresh';
-	import {
-		calculateAllMetrics,
-		getPerformanceRating,
-		getDiversityRating,
-		formatPercentage,
-		formatScore
-	} from '$lib/analytics';
-	import { historicalDataService, type DataSnapshot } from '$lib/historicalData';
-	import { calculateAllGrowthMetrics } from '$lib/trendAnalysis';
-	import TrendChart from '$lib/components/TrendChart.svelte';
-	import GrowthMetrics from '$lib/components/GrowthMetrics.svelte';
-	import MilestoneTracker from '$lib/components/MilestoneTracker.svelte';
-	import DataManagement from '$lib/components/DataManagement.svelte';
-	import MarketShareChart from '$lib/components/MarketShareChart.svelte';
-	import AppComparisonCards from '$lib/components/AppComparisonCards.svelte';
 	import GeographicAppAnalysis from '$lib/components/GeographicAppAnalysis.svelte';
+	import MarketShareChart from '$lib/components/MarketShareChart.svelte';
 	import VersionAnalytics from '$lib/components/VersionAnalytics.svelte';
 	import RecentInstallations from '$lib/components/RecentInstallations.svelte';
+	import { buildOverviewMetrics, describeUpdate, deriveLastSynced } from '$lib/utils/overview';
+
+	type VersionAnalyticsPayload = {
+		versionDistribution: Array<{
+			version: string;
+			count: number;
+			percentage: number;
+		}>;
+		latestVersion: string | null;
+		outdatedInstallations: number;
+		upgradeRate: { last7Days: number; last30Days: number };
+	};
+
+	type RecentInstallationsPayload = {
+		installations: Array<{
+			id: string;
+			appName: string;
+			appVersion: string;
+			countryCode: string | null;
+			region: string | null;
+			createdAt: string;
+		}>;
+		total: number;
+		limit: number;
+		offset: number;
+		installationsLast24h: number;
+		installationsLast7d: number;
+	};
 
 	export let data: {
 		totalInstallations: number;
 		monthlyActive: number;
-		createdAt: string;
+		createdAt: string | null;
 		countryToCount: { countryCode: string; count: number }[];
 		iCloudDocker: { total: number };
 		haBouncie: { total: number };
-		versionAnalytics?: {
-			versionDistribution: Array<{
-				version: string;
-				count: number;
-				percentage: number;
-			}>;
-			latestVersion: string | null;
-			outdatedInstallations: number;
-			upgradeRate: { last7Days: number; last30Days: number };
-		};
-		recentInstallations?: {
-			installations: Array<{
-				id: string;
-				appName: string;
-				appVersion: string;
-				countryCode: string | null;
-				region: string | null;
-				createdAt: string;
-			}>;
-			total: number;
-			limit: number;
-			offset: number;
-			installationsLast24h: number;
-			installationsLast7d: number;
-		};
+		versionAnalytics?: VersionAnalyticsPayload;
+		recentInstallations?: RecentInstallationsPayload;
 	};
 
-	// Minimal interface for svgmap object (add methods/properties as needed)
-	interface SvgMap {
-		// Add properties/methods as used in this file, e.g. destroy(), etc.
+	interface SvgMapInstance {
 		destroy?: () => void;
-		// Add more as needed
 	}
-	let mapObj: SvgMap | null = null;
+
 	const modalStore = getModalStore();
-
-	// Auto-refresh state
-	let refreshInterval: number = REFRESH_INTERVALS.FIVE_MIN;
-	let intervalId: number | null = null;
-	let lastUpdated: Date = new Date();
+	const API_URL = 'https://wapar-api.mandarons.com';
+	let mapObj: SvgMapInstance | null = null;
+	let svgMapConstructor: (typeof import('svgmap'))['default'] | null = null;
 	let isRefreshing = false;
-	let isTabVisible = true;
-	let dataFreshness: DataFreshness = 'fresh';
 	let fetchError: string | null = null;
-
-	// Historical data state
-	let historicalSnapshots: DataSnapshot[] = [];
-	$: growthMetrics = calculateAllGrowthMetrics(historicalSnapshots);
-
-	// Market share chart state
+	let lastSyncedIso: string | null = data.createdAt ?? null;
 	let chartType: 'pie' | 'doughnut' | 'bar' = 'pie';
 	let marketShareChartRef: MarketShareChart | null = null;
 
-	// Load historical data on mount
-	function loadHistoricalData() {
-		historicalSnapshots = historicalDataService.getAllSnapshots();
+	const fallbackVersions: VersionAnalyticsPayload = {
+		versionDistribution: [],
+		latestVersion: null,
+		outdatedInstallations: 0,
+		upgradeRate: { last7Days: 0, last30Days: 0 }
+	};
+
+	const fallbackRecent: RecentInstallationsPayload = {
+		installations: [],
+		total: 0,
+		limit: 20,
+		offset: 0,
+		installationsLast24h: 0,
+		installationsLast7d: 0
+	};
+
+	async function getSvgMapConstructor() {
+		if (!svgMapConstructor) {
+			const module = await import('svgmap');
+			svgMapConstructor = module.default;
+		}
+		return svgMapConstructor;
 	}
 
-	// Save current data as a snapshot
-	function saveSnapshot() {
-		const timestamp = new Date().toISOString();
-		
-		// Only save one snapshot per day
-		if (!historicalDataService.shouldSaveSnapshot(timestamp)) {
-			return;
+	async function initialiseMap() {
+		if (typeof document === 'undefined') return;
+		const svgMap = await getSvgMapConstructor();
+
+		if (mapObj?.destroy) {
+			mapObj.destroy();
 		}
 
-		const snapshot: DataSnapshot = {
-			timestamp,
-			totalInstallations: data.totalInstallations,
-			monthlyActive: data.monthlyActive,
-			iCloudDocker: data.iCloudDocker.total,
-			haBouncie: data.haBouncie.total,
-			countryToCount: data.countryToCount
-		};
-
-		historicalDataService.saveSnapshot(snapshot);
-		loadHistoricalData(); // Refresh the view
+		mapObj = new svgMap({
+			targetElementID: 'svgMap',
+			minZoom: 1,
+			maxZoom: 3,
+			initialZoom: 1,
+			showContinentSelector: false,
+			zoomScaleSensitivity: 1,
+			showZoomReset: false,
+			mouseWheelZoomEnabled: true,
+			flagType: 'emoji',
+			noDataText: 'No installations detected',
+			colorMax: '#050000',
+			colorMin: '#c7d2fe',
+			data: {
+				data: {
+					installations: {
+						name: 'Installations',
+						format: '{0}',
+						thousandSeparator: ',',
+						thresholdMax: 50000,
+						thresholdMin: 0
+					}
+				},
+				applyData: 'installations',
+				values: Object.fromEntries(
+					new Map(
+						data.countryToCount.map(({ countryCode, count }) => [
+							countryCode,
+							{ installations: count }
+						])
+					)
+				)
+			},
+			callback: (id: string) => handleCountryClick(id)
+		});
 	}
 
-	// Fetch data from API
-	async function fetchData() {
+	onMount(() => {
+		initialiseMap();
+	});
+
+	onDestroy(() => {
+		if (mapObj?.destroy) {
+			mapObj.destroy();
+		}
+	});
+
+	async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
+		try {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error(`Request failed: ${response.status}`);
+			}
+			return (await response.json()) as T;
+		} catch (error) {
+			console.warn(`Failed to fetch ${url}`, error);
+			return fallback;
+		}
+	}
+
+	async function refreshData() {
 		try {
 			isRefreshing = true;
-			fetchError = null;
-			const waparRes = await fetch('https://wapar-api.mandarons.com/api/usage');
-			const waparData = await waparRes.json();
+			const usageRes = await fetch(`${API_URL}/api/usage`);
+			if (!usageRes.ok) {
+				throw new Error(`Usage request failed: ${usageRes.status}`);
+			}
+			const usageData = await usageRes.json();
 			const haRes = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
+			if (!haRes.ok) {
+				throw new Error(`Home Assistant request failed: ${haRes.status}`);
+			}
 			const haData = await haRes.json();
+			const versionAnalytics = await fetchWithFallback(
+				`${API_URL}/api/version-analytics`,
+				fallbackVersions
+			);
+			const recentInstallations = await fetchWithFallback(
+				`${API_URL}/api/recent-installations?limit=20`,
+				fallbackRecent
+			);
 
 			data = {
-				...waparData,
-				totalInstallations: haData.bouncie.total + waparData.iCloudDocker.total,
-				haBouncie: haData.bouncie
+				...usageData,
+				totalInstallations: haData.bouncie.total + usageData.iCloudDocker.total,
+				haBouncie: haData.bouncie,
+				versionAnalytics,
+				recentInstallations
 			};
-
-			lastUpdated = new Date();
-			dataFreshness = calculateDataFreshness(lastUpdated);
-
-			// Save snapshot after successful data fetch
-			saveSnapshot();
+			lastSyncedIso = usageData.createdAt ?? new Date().toISOString();
+			fetchError = null;
+			await initialiseMap();
 		} catch (error) {
-			console.error('Error fetching data:', error);
-			fetchError = 'Failed to refresh data. Please try again later.';
+			console.error('Error refreshing usage data', error);
+			fetchError = 'Unable to refresh data right now. Please try again later.';
 		} finally {
 			isRefreshing = false;
 		}
 	}
 
-	// Manual refresh
 	async function handleManualRefresh() {
-		fetchError = null;
-		await fetchData();
+		await refreshData();
 	}
 
-	// Handle visibility change
-	function handleVisibilityChange() {
-		if (typeof document !== 'undefined') {
-			isTabVisible = !document.hidden;
-			if (isTabVisible && intervalId) {
-				// Resume auto-refresh when tab becomes visible
-				dataFreshness = calculateDataFreshness(lastUpdated);
-			}
-		}
-	}
+	$: overviewMetrics = buildOverviewMetrics({
+		totalInstallations: data.totalInstallations,
+		iCloudDockerTotal: data.iCloudDocker.total,
+		haBouncieTotal: data.haBouncie.total
+	});
 
-	// Start auto-refresh
-	function startAutoRefresh() {
-		if (intervalId) {
-			clearInterval(intervalId);
-		}
+	$: overviewSummary = describeUpdate({
+		totalInstallations: data.totalInstallations,
+		countryCount: data.countryToCount.length,
+		installationsLast24h: data.recentInstallations?.installationsLast24h ?? null,
+		installationsLast7d: data.recentInstallations?.installationsLast7d ?? null
+	});
 
-		intervalId = window.setInterval(() => {
-			if (isTabVisible) {
-				fetchData();
-			}
-			dataFreshness = calculateDataFreshness(lastUpdated);
-		}, refreshInterval);
-	}
-
-	// Handle interval change
-	function handleIntervalChange(newInterval: number) {
-		refreshInterval = newInterval;
-		startAutoRefresh();
-	}
-
-	// Calculate top countries and statistics
+	$: lastSyncedMeta = deriveLastSynced(lastSyncedIso);
 	$: sortedCountries = [...data.countryToCount].sort((a, b) => b.count - a.count);
 	$: top10Countries = sortedCountries.slice(0, 10);
 
-	// Calculate engagement health metrics
-	$: engagementRatio =
-		data.totalInstallations > 0 ? (data.monthlyActive / data.totalInstallations) * 100 : 0;
-	$: healthStatus =
-		engagementRatio > 50
-			? {
-					color: 'text-green-600',
-					bgColor: 'bg-green-100',
-					indicator: '🟢',
-					label: 'Excellent',
-					description: 'High user engagement'
-				}
-			: engagementRatio >= 25
-				? {
-						color: 'text-yellow-600',
-						bgColor: 'bg-yellow-100',
-						indicator: '🟡',
-						label: 'Good',
-						description: 'Moderate user engagement'
-					}
-				: {
-						color: 'text-red-600',
-						bgColor: 'bg-red-100',
-						indicator: '🔴',
-						label: 'Needs Attention',
-						description: 'Low user engagement'
-					};
+	function formatPercentage(count: number, total: number): string {
+		if (total === 0) return '0%';
+		return `${((count / total) * 100).toFixed(1)}%`;
+	}
 
-	// Advanced Analytics Calculations
-	$: advancedMetrics = calculateAllMetrics(
-		data.monthlyActive,
-		data.totalInstallations,
-		data.countryToCount
-	);
-	$: penetrationRating = getPerformanceRating(advancedMetrics.marketPenetrationScore);
-	$: diversityRating = getDiversityRating(advancedMetrics.geographicDiversityIndex);
-
-	// Get country name from country code (using basic mapping for common codes)
 	function getCountryName(code: string): string {
-		const countryNames: { [key: string]: string } = {
+		const countryNames: Record<string, string> = {
 			US: 'United States',
 			GB: 'United Kingdom',
 			DE: 'Germany',
@@ -263,54 +257,38 @@
 	}
 
 	function showCountryDetails(countryCode: string) {
-		const countryData = data.countryToCount.find((c) => c.countryCode === countryCode);
+		const countryData = data.countryToCount.find((entry) => entry.countryCode === countryCode);
 		if (!countryData) return;
 
 		const countryName = getCountryName(countryCode);
-		const percentage = ((countryData.count / data.totalInstallations) * 100).toFixed(2);
-		const ranking = sortedCountries.findIndex((c) => c.countryCode === countryCode) + 1;
-
-		// Estimate monthly active users proportionally (since we don't have per-country data)
-		const estimatedMonthlyActive = Math.round(
-			(countryData.count / data.totalInstallations) * data.monthlyActive
-		);
-		const engagementRate =
-			data.totalInstallations > 0
-				? ((estimatedMonthlyActive / countryData.count) * 100).toFixed(1)
-				: '0';
+		const percentage = formatPercentage(countryData.count, data.totalInstallations);
+		const ranking = sortedCountries.findIndex((entry) => entry.countryCode === countryCode) + 1;
 
 		const modal: ModalSettings = {
 			type: 'alert',
 			title: `${countryName} (${countryCode})`,
 			body: `
-				<div class="space-y-3">
-					<div class="flex justify-between">
-						<span class="font-semibold">Total Installations:</span>
-						<span>${countryData.count.toLocaleString()}</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="font-semibold">Percentage of Global:</span>
-						<span>${percentage}%</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="font-semibold">Est. Monthly Active:</span>
-						<span>${estimatedMonthlyActive.toLocaleString()}</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="font-semibold">Engagement Rate:</span>
-						<span>${engagementRate}%</span>
-					</div>
-					<div class="flex justify-between">
-						<span class="font-semibold">Global Ranking:</span>
-						<span>#${ranking} of ${data.countryToCount.length}</span>
-					</div>
-				</div>
-			`,
+<div class="space-y-3">
+<div class="flex justify-between">
+<span class="font-semibold">Total installations:</span>
+<span>${countryData.count.toLocaleString()}</span>
+</div>
+<div class="flex justify-between">
+<span class="font-semibold">Share of global total:</span>
+<span>${percentage}</span>
+</div>
+<div class="flex justify-between">
+<span class="font-semibold">Ranking:</span>
+<span>#${ranking} of ${data.countryToCount.length}</span>
+</div>
+</div>
+`,
 			modalClasses:
-				'!bg-white !text-slate-900 rounded-3xl shadow-2xl border border-slate-200 px-6 py-6',
+				'!bg-white !text-slate-900 rounded-2xl shadow-xl border border-slate-200 px-6 py-6',
 			backdropClasses: '!bg-black/40 backdrop-blur-sm',
 			buttonTextCancel: 'Close'
 		};
+
 		modalStore.trigger(modal);
 	}
 
@@ -319,268 +297,126 @@
 	}
 
 	function highlightCountryOnMap(countryCode: string) {
-		// Validate countryCode to prevent CSS injection
 		if (!/^[A-Za-z0-9]{2,3}$/.test(countryCode)) {
-			console.warn('Invalid country code:', countryCode);
 			return;
 		}
-		// Find the SVG element for the country and add visual highlight
 		const svgElement = document.querySelector(`[data-id="${countryCode}"]`);
 		if (svgElement) {
-			// Remove previous highlights
 			document.querySelectorAll('.svgMap-country').forEach((el) => {
 				el.classList.remove('country-highlighted');
 			});
-			// Add highlight to clicked country
 			svgElement.classList.add('country-highlighted');
 			showCountryDetails(countryCode);
 		}
 	}
 
-	// Timer for updating relative time display
-	let relativeTimeIntervalId: number | null = null;
+	$: lastSyncedTitle = lastSyncedMeta.isKnown
+		? `Data timestamp: ${lastSyncedMeta.absolute}`
+		: undefined;
 
-	onMount(async () => {
-		// Load historical data and save initial snapshot
-		loadHistoricalData();
-		saveSnapshot();
-
-		// Initialize auto-refresh
-		document.addEventListener('visibilitychange', handleVisibilityChange);
-		startAutoRefresh();
-		dataFreshness = calculateDataFreshness(lastUpdated);
-
-		// Update relative time display and freshness every 30 seconds
-		relativeTimeIntervalId = window.setInterval(() => {
-			dataFreshness = calculateDataFreshness(lastUpdated);
-		}, 30000);
-
-		// Initialize map
-		if (!mapObj) {
-			const module = await import('svgmap');
-			const svgMap = module.default;
-			mapObj = new svgMap({
-				targetElementID: 'svgMap',
-				minZoom: 1,
-				maxZoom: 3,
-				initialZoom: 1,
-				showContinentSelector: false,
-				zoomScaleSensitivity: 1,
-				showZoomReset: false,
-				mouseWheelZoomEnabled: true,
-				mouseWheelZoomWithKey: false,
-				mouseWheelZoomKeyMessage: 'Not enabled',
-				mouseWheelKeyMessageMac: 'Not enabled',
-				flagType: 'emoji',
-				noDataText: 'No installations detected',
-				colorMax: '#050000',
-				colorMin: '#ffb3b3',
-				data: {
-					data: {
-						installations: {
-							name: 'Installations',
-							format: '{0}',
-							thousandSeparator: ',',
-							thresholdMax: 50000,
-							thresholdMin: 0
-						}
-					},
-					applyData: 'installations',
-					values: Object.fromEntries(
-						new Map(
-							data.countryToCount.map(({ countryCode, count }) => [
-								countryCode,
-								{ installations: count }
-							])
-						)
-					)
-				},
-				callback: (id: string) => {
-					handleCountryClick(id);
-				}
-			});
-		}
-	});
-
-	onDestroy(() => {
-		// Clean up auto-refresh
-		if (intervalId) {
-			clearInterval(intervalId);
-		}
-		if (relativeTimeIntervalId) {
-			clearInterval(relativeTimeIntervalId);
-		}
-		if (typeof document !== 'undefined') {
-			document.removeEventListener('visibilitychange', handleVisibilityChange);
-		}
-	});
-
-	// Reactive values
-	$: relativeTimeDisplay = getRelativeTime(lastUpdated);
-	$: freshnessColor = getFreshnessColor(dataFreshness);
-	$: freshnessIndicator = getFreshnessIndicator(dataFreshness);
-
-	// Export market share chart
 	function handleExportChart() {
-		if (marketShareChartRef) {
-			const timestamp = new Date().toISOString().split('T')[0];
-			marketShareChartRef.exportChart(`market-share-${timestamp}.png`);
-		}
+		if (!marketShareChartRef) return;
+		const timestamp = new Date().toISOString().split('T')[0];
+		marketShareChartRef.exportChart(`market-share-${timestamp}.png`);
 	}
 </script>
 
-<!-- Auto-Refresh Controls -->
-<section class="body-font text-gray-600 border-b border-gray-200">
-	<div class="container mx-auto px-5 py-4">
+<section class="bg-gray-50 border-b border-gray-200">
+	<div class="container mx-auto px-5 py-8">
 		{#if fetchError}
-			<div class="mb-3 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm">
-				⚠️ {fetchError}
+			<div
+				class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+				role="alert"
+			>
+				{fetchError}
 			</div>
 		{/if}
-		<div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-			<!-- Data Freshness Indicator -->
-			<div class="flex items-center gap-2" data-testid="freshness-indicator">
-				<span class="text-2xl">{freshnessIndicator}</span>
-				<div class="text-sm">
-					<span class="font-medium {freshnessColor}">Last Updated:</span>
-					<span class="ml-1" data-testid="last-updated-time">{relativeTimeDisplay}</span>
+		<div
+			class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+			data-testid="overview-card"
+		>
+			<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+				<div class="space-y-2">
+					<h1 class="text-2xl font-semibold text-gray-900">Install overview</h1>
+					<p class="text-sm text-gray-600" data-testid="overview-summary">{overviewSummary}</p>
+					<p class="text-xs text-gray-500">
+						Data combined from WAPAR Worker API and Home Assistant telemetry.
+					</p>
 				</div>
-			</div>
-
-			<!-- Refresh Controls -->
-			<div class="flex items-center gap-4">
-				<!-- Interval Selector -->
-				<div class="flex items-center gap-2">
-					<label for="refresh-interval" class="text-sm font-medium">Auto-refresh:</label>
-					<select
-						id="refresh-interval"
-						data-testid="refresh-interval-selector"
-						bind:value={refreshInterval}
-						on:change={() => handleIntervalChange(refreshInterval)}
-						class="btn variant-ghost-surface text-sm px-3 py-1 rounded border border-gray-300"
-					>
-						<option value={REFRESH_INTERVALS.FIVE_MIN}>5 min</option>
-						<option value={REFRESH_INTERVALS.FIFTEEN_MIN}>15 min</option>
-						<option value={REFRESH_INTERVALS.THIRTY_MIN}>30 min</option>
-						<option value={REFRESH_INTERVALS.ONE_HOUR}>1 hour</option>
-					</select>
-				</div>
-
-				<!-- Manual Refresh Button -->
-				<button
-					data-testid="manual-refresh-button"
-					on:click={handleManualRefresh}
-					disabled={isRefreshing}
-					class="btn variant-filled-primary text-sm px-4 py-2 rounded {isRefreshing
-						? 'opacity-50 cursor-not-allowed'
-						: ''}"
-				>
-					{#if isRefreshing}
-						<span class="inline-block animate-spin mr-2">⟳</span>
-						Refreshing...
-					{:else}
-						<span class="mr-2">🔄</span>
-						Refresh Now
-					{/if}
-				</button>
-			</div>
-		</div>
-	</div>
-</section>
-
-<section class="body-font text-gray-600">
-	<div class="container mx-auto px-5 py-5">
-		<div class="mb-5 flex w-full flex-col text-center">
-			<h1 class="title-font mb-4 text-2xl font-medium text-gray-900 sm:text-3xl">
-				Application Installations
-			</h1>
-		</div>
-		<div class="-m-5 flex text-center justify-between">
-			<div class="w-1/2 p-4">
-				<h2
-					data-testid="total-installations"
-					class="title-font text-3xl font-medium text-green-600 sm:text-4xl"
-				>
-					{data.totalInstallations}
-				</h2>
-				<p class="leading-relaxed">Total Installations</p>
-			</div>
-			<div class="w-1/2 p-4">
-				<h2
-					data-testid="icloud-drive-docker-total-installations"
-					class="title-font text-3xl font-medium text-green-600 sm:text-4xl"
-				>
-					{data.iCloudDocker.total}
-				</h2>
-				<p class="leading-relaxed">iCloud Docker</p>
-			</div>
-			<div class="w-1/2 p-4">
-				<h2
-					data-testid="ha-bouncie-total-installations"
-					class="title-font text-3xl font-medium text-green-600 sm:text-4xl"
-				>
-					{data.haBouncie.total}
-				</h2>
-				<p class="leading-relaxed">Home Assistant - Bouncie</p>
-			</div>
-		</div>
-	</div>
-</section>
-
-<!-- Market Share & App Comparison Section -->
-<section class="body-font text-gray-600 border-t border-gray-200 bg-gradient-to-br from-gray-50 to-blue-50">
-	<div class="container mx-auto px-5 py-10">
-		<div class="mb-8 flex w-full flex-col text-center">
-			<h2 class="title-font mb-2 text-xl font-medium text-gray-900 sm:text-2xl">
-				📊 Market Share & App Comparison
-			</h2>
-			<p class="text-sm text-gray-600">Competitive analysis and market distribution insights</p>
-		</div>
-
-		<!-- App Comparison Cards -->
-		<div class="mb-8">
-			<AppComparisonCards
-				iCloudDockerTotal={data.iCloudDocker.total}
-				haBouncieTotal={data.haBouncie.total}
-			/>
-		</div>
-
-		<!-- Market Share Chart with Controls -->
-		<div class="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
-			<div class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-				<h3 class="text-lg font-semibold text-gray-900">Market Share Visualization</h3>
-				
-				<!-- Chart Controls -->
-				<div class="flex flex-wrap items-center gap-3">
-					<!-- Chart Type Selector -->
-					<div class="flex items-center gap-2">
-						<label for="chart-type" class="text-sm font-medium text-gray-700">Chart Type:</label>
-						<select
-							id="chart-type"
-							bind:value={chartType}
-							class="btn variant-ghost-surface text-sm px-3 py-1 rounded border border-gray-300"
-							data-testid="chart-type-selector"
-						>
-							<option value="pie">🥧 Pie Chart</option>
-							<option value="doughnut">🍩 Doughnut Chart</option>
-							<option value="bar">📊 Bar Chart</option>
-						</select>
+				<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+					<div class="text-xs text-gray-600" data-testid="last-synced" title={lastSyncedTitle}>
+						<span class="font-medium text-gray-700">Last synced:</span>
+						<span class="ml-1">{lastSyncedMeta.relative}</span>
 					</div>
-
-					<!-- Export Button -->
 					<button
-						on:click={handleExportChart}
-						class="btn variant-filled-primary text-sm px-4 py-2 rounded"
-						data-testid="export-chart-button"
+						class="inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+						on:click={handleManualRefresh}
+						disabled={isRefreshing}
+						data-testid="manual-refresh-button"
 					>
-						<span class="mr-2">💾</span>
-						Export Chart
+						{#if isRefreshing}
+							<span class="mr-2 inline-block animate-spin" aria-hidden="true">⏳</span>
+							Refreshing
+						{:else}
+							Refresh data
+						{/if}
 					</button>
 				</div>
 			</div>
+			<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+				{#each overviewMetrics as metric}
+					<div
+						class="rounded-md border border-gray-200 p-4"
+						data-testid={`overview-metric-${metric.testId}`}
+					>
+						<p class="text-xs font-medium uppercase tracking-wide text-gray-500">{metric.label}</p>
+						<p class="mt-2 text-3xl font-semibold text-gray-900" data-testid={metric.testId}>
+							{metric.value}
+						</p>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+</section>
 
-			<!-- Chart Container -->
-			<div class="w-full max-w-2xl mx-auto" style="height: 400px;">
+<section class="border-b border-gray-200 bg-white">
+	<div class="container mx-auto px-5 py-10">
+		<div class="mb-6 text-center">
+			<h2 class="text-xl font-semibold text-gray-900">Distribution insights</h2>
+			<p class="mt-2 text-sm text-gray-600">
+				Comparison of installation share between supported integrations.
+			</p>
+		</div>
+		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+			<div
+				class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
+			>
+				<h3 class="text-lg font-semibold text-gray-900">Market share visualisation</h3>
+				<div class="flex flex-wrap items-center gap-3">
+					<div class="flex items-center gap-2">
+						<label for="chart-type" class="text-sm font-medium text-gray-700">Chart type</label>
+						<select
+							id="chart-type"
+							bind:value={chartType}
+							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700"
+							data-testid="chart-type-selector"
+						>
+							<option value="pie">Pie</option>
+							<option value="doughnut">Doughnut</option>
+							<option value="bar">Bar</option>
+						</select>
+					</div>
+					<button
+						on:click={handleExportChart}
+						class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+						data-testid="export-chart-button"
+					>
+						Export chart
+					</button>
+				</div>
+			</div>
+			<div class="mx-auto w-full max-w-2xl" style="height: 400px;">
 				<MarketShareChart
 					bind:this={marketShareChartRef}
 					iCloudDockerTotal={data.iCloudDocker.total}
@@ -592,7 +428,6 @@
 			</div>
 		</div>
 
-		<!-- Geographic App Analysis -->
 		<div class="mt-8">
 			<GeographicAppAnalysis
 				iCloudDockerTotal={data.iCloudDocker.total}
@@ -601,7 +436,6 @@
 			/>
 		</div>
 
-		<!-- Version Analytics -->
 		{#if data.versionAnalytics}
 			<div class="mt-8">
 				<VersionAnalytics
@@ -613,7 +447,6 @@
 			</div>
 		{/if}
 
-		<!-- Recent Installations -->
 		{#if data.recentInstallations}
 			<div class="mt-8">
 				<RecentInstallations
@@ -629,394 +462,60 @@
 	</div>
 </section>
 
-<!-- Engagement Health Dashboard -->
-<section class="body-font text-gray-600">
-	<div class="container mx-auto px-5 py-5">
-		<div class="mb-5 flex w-full flex-col text-center">
-			<h2 class="title-font mb-2 text-xl font-medium text-gray-900 sm:text-2xl">
-				Engagement Health
-			</h2>
-			<p class="text-sm text-gray-600">Monthly active vs total installations</p>
+<section class="bg-gray-50">
+	<div class="container mx-auto px-5 py-12">
+		<div class="mb-6 text-center">
+			<h2 class="text-xl font-semibold text-gray-900">Geographic coverage</h2>
+			<p class="mt-2 text-sm text-gray-600">Top countries by combined installation count.</p>
 		</div>
-		<div class="flex justify-center">
-			<div class="w-full max-w-2xl">
-				<div
-					class="card p-6 {healthStatus.bgColor} rounded-lg shadow-md"
-					data-testid="engagement-health-dashboard"
-				>
-					<div class="flex flex-col items-center space-y-4">
-						<!-- Health Indicator -->
-						<div class="text-6xl" data-testid="health-indicator">
-							{healthStatus.indicator}
-						</div>
-
-						<!-- Engagement Ratio -->
-						<div class="text-center">
-							<div class="{healthStatus.color} text-5xl font-bold" data-testid="engagement-ratio">
-								{engagementRatio.toFixed(1)}%
-							</div>
-							<p class="text-lg font-medium {healthStatus.color} mt-2" data-testid="health-status">
-								{healthStatus.label}
-							</p>
-							<p class="text-sm text-gray-700 mt-1">
-								{healthStatus.description}
-							</p>
-						</div>
-
-						<!-- Breakdown -->
-						<div class="w-full border-t border-gray-300 pt-4 mt-4">
-							<div class="flex justify-around text-center">
-								<div>
-									<div
-										class="text-2xl font-semibold text-gray-900"
-										data-testid="monthly-active-count"
+		<div class="flex flex-col items-start gap-6 lg:flex-row">
+			<div class="w-full lg:w-1/3">
+				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+					<h3 class="text-base font-semibold text-gray-900">Top 10 countries</h3>
+					<div class="mt-4 space-y-2">
+						{#each top10Countries as country, index}
+							<button
+								on:click={() => highlightCountryOnMap(country.countryCode)}
+								class="flex w-full items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+								data-testid={`country-item-${country.countryCode}`}
+							>
+								<span class="flex items-center gap-2">
+									<span class="font-semibold text-gray-500">#{index + 1}</span>
+									<span>{getCountryName(country.countryCode)}</span>
+								</span>
+								<span class="text-right">
+									<span class="block font-semibold text-gray-900"
+										>{country.count.toLocaleString()}</span
 									>
-										{data.monthlyActive.toLocaleString()}
-									</div>
-									<p class="text-xs text-gray-600">Monthly Active</p>
-								</div>
-								<div class="text-3xl text-gray-400">÷</div>
-								<div>
-									<div
-										class="text-2xl font-semibold text-gray-900"
-										data-testid="total-installations-count"
+									<span class="block text-xs text-gray-500"
+										>{formatPercentage(country.count, data.totalInstallations)}</span
 									>
-										{data.totalInstallations.toLocaleString()}
-									</div>
-									<p class="text-xs text-gray-600">Total Installations</p>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
-
-<!-- Advanced Analytics Dashboard -->
-<section class="body-font text-gray-600 border-t border-gray-200">
-	<div class="container mx-auto px-5 py-10">
-		<div class="mb-8 flex w-full flex-col text-center">
-			<h2 class="title-font mb-2 text-xl font-medium text-gray-900 sm:text-2xl">
-				Advanced Analytics
-			</h2>
-			<p class="text-sm text-gray-600">Sophisticated performance metrics and market insights</p>
-		</div>
-
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-			<!-- Install-to-Activity Conversion Rate -->
-			<div
-				class="card p-6 bg-blue-50 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-				data-testid="conversion-rate-card"
-			>
-				<div class="flex flex-col space-y-3">
-					<div class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-						Conversion Rate
-					</div>
-					<div class="text-4xl font-bold text-blue-600" data-testid="conversion-rate-value">
-						{formatPercentage(advancedMetrics.installToActivityRate)}
-					</div>
-					<div class="text-xs text-gray-600">
-						Install-to-activity conversion showing active user engagement
-					</div>
-					<div class="mt-2 pt-3 border-t border-blue-200">
-						<div class="text-xs text-gray-500">
-							<span class="font-semibold">Industry Benchmark:</span> 20-30%
-						</div>
+								</span>
+							</button>
+						{/each}
 					</div>
 				</div>
 			</div>
 
-			<!-- Geographic Diversity Index -->
-			<div
-				class="card p-6 bg-purple-50 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-				data-testid="diversity-index-card"
-			>
-				<div class="flex flex-col space-y-3">
-					<div class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-						Geographic Diversity
-					</div>
-					<div class="text-4xl font-bold text-purple-600" data-testid="diversity-index-value">
-						{(advancedMetrics.geographicDiversityIndex * 100).toFixed(1)}%
-					</div>
-					<div class="text-xs {diversityRating.color} font-medium">
-						{diversityRating.label}: {diversityRating.description}
-					</div>
-					<div class="mt-2 pt-3 border-t border-purple-200">
-						<div class="text-xs text-gray-500">
-							<span class="font-semibold">Distribution:</span> Across {data.countryToCount.length} countries
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Engagement Quality Score -->
-			<div
-				class="card p-6 bg-teal-50 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-				data-testid="quality-score-card"
-			>
-				<div class="flex flex-col space-y-3">
-					<div class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-						Engagement Quality
-					</div>
-					<div class="text-4xl font-bold text-teal-600" data-testid="quality-score-value">
-						{(advancedMetrics.engagementQualityScore * 100).toFixed(1)}%
-					</div>
-					<div class="text-xs text-gray-600">
-						Composite score combining engagement rate and market diversity
-					</div>
-					<div class="mt-2 pt-3 border-t border-teal-200">
-						<div class="text-xs text-gray-500">
-							<span class="font-semibold">Formula:</span> Engagement × (1 + Diversity)
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Market Penetration Score -->
-			<div
-				class="card p-6 {penetrationRating.bgColor} rounded-lg shadow-md hover:shadow-lg transition-shadow"
-				data-testid="penetration-score-card"
-			>
-				<div class="flex flex-col space-y-3">
-					<div class="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-						Market Penetration
-					</div>
-					<div class="flex items-center gap-2">
-						<span class="text-3xl">{penetrationRating.indicator}</span>
-						<span
-							class="text-4xl font-bold {penetrationRating.color}"
-							data-testid="penetration-score-value"
-						>
-							{formatScore(advancedMetrics.marketPenetrationScore)}
-						</span>
-					</div>
-					<div class="text-xs {penetrationRating.color} font-medium">
-						{penetrationRating.label}: {penetrationRating.description}
-					</div>
-					<div class="mt-2 pt-3 border-t border-gray-300">
-						<div class="text-xs text-gray-500">
-							<span class="font-semibold">Benchmark:</span> vs SaaS industry standards
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Performance Insights -->
-		<div class="mt-8 bg-white rounded-lg shadow-md p-6 border border-gray-200">
-			<h3 class="text-lg font-semibold text-gray-900 mb-4">📊 Performance Insights</h3>
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-				<div class="flex items-start space-x-3">
-					<span class="text-2xl">💡</span>
-					<div>
-						<p class="font-semibold text-gray-900">Engagement Analysis</p>
-						<p class="text-gray-600">
-							{#if advancedMetrics.installToActivityRate > 50}
-								Your app demonstrates excellent user retention, significantly exceeding industry
-								standards of 20-30% engagement.
-							{:else if advancedMetrics.installToActivityRate >= 25}
-								Your app shows solid engagement rates within industry benchmarks. Consider
-								strategies to increase active user retention.
-							{:else}
-								Engagement rate is below industry averages. Focus on user activation and retention
-								strategies to improve monthly active users.
-							{/if}
-						</p>
-					</div>
-				</div>
-
-				<div class="flex items-start space-x-3">
-					<span class="text-2xl">🌍</span>
-					<div>
-						<p class="font-semibold text-gray-900">Market Distribution</p>
-						<p class="text-gray-600">
-							{#if advancedMetrics.geographicDiversityIndex >= 0.7}
-								Excellent geographic distribution reduces market risk and indicates broad appeal
-								across multiple regions.
-							{:else if advancedMetrics.geographicDiversityIndex >= 0.5}
-								Good market diversification with room to expand into additional geographic markets.
-							{:else}
-								Market concentration in few countries presents opportunity for geographic expansion.
-							{/if}
-						</p>
-					</div>
-				</div>
-
-				<div class="flex items-start space-x-3">
-					<span class="text-2xl">⭐</span>
-					<div>
-						<p class="font-semibold text-gray-900">Quality Score</p>
-						<p class="text-gray-600">
-							The engagement quality score of {(
-								advancedMetrics.engagementQualityScore * 100
-							).toFixed(0)}% reflects combined strength of user engagement and geographic reach.
-						</p>
-					</div>
-				</div>
-
-				<div class="flex items-start space-x-3">
-					<span class="text-2xl">🎯</span>
-					<div>
-						<p class="font-semibold text-gray-900">Competitive Position</p>
-						<p class="text-gray-600">
-							{#if advancedMetrics.marketPenetrationScore >= 80}
-								Outstanding market performance placing you in the top tier of Home Assistant
-								integrations.
-							{:else if advancedMetrics.marketPenetrationScore >= 60}
-								Above-average market position with strong foundation for continued growth.
-							{:else}
-								Opportunity to improve market position through enhanced user engagement and
-								retention.
-							{/if}
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Comparative Benchmarks -->
-		<div
-			class="mt-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow-md p-6 border border-blue-200"
-		>
-			<h3 class="text-lg font-semibold text-gray-900 mb-4">📈 Comparative Benchmarks</h3>
-			<div class="space-y-3">
-				<div class="flex items-center justify-between">
-					<span class="text-sm font-medium text-gray-700">Your Engagement Rate:</span>
-					<span class="text-sm font-bold text-blue-600">
-						{formatPercentage(advancedMetrics.installToActivityRate)}
-					</span>
-				</div>
-				<div class="w-full bg-gray-200 rounded-full h-2">
+			<div class="w-full lg:w-2/3">
+				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
 					<div
-						class="bg-blue-600 h-2 rounded-full transition-all duration-500"
-						style="width: {Math.min(advancedMetrics.installToActivityRate, 100)}%"
+						id="svgMap"
+						class="w-full"
+						data-testid="interactive-map"
+						aria-label="World map showing installation density"
 					></div>
 				</div>
-
-				<div class="grid grid-cols-3 gap-2 mt-4 text-xs text-center">
-					<div class="bg-white rounded p-2 border border-gray-200">
-						<div class="font-semibold text-gray-900">Typical SaaS</div>
-						<div class="text-red-600 font-bold">20-30%</div>
-					</div>
-					<div class="bg-white rounded p-2 border border-gray-200">
-						<div class="font-semibold text-gray-900">Good Performance</div>
-						<div class="text-yellow-600 font-bold">40-50%</div>
-					</div>
-					<div class="bg-white rounded p-2 border border-gray-200">
-						<div class="font-semibold text-gray-900">Excellent</div>
-						<div class="text-green-600 font-bold">&gt;50%</div>
-					</div>
-				</div>
 			</div>
 		</div>
 	</div>
 </section>
-
-<!-- Map and Top Countries Section -->
-<div class="container mx-auto px-5 pb-20">
-	<div class="flex flex-col lg:flex-row gap-6 items-start">
-		<!-- Top 10 Countries Sidebar -->
-		<div class="w-full lg:w-1/4 order-2 lg:order-1">
-			<div class="card p-4 variant-ghost-primary">
-				<h2 class="h3 mb-4 font-bold text-center">Top 10 Countries</h2>
-				<div class="space-y-2">
-					{#each top10Countries as country, index}
-						<button
-							class="w-full btn variant-soft hover:variant-filled-primary text-left transition-all"
-							on:click={() => highlightCountryOnMap(country.countryCode)}
-							data-testid="country-item-{country.countryCode}"
-						>
-							<div class="flex items-center justify-between w-full">
-								<div class="flex items-center gap-2">
-									<span class="font-bold text-primary-500">#{index + 1}</span>
-									<span class="text-lg">{country.countryCode}</span>
-								</div>
-								<div class="text-right">
-									<div class="font-semibold">{country.count.toLocaleString()}</div>
-									<div class="text-xs opacity-75">
-										{((country.count / data.totalInstallations) * 100).toFixed(1)}%
-									</div>
-								</div>
-							</div>
-						</button>
-					{/each}
-				</div>
-			</div>
-		</div>
-
-		<!-- Map -->
-		<div class="w-full lg:w-3/4 order-1 lg:order-2">
-			<div id="svgMap" class="w-full" data-testid="interactive-map"></div>
-		</div>
-	</div>
-</div>
-
-<!-- Historical Trend Analysis -->
-<section class="body-font text-gray-600 border-t border-gray-200 bg-gray-50">
-	<div class="container mx-auto px-5 py-10">
-		<div class="mb-8 flex w-full flex-col text-center">
-			<h2 class="title-font mb-2 text-xl font-medium text-gray-900 sm:text-2xl">
-				📈 Historical Trend Analysis
-			</h2>
-			<p class="text-sm text-gray-600">Growth trends, velocity metrics, and milestone tracking</p>
-		</div>
-
-		<!-- Main content -->
-		<div class="space-y-6">
-			<!-- Trend Chart -->
-			<TrendChart 
-				snapshots={historicalSnapshots} 
-				title="Installation Growth Over Time"
-				showMonthlyActive={true} 
-			/>
-
-			<!-- Growth Metrics and Milestone Tracker in 2-column grid -->
-			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				<GrowthMetrics
-					daily={growthMetrics.daily}
-					weekly={growthMetrics.weekly}
-					monthly={growthMetrics.monthly}
-					velocity={growthMetrics.velocity}
-				/>
-				<MilestoneTracker 
-					snapshots={historicalSnapshots}
-					currentTotal={data.totalInstallations}
-				/>
-			</div>
-
-			<!-- Data Management -->
-			<DataManagement onDataImported={loadHistoricalData} />
-		</div>
-
-		{#if historicalSnapshots.length === 0}
-			<div class="mt-8 text-center bg-blue-50 border border-blue-200 rounded-lg p-6">
-				<div class="text-4xl mb-4">🚀</div>
-				<h3 class="text-lg font-semibold text-gray-800 mb-2">Start Building Your History</h3>
-				<p class="text-gray-600 max-w-2xl mx-auto">
-					Historical data is automatically saved once per day when you visit this dashboard. 
-					Come back tomorrow to see your first growth metrics and trend analysis!
-				</p>
-			</div>
-		{/if}
-	</div>
-</section>
-
-<div class="fixed bottom-0 w-full">
-	<div class="flex items-center justify-between p-4">
-		<div class="flex items-center"></div>
-		<div class="flex items-end space-x-4">
-			<p class="text-xs font-medium text-gray-600">Copyright &copy; 2023 Mandar Patil</p>
-		</div>
-	</div>
-</div>
 
 <style>
 	:global(.country-highlighted) {
-		stroke: #0fba81 !important;
+		stroke: #1f2937 !important;
 		stroke-width: 2 !important;
-		filter: brightness(1.2);
+		filter: brightness(1.1);
 	}
 
 	:global(.svgMap-country) {
@@ -1025,18 +524,15 @@
 	}
 
 	:global(.svgMap-country:hover) {
-		filter: brightness(1.1);
-		stroke: #0fba81;
+		filter: brightness(1.05);
+		stroke: #1f2937;
 		stroke-width: 1.5;
 	}
 
-	/* Apple-style modal box: white with 90% opacity (10% transparency) and rounded corners */
-	:global(.modal-content),
 	:global(.modal .card) {
-		background: rgba(255, 255, 255, 0.9) !important; /* 90% opacity (10% transparency) over white */
-		border-radius: 24px !important; /* Apple-style rounded corners */
+		background: #ffffff !important;
+		border-radius: 1.25rem !important;
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 		border: none !important;
-		backdrop-filter: blur(8px);
 	}
 </style>
