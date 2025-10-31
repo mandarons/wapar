@@ -161,6 +161,36 @@
 		const node = tabRefs[index];
 		if (node) {
 			node.focus();
+	const fallbackVersions: VersionAnalyticsPayload = {
+		versionDistribution: [],
+		latestVersion: null,
+		outdatedInstallations: 0,
+		upgradeRate: { last7Days: 0, last30Days: 0 }
+	};
+
+	const fallbackRecent: RecentInstallationsPayload = {
+		installations: [],
+		total: 0,
+		limit: 20,
+		offset: 0,
+		installationsLast24h: 0,
+		installationsLast7d: 0
+	};
+
+	async function getSvgMapConstructor() {
+		if (!svgMapConstructor) {
+			const module = await import('svgmap');
+			svgMapConstructor = module.default;
+		}
+		return svgMapConstructor;
+	}
+
+	async function initialiseMap() {
+		if (typeof document === 'undefined') return;
+		const svgMap = await getSvgMapConstructor();
+
+		if (mapObj?.destroy) {
+			mapObj.destroy();
 		}
 		if (tab.id === MAP_TAB_ID && !mapInitialized) {
 			await initialiseMap();
@@ -264,6 +294,22 @@ onMount(() => {
 onDestroy(() => {
 	destroyMap();
 });	async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
+			},
+			callback: (id: string) => handleCountryClick(id)
+		});
+	}
+
+	onMount(() => {
+		initialiseMap();
+	});
+
+	onDestroy(() => {
+		if (mapObj?.destroy) {
+			mapObj.destroy();
+		}
+	});
+
+	async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 		try {
 			const response = await fetch(url);
 			if (!response.ok) {
@@ -665,6 +711,183 @@ onDestroy(() => {
 				{/if}
 			</div>
 		{/each}
+		<div
+			class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+			data-testid="overview-card"
+		>
+			<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+				<div class="space-y-2">
+					<h1 class="text-2xl font-semibold text-gray-900">Install overview</h1>
+					<p class="text-sm text-gray-600" data-testid="overview-summary">{overviewSummary}</p>
+					<p class="text-xs text-gray-500">
+						Data combined from WAPAR Worker API and Home Assistant telemetry.
+					</p>
+				</div>
+				<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+					<div class="text-xs text-gray-600" data-testid="last-synced" title={lastSyncedTitle}>
+						<span class="font-medium text-gray-700">Last synced:</span>
+						<span class="ml-1">{lastSyncedMeta.relative}</span>
+					</div>
+					<button
+						class="inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+						on:click={handleManualRefresh}
+						disabled={isRefreshing}
+						data-testid="manual-refresh-button"
+					>
+						{#if isRefreshing}
+							<span class="mr-2 inline-block animate-spin" aria-hidden="true">⏳</span>
+							Refreshing
+						{:else}
+							Refresh data
+						{/if}
+					</button>
+				</div>
+			</div>
+			<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+				{#each overviewMetrics as metric}
+					<div
+						class="rounded-md border border-gray-200 p-4"
+						data-testid={`overview-metric-${metric.testId}`}
+					>
+						<p class="text-xs font-medium uppercase tracking-wide text-gray-500">{metric.label}</p>
+						<p class="mt-2 text-3xl font-semibold text-gray-900" data-testid={metric.testId}>
+							{metric.value}
+						</p>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="border-b border-gray-200 bg-white">
+	<div class="container mx-auto px-5 py-10">
+		<div class="mb-6 text-center">
+			<h2 class="text-xl font-semibold text-gray-900">Distribution insights</h2>
+			<p class="mt-2 text-sm text-gray-600">
+				Comparison of installation share between supported integrations.
+			</p>
+		</div>
+		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+			<div
+				class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
+			>
+				<h3 class="text-lg font-semibold text-gray-900">Market share visualisation</h3>
+				<div class="flex flex-wrap items-center gap-3">
+					<div class="flex items-center gap-2">
+						<label for="chart-type" class="text-sm font-medium text-gray-700">Chart type</label>
+						<select
+							id="chart-type"
+							bind:value={chartType}
+							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700"
+							data-testid="chart-type-selector"
+						>
+							<option value="pie">Pie</option>
+							<option value="doughnut">Doughnut</option>
+							<option value="bar">Bar</option>
+						</select>
+					</div>
+					<button
+						on:click={handleExportChart}
+						class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+						data-testid="export-chart-button"
+					>
+						Export chart
+					</button>
+				</div>
+			</div>
+			<div class="mx-auto w-full max-w-2xl" style="height: 400px;">
+				<MarketShareChart
+					bind:this={marketShareChartRef}
+					iCloudDockerTotal={data.iCloudDocker.total}
+					haBouncieTotal={data.haBouncie.total}
+					{chartType}
+					showLegend={true}
+					title=""
+				/>
+			</div>
+		</div>
+
+		<div class="mt-8">
+			<GeographicAppAnalysis
+				iCloudDockerTotal={data.iCloudDocker.total}
+				haBouncieTotal={data.haBouncie.total}
+				countryToCount={data.countryToCount}
+			/>
+		</div>
+
+		{#if data.versionAnalytics}
+			<div class="mt-8">
+				<VersionAnalytics
+					versionDistribution={data.versionAnalytics.versionDistribution}
+					latestVersion={data.versionAnalytics.latestVersion}
+					outdatedInstallations={data.versionAnalytics.outdatedInstallations}
+					upgradeRate={data.versionAnalytics.upgradeRate}
+				/>
+			</div>
+		{/if}
+
+		{#if data.recentInstallations}
+			<div class="mt-8">
+				<RecentInstallations
+					installations={data.recentInstallations.installations}
+					total={data.recentInstallations.total}
+					limit={data.recentInstallations.limit}
+					offset={data.recentInstallations.offset}
+					installationsLast24h={data.recentInstallations.installationsLast24h}
+					installationsLast7d={data.recentInstallations.installationsLast7d}
+				/>
+			</div>
+		{/if}
+	</div>
+</section>
+
+<section class="bg-gray-50">
+	<div class="container mx-auto px-5 py-12">
+		<div class="mb-6 text-center">
+			<h2 class="text-xl font-semibold text-gray-900">Geographic coverage</h2>
+			<p class="mt-2 text-sm text-gray-600">Top countries by combined installation count.</p>
+		</div>
+		<div class="flex flex-col items-start gap-6 lg:flex-row">
+			<div class="w-full lg:w-1/3">
+				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+					<h3 class="text-base font-semibold text-gray-900">Top 10 countries</h3>
+					<div class="mt-4 space-y-2">
+						{#each top10Countries as country, index}
+							<button
+								on:click={() => highlightCountryOnMap(country.countryCode)}
+								class="flex w-full items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+								data-testid={`country-item-${country.countryCode}`}
+							>
+								<span class="flex items-center gap-2">
+									<span class="font-semibold text-gray-500">#{index + 1}</span>
+									<span>{getCountryName(country.countryCode)}</span>
+								</span>
+								<span class="text-right">
+									<span class="block font-semibold text-gray-900"
+										>{country.count.toLocaleString()}</span
+									>
+									<span class="block text-xs text-gray-500"
+										>{formatPercentage(country.count, data.totalInstallations)}</span
+									>
+								</span>
+							</button>
+						{/each}
+					</div>
+				</div>
+			</div>
+
+			<div class="w-full lg:w-2/3">
+				<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+					<div
+						id="svgMap"
+						class="w-full"
+						data-testid="interactive-map"
+						aria-label="World map showing installation density"
+					></div>
+				</div>
+			</div>
+		</div>
 	</div>
 </section>
 
