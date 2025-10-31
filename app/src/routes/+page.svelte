@@ -309,7 +309,7 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 			};
 			lastSyncedIso = usageData.createdAt ?? new Date().toISOString();
 			fetchError = null;
-			if (activeTab === MAP_TAB_ID && !mapInitialized) {
+			if (activeTab === MAP_TAB_ID) {
 				await initialiseMap();
 			} else if (mapInitialized) {
 				destroyMap();
