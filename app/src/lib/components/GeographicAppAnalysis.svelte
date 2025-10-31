@@ -15,9 +15,7 @@
 		let iCloudEstimate = 0;
 		let bouncieEstimate = 0;
 		if (totalInstallations > 0) {
-			iCloudEstimate = Math.round(
-				(country.count * iCloudDockerTotal) / totalInstallations
-			);
+			iCloudEstimate = Math.round((country.count * iCloudDockerTotal) / totalInstallations);
 			bouncieEstimate = Math.round((country.count * haBouncieTotal) / totalInstallations);
 		}
 		return {
@@ -76,7 +74,10 @@
 	}
 </script>
 
-<div class="bg-white rounded-lg shadow-md p-6 border border-gray-200" data-testid="geographic-analysis">
+<div
+	class="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+	data-testid="geographic-analysis"
+>
 	<h3 class="text-lg font-semibold text-gray-900 mb-4">
 		<span aria-hidden="true">🌍</span>
 		<span class="sr-only">Globe icon:</span>
@@ -90,7 +91,11 @@
 
 	<!-- Layer Toggle -->
 	<div class="flex justify-center mb-6">
-		<div class="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1" role="group" aria-label="Application filter">
+		<div
+			class="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1"
+			role="group"
+			aria-label="Application filter"
+		>
 			<button
 				on:click={() => (selectedLayer = 'both')}
 				class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedLayer === 'both'
@@ -105,7 +110,8 @@
 			</button>
 			<button
 				on:click={() => (selectedLayer = 'icloud')}
-				class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedLayer === 'icloud'
+				class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedLayer ===
+				'icloud'
 					? 'bg-white text-blue-600 shadow-sm'
 					: 'text-gray-700 hover:text-gray-900'}"
 				data-testid="layer-icloud"
@@ -117,7 +123,8 @@
 			</button>
 			<button
 				on:click={() => (selectedLayer = 'bouncie')}
-				class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedLayer === 'bouncie'
+				class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedLayer ===
+				'bouncie'
 					? 'bg-white text-green-600 shadow-sm'
 					: 'text-gray-700 hover:text-gray-900'}"
 				data-testid="layer-bouncie"

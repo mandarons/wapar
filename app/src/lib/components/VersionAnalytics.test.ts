@@ -40,9 +40,9 @@ describe('VersionAnalytics Component Tests', () => {
 
 	it('should calculate outdated installations correctly', () => {
 		expect(mockVersionData.outdatedInstallations).toBeGreaterThan(0);
-		const latestCount = mockVersionData.versionDistribution.find(
-			(v) => v.version === mockVersionData.latestVersion
-		)?.count || 0;
+		const latestCount =
+			mockVersionData.versionDistribution.find((v) => v.version === mockVersionData.latestVersion)
+				?.count || 0;
 		const totalCount = mockVersionData.versionDistribution.reduce((sum, v) => sum + v.count, 0);
 		expect(mockVersionData.outdatedInstallations).toBe(totalCount - latestCount);
 	});

@@ -2,9 +2,10 @@ import type { PageServerLoad } from './$types';
 
 // Check if process.env exists (Node.js) and has PUBLIC_API_URL, otherwise use production URL
 // This supports both staging (Node.js with env vars) and production (Cloudflare Workers)
-const API_URL = (typeof process !== 'undefined' && process.env?.PUBLIC_API_URL) 
-	? process.env.PUBLIC_API_URL 
-	: 'https://wapar-api.mandarons.com';
+const API_URL =
+	typeof process !== 'undefined' && process.env?.PUBLIC_API_URL
+		? process.env.PUBLIC_API_URL
+		: 'https://wapar-api.mandarons.com';
 
 export const load: PageServerLoad = async () => {
 	try {
@@ -12,7 +13,7 @@ export const load: PageServerLoad = async () => {
 		const waparData = await res.json();
 		res = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
 		const haData = await res.json();
-		
+
 		// Fetch version analytics
 		let versionAnalytics;
 		try {
@@ -27,7 +28,7 @@ export const load: PageServerLoad = async () => {
 				upgradeRate: { last7Days: 0, last30Days: 0 }
 			};
 		}
-		
+
 		// Fetch recent installations
 		let recentInstallationsData;
 		try {
@@ -44,7 +45,7 @@ export const load: PageServerLoad = async () => {
 				installationsLast7d: 0
 			};
 		}
-		
+
 		const data = { ...waparData };
 		data.totalInstallations = haData.bouncie.total + data.iCloudDocker.total;
 		data.haBouncie = haData.bouncie;

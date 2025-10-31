@@ -7,28 +7,33 @@ Client-side historical data tracking and trend analysis feature that provides gr
 ## Features Implemented
 
 ### 1. ✅ Client-Side Data Persistence
+
 - **Browser Storage**: Uses localStorage for historical snapshots
-- **Automatic Collection**: Saves data once per day on page visit  
+- **Automatic Collection**: Saves data once per day on page visit
 - **Data Retention**: 90-day retention policy with configurable limits
 - **Storage Management**: Quota monitoring and automatic cleanup
 
 ### 2. ✅ Growth Timeline Visualization
+
 - **Installation Growth Curves**: SVG-based line charts
 - **Interactive Tooltips**: Hover for detailed metrics
 - **Responsive Design**: Adapts to screen sizes
 - **No Dependencies**: Lightweight implementation
 
 ### 3. ✅ Growth Rate Calculations
+
 - Daily, weekly, and monthly growth rates
 - Growth velocity with acceleration/deceleration indicators
 - Percentage and absolute change metrics
 
 ### 4. ✅ Milestone Tracking
+
 - Achievement milestones: 1K, 5K, 10K, 25K, 50K, 100K, 250K, 500K, 1M
 - Visual timeline with progress indicators
 - Smart projections with confidence levels
 
 ### 5. ✅ Data Export and Import
+
 - Export formats: JSON and CSV
 - Import with automatic merge
 - Privacy-first: all data stays in browser
@@ -36,17 +41,20 @@ Client-side historical data tracking and trend analysis feature that provides gr
 ## Files
 
 **Core Libraries** (`app/src/lib/`):
+
 - `historicalData.ts` - Storage service (195 lines)
 - `trendAnalysis.ts` - Growth calculations (232 lines)
 - `dataExport.ts` - Export/import utilities (175 lines)
 
 **UI Components** (`app/src/lib/components/`):
+
 - `TrendChart.svelte` - SVG line chart (246 lines)
 - `GrowthMetrics.svelte` - Growth rate cards (226 lines)
 - `MilestoneTracker.svelte` - Milestone progress (269 lines)
 - `DataManagement.svelte` - Data controls (344 lines)
 
 **Tests**:
+
 - 69 unit tests with 100% coverage
 - 13 E2E tests for UI components
 
@@ -68,12 +76,12 @@ const snapshots = historicalDataService.getAllSnapshots();
 
 // Save a snapshot
 historicalDataService.saveSnapshot({
-  timestamp: new Date().toISOString(),
-  totalInstallations: 1000,
-  monthlyActive: 600,
-  iCloudDocker: 555,
-  haBouncie: 445,
-  countryToCount: []
+	timestamp: new Date().toISOString(),
+	totalInstallations: 1000,
+	monthlyActive: 600,
+	iCloudDocker: 555,
+	haBouncie: 445,
+	countryToCount: []
 });
 
 // Get storage stats
@@ -93,7 +101,7 @@ bun run test:e2e
 ## Storage Limits
 
 - Default retention: 90 days
-- Max snapshots: 500 
+- Max snapshots: 500
 - Estimated size: ~10 KB per snapshot
 - Total storage: ~5 MB (well within localStorage limits)
 

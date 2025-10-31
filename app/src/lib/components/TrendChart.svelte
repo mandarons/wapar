@@ -51,9 +51,7 @@
 
 			// Generate SVG paths
 			totalPath = generatePath(snapshots.map((s) => s.totalInstallations));
-			activePath = showMonthlyActive
-				? generatePath(snapshots.map((s) => s.monthlyActive))
-				: '';
+			activePath = showMonthlyActive ? generatePath(snapshots.map((s) => s.monthlyActive)) : '';
 		}
 	}
 
@@ -67,7 +65,9 @@
 
 		const points = values.map((value, index) => {
 			const x = (index / Math.max(values.length - 1, 1)) * chartWidth;
-			const y = chartHeight - ((value - minInstallations) / (maxInstallations - minInstallations)) * chartHeight;
+			const y =
+				chartHeight -
+				((value - minInstallations) / (maxInstallations - minInstallations)) * chartHeight;
 			return `${x},${y}`;
 		});
 
@@ -101,9 +101,10 @@
 	}
 
 	// Accessibility: Generate textual summary
-	$: chartSummary = snapshots.length > 0 
-		? `Installation growth trend chart showing ${snapshots.length} data points from ${formatDate(snapshots[0].timestamp)} to ${formatDate(snapshots[snapshots.length - 1].timestamp)}. Latest total installations: ${formatNumber(snapshots[snapshots.length - 1].totalInstallations)}${showMonthlyActive ? `, monthly active: ${formatNumber(snapshots[snapshots.length - 1].monthlyActive)}` : ''}.`
-		: 'No historical data available yet.';
+	$: chartSummary =
+		snapshots.length > 0
+			? `Installation growth trend chart showing ${snapshots.length} data points from ${formatDate(snapshots[0].timestamp)} to ${formatDate(snapshots[snapshots.length - 1].timestamp)}. Latest total installations: ${formatNumber(snapshots[snapshots.length - 1].totalInstallations)}${showMonthlyActive ? `, monthly active: ${formatNumber(snapshots[snapshots.length - 1].monthlyActive)}` : ''}.`
+			: 'No historical data available yet.';
 
 	function toggleDataTable() {
 		showDataTable = !showDataTable;
@@ -155,10 +156,10 @@
 		</div>
 
 		<h3 class="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
-		<svg 
-			{width} 
-			{height} 
-			class="trend-chart" 
+		<svg
+			{width}
+			{height}
+			class="trend-chart"
 			on:mouseleave={handleMouseLeave}
 			role="img"
 			aria-label="Installation growth trend chart"
@@ -200,12 +201,7 @@
 
 				<!-- X-axis labels -->
 				{#each xTicks as tick}
-					<text
-						x={tick.x}
-						y={chartHeight + 20}
-						text-anchor="middle"
-						class="text-xs fill-gray-600"
-					>
+					<text x={tick.x} y={chartHeight + 20} text-anchor="middle" class="text-xs fill-gray-600">
 						{formatDate(tick.date)}
 					</text>
 				{/each}
@@ -229,13 +225,23 @@
 					/>
 
 					<!-- Monthly active line -->
-					<path d={activePath} fill="none" stroke="#10b981" stroke-width="3" stroke-dasharray="5,5" />
+					<path
+						d={activePath}
+						fill="none"
+						stroke="#10b981"
+						stroke-width="3"
+						stroke-dasharray="5,5"
+					/>
 				{/if}
 
 				<!-- Data points (interactive) -->
 				{#each snapshots as snapshot, index}
 					{@const x = (index / Math.max(snapshots.length - 1, 1)) * chartWidth}
-					{@const y = chartHeight - ((snapshot.totalInstallations - minInstallations) / (maxInstallations - minInstallations)) * chartHeight}
+					{@const y =
+						chartHeight -
+						((snapshot.totalInstallations - minInstallations) /
+							(maxInstallations - minInstallations)) *
+							chartHeight}
 					<circle
 						cx={x}
 						cy={y}
@@ -248,7 +254,11 @@
 						on:keydown={(e) => handleDataPointKeydown(e, index)}
 						role="button"
 						tabindex="0"
-						aria-label="Data point for {formatDate(snapshot.timestamp)}: {formatNumber(snapshot.totalInstallations)} total installations{showMonthlyActive ? `, ${formatNumber(snapshot.monthlyActive)} monthly active` : ''}"
+						aria-label="Data point for {formatDate(snapshot.timestamp)}: {formatNumber(
+							snapshot.totalInstallations
+						)} total installations{showMonthlyActive
+							? `, ${formatNumber(snapshot.monthlyActive)} monthly active`
+							: ''}"
 					/>
 				{/each}
 
@@ -306,7 +316,11 @@
 			</div>
 			{#if showMonthlyActive}
 				<div class="flex items-center gap-2">
-					<div class="w-8 h-0.5 bg-green-500 border-dashed" style="border-top: 2px dashed #10b981; background: none;" aria-hidden="true"></div>
+					<div
+						class="w-8 h-0.5 bg-green-500 border-dashed"
+						style="border-top: 2px dashed #10b981; background: none;"
+						aria-hidden="true"
+					></div>
 					<span class="text-gray-700">Monthly Active</span>
 				</div>
 			{/if}
@@ -326,18 +340,29 @@
 
 		<!-- Accessible data table alternative -->
 		{#if showDataTable}
-			<div id="trend-data-table" class="mt-4 overflow-x-auto" role="table" aria-label="Installation growth data">
+			<div
+				id="trend-data-table"
+				class="mt-4 overflow-x-auto"
+				role="table"
+				aria-label="Installation growth data"
+			>
 				<table class="min-w-full border border-gray-300 bg-white">
 					<thead class="bg-gray-100">
 						<tr>
-							<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">
+							<th
+								class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300"
+							>
 								Date
 							</th>
-							<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+							<th
+								class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300"
+							>
 								Total Installations
 							</th>
 							{#if showMonthlyActive}
-								<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+								<th
+									class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300"
+								>
 									Monthly Active
 								</th>
 							{/if}
@@ -371,7 +396,9 @@
 		background: white;
 		padding: 1.5rem;
 		border-radius: 0.5rem;
-		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+		box-shadow:
+			0 1px 3px 0 rgba(0, 0, 0, 0.1),
+			0 1px 2px 0 rgba(0, 0, 0, 0.06);
 	}
 
 	.trend-chart {

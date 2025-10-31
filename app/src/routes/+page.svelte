@@ -241,57 +241,60 @@
 						])
 					)
 				)
-		},
-		callback: (id: string) => handleCountryClick(id)
+			},
+			callback: (id: string) => handleCountryClick(id)
+		});
+		mapInitialized = true;
+
+		// Add keyboard accessibility to map countries
+		if (typeof document !== 'undefined') {
+			setTimeout(() => {
+				const countries = document.querySelectorAll('.svgMap-country');
+				countries.forEach((country) => {
+					country.setAttribute('tabindex', '0');
+					country.setAttribute('role', 'button');
+					const countryId = country.getAttribute('data-id');
+					if (countryId) {
+						const countryName = getCountryName(countryId);
+						const countryData = data.countryToCount.find((c) => c.countryCode === countryId);
+						const installs = countryData ? countryData.count.toLocaleString() : '0';
+						country.setAttribute(
+							'aria-label',
+							`${countryName}: ${installs} installations. Press Enter to view details.`
+						);
+
+						country.addEventListener('keydown', (e: Event) => {
+							const event = e as KeyboardEvent;
+							if (event.key === 'Enter' || event.key === ' ') {
+								event.preventDefault();
+								handleCountryClick(countryId);
+							}
+						});
+					}
+				});
+			}, 100);
+		}
+	}
+
+	function destroyMap() {
+		if (mapObj?.destroy) {
+			mapObj.destroy();
+		}
+		mapObj = null;
+		mapInitialized = false;
+	}
+
+	onMount(async () => {
+		if (activeTab === MAP_TAB_ID) {
+			await initialiseMap();
+		}
 	});
-	mapInitialized = true;
 
-	// Add keyboard accessibility to map countries
-	if (typeof document !== 'undefined') {
-		setTimeout(() => {
-			const countries = document.querySelectorAll('.svgMap-country');
-			countries.forEach((country) => {
-				country.setAttribute('tabindex', '0');
-				country.setAttribute('role', 'button');
-				const countryId = country.getAttribute('data-id');
-				if (countryId) {
-					const countryName = getCountryName(countryId);
-					const countryData = data.countryToCount.find(c => c.countryCode === countryId);
-					const installs = countryData ? countryData.count.toLocaleString() : '0';
-					country.setAttribute('aria-label', `${countryName}: ${installs} installations. Press Enter to view details.`);
-					
-					country.addEventListener('keydown', (e: Event) => {
-						const event = e as KeyboardEvent;
-						if (event.key === 'Enter' || event.key === ' ') {
-							event.preventDefault();
-							handleCountryClick(countryId);
-						}
-					});
-				}
-			});
-		}, 100);
-	}
-}
+	onDestroy(() => {
+		destroyMap();
+	});
 
-function destroyMap() {
-	if (mapObj?.destroy) {
-		mapObj.destroy();
-	}
-	mapObj = null;
-	mapInitialized = false;
-}
-
-onMount(async () => {
-	if (activeTab === MAP_TAB_ID) {
-		await initialiseMap();
-	}
-});
-
-onDestroy(() => {
-	destroyMap();
-});
-
-async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
+	async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 		try {
 			const response = await fetch(url);
 			if (!response.ok) {
@@ -499,76 +502,83 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 				{fetchError}
 			</div>
 		{/if}
-	<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-		<div>
-			<h1 class="text-2xl font-semibold text-gray-900">Install dashboard</h1>
-			<p class="text-sm text-gray-600">
-				Navigate between focused analytics panels to explore adoption from different angles.
-			</p>
+		<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+			<div>
+				<h1 class="text-2xl font-semibold text-gray-900">Install dashboard</h1>
+				<p class="text-sm text-gray-600">
+					Navigate between focused analytics panels to explore adoption from different angles.
+				</p>
+			</div>
+			{#if activeTabDetails}
+				<p class="text-sm text-gray-500 md:max-w-sm">
+					<strong class="font-semibold text-gray-700">{activeTabDetails.label}:</strong>
+					{activeTabDetails.description}
+				</p>
+			{/if}
 		</div>
-		{#if activeTabDetails}
-			<p class="text-sm text-gray-500 md:max-w-sm">
-				<strong class="font-semibold text-gray-700">{activeTabDetails.label}:</strong>
-				{activeTabDetails.description}
-			</p>
-		{/if}
-	</div>
 
-	<div
-		class="mt-6 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-2 shadow-sm"
-		role="tablist"
-		aria-label="Dashboard sections"
-	>
-		{#each visibleTabs as tab, index}
-			<button
-				bind:this={tabRefs[index]}
-				id={`dashboard-tab-${tab.id}`}
-				class={`flex flex-col rounded-md border px-4 py-2 text-left text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:gap-2 ${
-					activeTab === tab.id
-						? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
-						: 'border-transparent bg-white text-gray-700 hover:border-gray-200 hover:bg-gray-50'
-				}`}
-				role="tab"
-				type="button"
-				tabindex={activeTab === tab.id ? 0 : -1}
-				aria-selected={activeTab === tab.id}
-				aria-controls={`dashboard-panel-${tab.id}`}
-				on:click={() => handleTabClick(index)}
-				on:keydown={(event) => handleTabKeydown(event, index)}
-				data-testid={`tab-${tab.id}`}
-				title={tab.description}
-			>
-				<span>{tab.label}</span>
-				{#if activeTab === tab.id}
-					<span class="mt-1 text-xs font-normal text-indigo-100 sm:hidden">{tab.description}</span>
-				{/if}
-			</button>
-		{/each}
-	</div>
-
-	{#each visibleTabs as tab}
 		<div
-			id={`dashboard-panel-${tab.id}`}
-			role="tabpanel"
-			aria-labelledby={`dashboard-tab-${tab.id}`}
-			tabindex="0"
-			class={`mt-8 ${activeTab === tab.id ? '' : 'hidden'}`}
+			class="mt-6 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-2 shadow-sm"
+			role="tablist"
+			aria-label="Dashboard sections"
 		>
-			{#if tab.id === 'overview'}
-				<div
-					class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-					data-testid="overview-card"
+			{#each visibleTabs as tab, index}
+				<button
+					bind:this={tabRefs[index]}
+					id={`dashboard-tab-${tab.id}`}
+					class={`flex flex-col rounded-md border px-4 py-2 text-left text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:gap-2 ${
+						activeTab === tab.id
+							? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
+							: 'border-transparent bg-white text-gray-700 hover:border-gray-200 hover:bg-gray-50'
+					}`}
+					role="tab"
+					type="button"
+					tabindex={activeTab === tab.id ? 0 : -1}
+					aria-selected={activeTab === tab.id}
+					aria-controls={`dashboard-panel-${tab.id}`}
+					on:click={() => handleTabClick(index)}
+					on:keydown={(event) => handleTabKeydown(event, index)}
+					data-testid={`tab-${tab.id}`}
+					title={tab.description}
 				>
-					<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-						<div class="space-y-2">
-							<h2 class="text-xl font-semibold text-gray-900">Install overview</h2>
-							<p class="text-sm text-gray-600" data-testid="overview-summary">{overviewSummary}</p>
-							<p class="text-xs text-gray-500">
-								Data combined from WAPAR Worker API and Home Assistant telemetry.
+					<span>{tab.label}</span>
+					{#if activeTab === tab.id}
+						<span class="mt-1 text-xs font-normal text-indigo-100 sm:hidden">{tab.description}</span
+						>
+					{/if}
+				</button>
+			{/each}
+		</div>
+
+		{#each visibleTabs as tab}
+			<div
+				id={`dashboard-panel-${tab.id}`}
+				role="tabpanel"
+				aria-labelledby={`dashboard-tab-${tab.id}`}
+				tabindex="0"
+				class={`mt-8 ${activeTab === tab.id ? '' : 'hidden'}`}
+			>
+				{#if tab.id === 'overview'}
+					<div
+						class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+						data-testid="overview-card"
+					>
+						<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+							<div class="space-y-2">
+								<h2 class="text-xl font-semibold text-gray-900">Install overview</h2>
+								<p class="text-sm text-gray-600" data-testid="overview-summary">
+									{overviewSummary}
+								</p>
+								<p class="text-xs text-gray-500">
+									Data combined from WAPAR Worker API and Home Assistant telemetry.
 								</p>
 							</div>
 							<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-								<div class="text-xs text-gray-600" data-testid="last-synced" title={lastSyncedTitle}>
+								<div
+									class="text-xs text-gray-600"
+									data-testid="last-synced"
+									title={lastSyncedTitle}
+								>
 									<span class="font-medium text-gray-700">Last synced:</span>
 									<span class="ml-1">{lastSyncedMeta.relative}</span>
 								</div>
@@ -663,13 +673,22 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 							<div class="w-full lg:w-1/3">
 								<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
 									<h3 class="text-base font-semibold text-gray-900">Top 10 countries</h3>
-									<div class="mt-4 space-y-2" role="list" aria-label="Top 10 countries by installations">
+									<div
+										class="mt-4 space-y-2"
+										role="list"
+										aria-label="Top 10 countries by installations"
+									>
 										{#each top10Countries as country, index}
 											<button
 												on:click={() => highlightCountryOnMap(country.countryCode)}
 												class="flex w-full items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
 												data-testid={`country-item-${country.countryCode}`}
-												aria-label="View {getCountryName(country.countryCode)} on map: {country.count.toLocaleString()} installations, {formatPercentage(country.count, data.totalInstallations)}"
+												aria-label="View {getCountryName(
+													country.countryCode
+												)} on map: {country.count.toLocaleString()} installations, {formatPercentage(
+													country.count,
+													data.totalInstallations
+												)}"
 											>
 												<span class="flex items-center gap-2">
 													<span class="font-semibold text-gray-500">#{index + 1}</span>
@@ -700,8 +719,9 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 										aria-describedby="map-description"
 									></div>
 									<div id="map-description" class="sr-only">
-										World map visualization showing {data.countryToCount.length} countries with installation data. 
-										Use keyboard navigation to explore countries or view the data table below for detailed information.
+										World map visualization showing {data.countryToCount.length} countries with installation
+										data. Use keyboard navigation to explore countries or view the data table below for
+										detailed information.
 									</div>
 
 									<!-- Toggle button for map data table -->
@@ -718,20 +738,33 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 
 									<!-- Accessible data table alternative for map -->
 									{#if showMapDataTable}
-										<div id="map-data-table" class="mt-4 overflow-x-auto max-h-96" role="table" aria-label="Country installation data">
+										<div
+											id="map-data-table"
+											class="mt-4 overflow-x-auto max-h-96"
+											role="table"
+											aria-label="Country installation data"
+										>
 											<table class="min-w-full border border-gray-300 bg-white">
 												<thead class="bg-gray-100 sticky top-0">
 													<tr>
-														<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">
+														<th
+															class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300"
+														>
 															Rank
 														</th>
-														<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">
+														<th
+															class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300"
+														>
 															Country
 														</th>
-														<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+														<th
+															class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300"
+														>
 															Installations
 														</th>
-														<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+														<th
+															class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300"
+														>
 															Share
 														</th>
 													</tr>

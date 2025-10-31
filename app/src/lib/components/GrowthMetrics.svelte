@@ -149,7 +149,10 @@
 				<div class="velocity-bar-track">
 					<div
 						class="velocity-bar velocity-current"
-						style="width: {Math.min((velocity.currentRate / Math.max(velocity.averageRate * 2, 1)) * 100, 100)}%"
+						style="width: {Math.min(
+							(velocity.currentRate / Math.max(velocity.averageRate * 2, 1)) * 100,
+							100
+						)}%"
 					></div>
 				</div>
 			</div>
@@ -164,7 +167,10 @@
 				<div class="velocity-bar-track">
 					<div
 						class="velocity-bar velocity-average"
-						style="width: {Math.min((velocity.averageRate / Math.max(velocity.averageRate * 2, 1)) * 100, 100)}%"
+						style="width: {Math.min(
+							(velocity.averageRate / Math.max(velocity.averageRate * 2, 1)) * 100,
+							100
+						)}%"
 					></div>
 				</div>
 			</div>
@@ -174,7 +180,11 @@
 					<span class="text-sm font-medium">
 						{velocity.acceleration > 0 ? 'Acceleration' : 'Deceleration'}:
 					</span>
-					<span class="text-sm font-semibold {velocity.acceleration > 0 ? 'text-green-600' : 'text-orange-600'}">
+					<span
+						class="text-sm font-semibold {velocity.acceleration > 0
+							? 'text-green-600'
+							: 'text-orange-600'}"
+					>
 						{Math.abs(velocity.acceleration).toFixed(2)} installs/day
 					</span>
 				</div>

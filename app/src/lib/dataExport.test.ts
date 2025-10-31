@@ -100,10 +100,7 @@ describe('dataExport', () => {
 
 	describe('exportAsCSV', () => {
 		it('should create a CSV export with correct headers', () => {
-			const snapshots: DataSnapshot[] = [
-				createTestSnapshot(2, 1000),
-				createTestSnapshot(1, 1050)
-			];
+			const snapshots: DataSnapshot[] = [createTestSnapshot(2, 1000), createTestSnapshot(1, 1050)];
 
 			exportAsCSV(snapshots);
 
@@ -140,10 +137,7 @@ describe('dataExport', () => {
 
 	describe('importFromJSON', () => {
 		it('should import valid JSON file', async () => {
-			const snapshots: DataSnapshot[] = [
-				createTestSnapshot(2, 1000),
-				createTestSnapshot(1, 1050)
-			];
+			const snapshots: DataSnapshot[] = [createTestSnapshot(2, 1000), createTestSnapshot(1, 1050)];
 
 			const fileContent = JSON.stringify({
 				version: '1.0',
@@ -177,7 +171,7 @@ describe('dataExport', () => {
 		it('should filter out invalid snapshots', async () => {
 			const validSnapshot = createTestSnapshot(0, 1000);
 			const invalidSnapshot = {
-				timestamp: 'invalid',
+				timestamp: 'invalid'
 				// Missing required fields
 			};
 
@@ -230,15 +224,9 @@ describe('dataExport', () => {
 
 	describe('mergeSnapshots', () => {
 		it('should merge two arrays without duplicates', () => {
-			const existing: DataSnapshot[] = [
-				createTestSnapshot(5, 1000),
-				createTestSnapshot(4, 1020)
-			];
+			const existing: DataSnapshot[] = [createTestSnapshot(5, 1000), createTestSnapshot(4, 1020)];
 
-			const imported: DataSnapshot[] = [
-				createTestSnapshot(3, 1040),
-				createTestSnapshot(2, 1060)
-			];
+			const imported: DataSnapshot[] = [createTestSnapshot(3, 1040), createTestSnapshot(2, 1060)];
 
 			const merged = mergeSnapshots(existing, imported);
 
@@ -261,15 +249,9 @@ describe('dataExport', () => {
 		});
 
 		it('should sort by timestamp', () => {
-			const existing: DataSnapshot[] = [
-				createTestSnapshot(1, 1050),
-				createTestSnapshot(5, 1000)
-			];
+			const existing: DataSnapshot[] = [createTestSnapshot(1, 1050), createTestSnapshot(5, 1000)];
 
-			const imported: DataSnapshot[] = [
-				createTestSnapshot(0, 1100),
-				createTestSnapshot(3, 1030)
-			];
+			const imported: DataSnapshot[] = [createTestSnapshot(0, 1100), createTestSnapshot(3, 1030)];
 
 			const merged = mergeSnapshots(existing, imported);
 

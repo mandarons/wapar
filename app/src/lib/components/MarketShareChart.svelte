@@ -82,10 +82,12 @@
 			options: {
 				responsive: true,
 				maintainAspectRatio: true,
-				animation: prefersReducedMotion ? false : {
-					duration: 750,
-					easing: 'easeInOutQuart'
-				},
+				animation: prefersReducedMotion
+					? false
+					: {
+							duration: 750,
+							easing: 'easeInOutQuart'
+						},
 				plugins: {
 					legend: {
 						display: showLegend,
@@ -194,7 +196,12 @@
 	}
 
 	// Recreate chart when chartType, iCloudDockerTotal, or haBouncieTotal changes
-	$: if (canvas && chartType !== undefined && iCloudDockerTotal !== undefined && haBouncieTotal !== undefined) {
+	$: if (
+		canvas &&
+		chartType !== undefined &&
+		iCloudDockerTotal !== undefined &&
+		haBouncieTotal !== undefined
+	) {
 		createChart();
 	}
 
@@ -228,11 +235,7 @@
 	</div>
 
 	<!-- Chart canvas -->
-	<div
-		role="img"
-		aria-label="Market share distribution chart"
-		aria-describedby="chart-description"
-	>
+	<div role="img" aria-label="Market share distribution chart" aria-describedby="chart-description">
 		<canvas
 			bind:this={canvas}
 			tabindex="0"
@@ -255,17 +258,28 @@
 
 	<!-- Accessible data table alternative -->
 	{#if showDataTable}
-		<div id="chart-data-table" class="mt-4 overflow-x-auto" role="table" aria-label="Market share data">
+		<div
+			id="chart-data-table"
+			class="mt-4 overflow-x-auto"
+			role="table"
+			aria-label="Market share data"
+		>
 			<table class="min-w-full border border-gray-300 bg-white">
 				<thead class="bg-gray-100">
 					<tr>
-						<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">
+						<th
+							class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300"
+						>
 							Application
 						</th>
-						<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+						<th
+							class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300"
+						>
 							Installations
 						</th>
-						<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+						<th
+							class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300"
+						>
 							Percentage
 						</th>
 					</tr>

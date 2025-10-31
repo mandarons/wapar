@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { historicalDataService } from '../historicalData';
-	import { exportAsJSON, exportAsCSV, importFromJSON, mergeSnapshots, estimateExportSize } from '../dataExport';
+	import {
+		exportAsJSON,
+		exportAsCSV,
+		importFromJSON,
+		mergeSnapshots,
+		estimateExportSize
+	} from '../dataExport';
 
 	export let onDataImported: () => void = () => {};
 
@@ -11,9 +17,10 @@
 
 	// Get storage stats
 	$: storageStats = historicalDataService.getStorageStats();
-	$: exportSize = storageStats.snapshotCount > 0 
-		? estimateExportSize(historicalDataService.getAllSnapshots())
-		: { jsonSizeKB: 0, csvSizeKB: 0 };
+	$: exportSize =
+		storageStats.snapshotCount > 0
+			? estimateExportSize(historicalDataService.getAllSnapshots())
+			: { jsonSizeKB: 0, csvSizeKB: 0 };
 
 	function handleExportJSON() {
 		const snapshots = historicalDataService.getAllSnapshots();
@@ -69,7 +76,7 @@
 		} catch (error) {
 			importStatus = 'error';
 			importMessage = error instanceof Error ? error.message : 'Failed to import data';
-			
+
 			// Reset after 5 seconds
 			setTimeout(() => {
 				importStatus = 'idle';
@@ -98,9 +105,9 @@
 	function formatDate(isoString: string | null): string {
 		if (!isoString) return 'N/A';
 		const date = new Date(isoString);
-		return date.toLocaleDateString(undefined, { 
-			month: 'short', 
-			day: 'numeric', 
+		return date.toLocaleDateString(undefined, {
+			month: 'short',
+			day: 'numeric',
 			year: 'numeric',
 			hour: '2-digit',
 			minute: '2-digit'
@@ -186,7 +193,11 @@
 
 			{#if importMessage}
 				<div
-					class="import-message {importStatus === 'success' ? 'success' : importStatus === 'error' ? 'error' : ''}"
+					class="import-message {importStatus === 'success'
+						? 'success'
+						: importStatus === 'error'
+							? 'error'
+							: ''}"
 					data-testid="import-message"
 				>
 					{importMessage}
@@ -203,12 +214,8 @@
 						Are you sure? This will permanently delete all {storageStats.snapshotCount} snapshots.
 					</p>
 					<div class="button-group">
-						<button class="btn btn-danger" on:click={confirmClear}>
-							Yes, Delete All
-						</button>
-						<button class="btn btn-secondary" on:click={cancelClear}>
-							Cancel
-						</button>
+						<button class="btn btn-danger" on:click={confirmClear}> Yes, Delete All </button>
+						<button class="btn btn-secondary" on:click={cancelClear}> Cancel </button>
 					</div>
 				</div>
 			{:else}
@@ -230,7 +237,8 @@
 		<div class="info-icon">ℹ️</div>
 		<div class="info-content">
 			<p class="text-sm text-gray-700">
-				<strong>Privacy:</strong> All data is stored locally in your browser. Nothing is sent to external servers.
+				<strong>Privacy:</strong> All data is stored locally in your browser. Nothing is sent to external
+				servers.
 			</p>
 			<p class="text-sm text-gray-600 mt-1">
 				Historical data is automatically saved once per day and retained for 90 days.

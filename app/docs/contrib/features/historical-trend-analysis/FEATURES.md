@@ -3,9 +3,11 @@
 ## Visual Components
 
 ### 1. Trend Chart
+
 **Location**: Top of Historical Trend Analysis section
 
 **Features**:
+
 - Interactive SVG line chart showing installation growth
 - Dual series: Total installations (solid blue) + Monthly active (dashed green)
 - Hover tooltips with date and values
@@ -14,6 +16,7 @@
 - Empty state message for new users
 
 **Empty State**:
+
 ```
 ┌─────────────────────────────────────────┐
 │         No Historical Data Yet          │
@@ -24,6 +27,7 @@
 ```
 
 **With Data**:
+
 ```
 Installation Growth Over Time
 
@@ -38,9 +42,11 @@ Installation Growth Over Time
 ```
 
 ### 2. Growth Metrics Cards
+
 **Location**: Left column under chart
 
 **Cards Display**:
+
 ```
 ┌──────────────────────┐  ┌──────────────────────┐
 │ 📈 Daily Growth      │  │ 📈 Weekly Growth     │
@@ -59,6 +65,7 @@ Installation Growth Over Time
 ```
 
 **Velocity Details**:
+
 ```
 ┌─────────────────────────────────────┐
 │ Current Rate: 10.5/day              │
@@ -72,9 +79,11 @@ Installation Growth Over Time
 ```
 
 ### 3. Milestone Tracker
+
 **Location**: Right column under chart
 
 **Timeline**:
+
 ```
 Progress to Next Milestone
 
@@ -99,9 +108,11 @@ Progress to Next Milestone
 ```
 
 ### 4. Data Management
+
 **Location**: Bottom of section
 
 **Storage Stats**:
+
 ```
 ┌───────────────┬────────────────┬──────────────┬──────────────┐
 │ Snapshots: 45 │ Storage: 450KB │ Oldest: Sep 1│ Latest: Oct 14│
@@ -109,6 +120,7 @@ Progress to Next Milestone
 ```
 
 **Actions**:
+
 ```
 ┌────────────────────────────────────────────┐
 │ Export Data                                │
@@ -133,6 +145,7 @@ Progress to Next Milestone
 ```
 
 **Clear Confirmation**:
+
 ```
 ┌─────────────────────────────────────────┐
 │ Are you sure? This will permanently    │
@@ -147,12 +160,14 @@ Progress to Next Milestone
 ## User Flows
 
 ### First Visit
+
 1. User lands on dashboard
 2. Snapshot saved automatically
 3. Empty state shown: "No Historical Data Yet"
 4. Message: "Come back tomorrow to see trends"
 
 ### Second Visit (Next Day)
+
 1. Previous snapshot loaded
 2. New snapshot saved
 3. Chart appears with 2 data points
@@ -160,6 +175,7 @@ Progress to Next Milestone
 5. Milestone tracker shows progress
 
 ### Regular Use (Week+)
+
 1. All visualizations fully populated
 2. Growth rates calculated
 3. Velocity indicators show trends
@@ -167,12 +183,14 @@ Progress to Next Milestone
 5. Export becomes useful
 
 ### Export Workflow
+
 1. Click "Export JSON" or "Export CSV"
 2. File downloads immediately
 3. Filename: `wapar-historical-data-2025-10-14.json`
 4. Contains all snapshots with metadata
 
 ### Import Workflow
+
 1. Click "Import JSON"
 2. File picker opens
 3. Select exported file
@@ -181,6 +199,7 @@ Progress to Next Milestone
 6. Charts update immediately
 
 ### Clear Data Workflow
+
 1. Click "Clear All Data"
 2. Confirmation dialog appears
 3. User confirms or cancels
@@ -190,16 +209,19 @@ Progress to Next Milestone
 ## Color Scheme
 
 ### Growth Indicators
+
 - **Positive Growth**: 📈 Green (#10b981)
 - **Negative Growth**: 📉 Red (#ef4444)
 - **Neutral**: ➖ Gray (#6b7280)
 
 ### Trends
+
 - **Accelerating**: 🚀 Green (#10b981)
 - **Decelerating**: 🐌 Orange (#f59e0b)
 - **Steady**: ➡️ Blue (#3b82f6)
 
 ### Milestones
+
 - **1K**: Blue (#3b82f6) 🎉
 - **5K**: Purple (#a855f7) 🚀
 - **10K**: Green (#10b981) 🌟
@@ -211,6 +233,7 @@ Progress to Next Milestone
 - **1M**: Purple (#7c3aed) 🎯
 
 ### Chart Colors
+
 - **Total Installations**: Blue (#3b82f6) solid line
 - **Monthly Active**: Green (#10b981) dashed line
 - **Gradient Fill**: Translucent color matching line
@@ -218,16 +241,19 @@ Progress to Next Milestone
 ## Responsive Behavior
 
 ### Desktop (> 1024px)
+
 - Chart: Full width
 - Growth + Milestone: 2-column grid
 - All cards visible
 
 ### Tablet (768-1024px)
+
 - Chart: Full width
 - Growth + Milestone: Stack vertically
 - Cards maintain full width
 
 ### Mobile (< 768px)
+
 - All components stack
 - Chart height reduced
 - Cards single column
@@ -236,16 +262,19 @@ Progress to Next Milestone
 ## Accessibility
 
 ### ARIA Labels
+
 - Chart data points: "Data point for [date]"
 - Buttons: Descriptive text
 - Progress bars: Current value in label
 
 ### Keyboard Navigation
+
 - All interactive elements focusable
 - Tab order follows visual order
 - Enter/Space activate buttons
 
 ### Screen Readers
+
 - Chart announced as "Line chart showing installation growth"
 - Data points readable with arrow keys
 - Status messages announced on changes
@@ -253,16 +282,19 @@ Progress to Next Milestone
 ## Performance
 
 ### Initial Load
+
 - Historical data loads asynchronously
 - No blocking on main thread
 - Progressive enhancement
 
 ### Interactions
+
 - Hover tooltips: < 16ms (60 FPS)
 - Chart animations: Hardware accelerated
 - Button clicks: Instant feedback
 
 ### Storage Operations
+
 - Save: < 5ms
 - Load: < 5ms
 - Export: < 100ms
@@ -271,6 +303,7 @@ Progress to Next Milestone
 ## Browser Storage
 
 ### localStorage Structure
+
 ```json
 {
   "version": "1.0",
@@ -288,10 +321,12 @@ Progress to Next Milestone
 ```
 
 ### Storage Key
+
 - `wapar_historical_data`: Main storage key
 - Configurable in service constructor
 
 ### Quota Management
+
 - Automatic cleanup when quota exceeded
 - Keeps most recent 50% on error
 - Warns user if can't save
@@ -299,18 +334,21 @@ Progress to Next Milestone
 ## Error Handling
 
 ### Storage Full
+
 ```
 ⚠️ Storage quota exceeded
    Export and clear old data to continue
 ```
 
 ### Import Failed
+
 ```
 ❌ Failed to import data
    Invalid file format
 ```
 
 ### Network Unavailable
+
 ```
 ℹ️ Using cached data
    Last updated: 2 hours ago
@@ -319,6 +357,7 @@ Progress to Next Milestone
 ## Future Enhancements
 
 ### Phase 2 Features
+
 1. **Date Range Filter**: Zoom into specific periods
 2. **Comparative View**: Side-by-side period comparison
 3. **Custom Milestones**: User-defined goals
@@ -326,6 +365,7 @@ Progress to Next Milestone
 5. **Sharing**: Export shareable links
 
 ### Phase 3 Features
+
 1. **Cloud Sync**: Optional server backup
 2. **Multi-Device**: Sync across browsers
 3. **Advanced Charts**: More visualization types
@@ -335,12 +375,14 @@ Progress to Next Milestone
 ## Integration Notes
 
 ### Works With
+
 - ✅ Engagement Health Dashboard
 - ✅ Advanced Analytics
 - ✅ Geographic Map
 - ✅ Auto-Refresh System
 
 ### No Conflicts
+
 - ✅ Independent data storage
 - ✅ Separate UI section
 - ✅ Non-blocking operations
@@ -349,6 +391,7 @@ Progress to Next Milestone
 ## Testing Coverage
 
 ### Unit Tests (69)
+
 - Storage operations
 - Growth calculations
 - Export/import
@@ -356,6 +399,7 @@ Progress to Next Milestone
 - Edge cases
 
 ### E2E Tests (13)
+
 - Chart rendering
 - Card display
 - Button interactions
@@ -363,6 +407,7 @@ Progress to Next Milestone
 - Data flows
 
 ### Manual Tests
+
 - Cross-browser compatibility
 - Mobile responsiveness
 - Accessibility features

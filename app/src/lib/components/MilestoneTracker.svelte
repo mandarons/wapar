@@ -29,9 +29,7 @@
 
 	// Project when next milestone will be reached
 	$: projection =
-		nextMilestone && snapshots.length > 2
-			? projectMilestone(snapshots, nextMilestone.value)
-			: null;
+		nextMilestone && snapshots.length > 2 ? projectMilestone(snapshots, nextMilestone.value) : null;
 
 	function formatDate(isoString: string): string {
 		const date = new Date(isoString);
@@ -108,7 +106,9 @@
 								{#if projection.confidence === 'high'}
 									<span class="confidence-badge bg-green-100 text-green-800">High Confidence</span>
 								{:else if projection.confidence === 'medium'}
-									<span class="confidence-badge bg-yellow-100 text-yellow-800">Medium Confidence</span>
+									<span class="confidence-badge bg-yellow-100 text-yellow-800"
+										>Medium Confidence</span
+									>
 								{:else}
 									<span class="confidence-badge bg-gray-100 text-gray-800">Low Confidence</span>
 								{/if}

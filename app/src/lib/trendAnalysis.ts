@@ -252,7 +252,9 @@ export function projectMilestone(
 		dataPoints > 30 ? 'high' : dataPoints > 14 ? 'medium' : 'low';
 
 	// Project date
-	const projectedDate = new Date(new Date(latest.timestamp).getTime() + daysToMilestone * 24 * 60 * 60 * 1000);
+	const projectedDate = new Date(
+		new Date(latest.timestamp).getTime() + daysToMilestone * 24 * 60 * 60 * 1000
+	);
 
 	return {
 		projectedDate: projectedDate.toISOString(),

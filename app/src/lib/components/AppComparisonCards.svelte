@@ -56,9 +56,7 @@
 
 			<!-- Market Share -->
 			<div class="border-b border-blue-300 pb-4">
-				<p class="text-sm text-blue-700 mb-1 uppercase tracking-wide font-semibold">
-					Market Share
-				</p>
+				<p class="text-sm text-blue-700 mb-1 uppercase tracking-wide font-semibold">Market Share</p>
 				<div class="flex items-baseline gap-2">
 					<p class="text-3xl font-bold text-blue-600" data-testid="icloud-percentage">
 						{iCloudPercentage}%

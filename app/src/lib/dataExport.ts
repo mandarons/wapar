@@ -139,10 +139,7 @@ function formatDateForFilename(date: Date): string {
  * Merge imported snapshots with existing data
  * Removes duplicates and sorts by timestamp
  */
-export function mergeSnapshots(
-	existing: DataSnapshot[],
-	imported: DataSnapshot[]
-): DataSnapshot[] {
+export function mergeSnapshots(existing: DataSnapshot[], imported: DataSnapshot[]): DataSnapshot[] {
 	// Combine arrays
 	const combined = [...existing, ...imported];
 
@@ -151,7 +148,10 @@ export function mergeSnapshots(
 	for (const snapshot of combined) {
 		const key = snapshot.timestamp;
 		// Keep the snapshot with more data (in case of conflicts)
-		if (!uniqueMap.has(key) || uniqueMap.get(key)!.totalInstallations < snapshot.totalInstallations) {
+		if (
+			!uniqueMap.has(key) ||
+			uniqueMap.get(key)!.totalInstallations < snapshot.totalInstallations
+		) {
 			uniqueMap.set(key, snapshot);
 		}
 	}

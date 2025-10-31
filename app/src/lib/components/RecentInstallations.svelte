@@ -37,10 +37,7 @@
 	/**
 	 * Get location display string
 	 */
-	function getLocationDisplay(
-		countryCode: string | null,
-		region: string | null
-	): string {
+	function getLocationDisplay(countryCode: string | null, region: string | null): string {
 		if (region) {
 			return region;
 		}
@@ -116,9 +113,15 @@
 	{:else}
 		<div class="space-y-2">
 			{#each installations as install (install.id)}
-				<div class="flex items-center justify-between p-3 bg-surface-100 rounded hover:bg-surface-200 transition-colors">
+				<div
+					class="flex items-center justify-between p-3 bg-surface-100 rounded hover:bg-surface-200 transition-colors"
+				>
 					<div class="flex items-center gap-3">
-						<span class="text-2xl" aria-label="{getCountryName(install.countryCode)} flag" title={getCountryName(install.countryCode)}>
+						<span
+							class="text-2xl"
+							aria-label="{getCountryName(install.countryCode)} flag"
+							title={getCountryName(install.countryCode)}
+						>
 							{getCountryFlag(install.countryCode)}
 						</span>
 						<div>
@@ -141,7 +144,8 @@
 		<!-- Pagination info (display only) -->
 		<div class="flex justify-center items-center mt-4">
 			<div class="text-sm text-surface-600">
-				Showing {Math.min(offset + 1, total)}-{Math.min(offset + installations.length, total)} of {total} installations
+				Showing {Math.min(offset + 1, total)}-{Math.min(offset + installations.length, total)} of {total}
+				installations
 				{#if totalPages > 1}
 					(Page {currentPage} of {totalPages})
 				{/if}
