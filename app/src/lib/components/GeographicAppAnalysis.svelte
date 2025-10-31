@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { getCountryName } from '$lib/utils/countries';
+
 	export let iCloudDockerTotal: number;
 	export let haBouncieTotal: number;
 	export let countryToCount: { countryCode: string; count: number }[];
@@ -35,43 +37,6 @@
 	$: topBouncieCountries = [...estimatedCountryData]
 		.sort((a, b) => b.bouncieEstimate - a.bouncieEstimate)
 		.slice(0, 5);
-
-	function getCountryName(code: string): string {
-		const countryNames: { [key: string]: string } = {
-			US: 'United States',
-			GB: 'United Kingdom',
-			DE: 'Germany',
-			FR: 'France',
-			CA: 'Canada',
-			AU: 'Australia',
-			NL: 'Netherlands',
-			SE: 'Sweden',
-			NO: 'Norway',
-			DK: 'Denmark',
-			FI: 'Finland',
-			BE: 'Belgium',
-			CH: 'Switzerland',
-			AT: 'Austria',
-			ES: 'Spain',
-			IT: 'Italy',
-			PL: 'Poland',
-			RU: 'Russia',
-			BR: 'Brazil',
-			IN: 'India',
-			CN: 'China',
-			JP: 'Japan',
-			KR: 'South Korea',
-			SG: 'Singapore',
-			NZ: 'New Zealand',
-			IE: 'Ireland',
-			PT: 'Portugal',
-			GR: 'Greece',
-			CZ: 'Czech Republic',
-			RO: 'Romania',
-			HU: 'Hungary'
-		};
-		return countryNames[code] || code;
-	}
 </script>
 
 <div
