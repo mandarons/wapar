@@ -13,14 +13,13 @@
 	export let title: string = 'App Version Distribution';
 
 	// Calculate max count for bar sizing
-	$: maxCount = versionDistribution.length > 0 
-		? Math.max(...versionDistribution.map(v => v.count)) 
-		: 1;
+	$: maxCount =
+		versionDistribution.length > 0 ? Math.max(...versionDistribution.map((v) => v.count)) : 1;
 
 	// Determine if a version is outdated (not the latest version)
 	function isOutdated(version: string): boolean {
 		if (!latestVersion || version === latestVersion) return false;
-		
+
 		// Simple heuristic: versions that are not the latest are considered outdated
 		// A more sophisticated version comparison could be added
 		return version !== latestVersion;
@@ -58,8 +57,8 @@
 	}
 </script>
 
-<div 
-	class="version-analytics-container" 
+<div
+	class="version-analytics-container"
 	data-testid="version-analytics"
 	role="region"
 	aria-labelledby="version-analytics-title"
@@ -72,15 +71,15 @@
 			aria-label="Export version analytics data"
 			title="Export version analytics data as JSON"
 		>
-			<svg 
-				xmlns="http://www.w3.org/2000/svg" 
-				width="16" 
-				height="16" 
-				viewBox="0 0 24 24" 
-				fill="none" 
-				stroke="currentColor" 
-				stroke-width="2" 
-				stroke-linecap="round" 
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
 				stroke-linejoin="round"
 				aria-hidden="true"
 			>
@@ -102,8 +101,8 @@
 			{#each versionDistribution as version (version.version)}
 				{@const barWidth = (version.count / maxCount) * 100}
 				{@const isOldVersion = isOutdated(version.version)}
-				<div 
-					class="version-item" 
+				<div
+					class="version-item"
 					role="listitem"
 					aria-label="{version.version}: {version.count} installations, {version.percentage}% of total"
 				>
@@ -114,7 +113,11 @@
 								<span class="latest-badge" aria-label="Latest version">Latest</span>
 							{/if}
 							{#if isOldVersion}
-								<span class="outdated-badge" aria-label="Outdated version" title="Consider upgrading">
+								<span
+									class="outdated-badge"
+									aria-label="Outdated version"
+									title="Consider upgrading"
+								>
 									<span aria-hidden="true">⚠️</span>
 									<span class="sr-only">Warning:</span>
 									Outdated
@@ -123,8 +126,8 @@
 						</span>
 					</div>
 					<div class="bar-container">
-						<div 
-							class="bar {isOldVersion ? 'outdated' : ''}" 
+						<div
+							class="bar {isOldVersion ? 'outdated' : ''}"
 							style="width: {barWidth}%"
 							role="progressbar"
 							aria-valuenow={version.percentage}
@@ -164,7 +167,9 @@
 		background: white;
 		padding: 1.5rem;
 		border-radius: 0.5rem;
-		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+		box-shadow:
+			0 1px 3px 0 rgba(0, 0, 0, 0.1),
+			0 1px 2px 0 rgba(0, 0, 0, 0.06);
 	}
 
 	.header {

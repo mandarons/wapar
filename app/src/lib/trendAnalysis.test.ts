@@ -6,16 +6,12 @@ import {
 	calculateMonthlyGrowthRate,
 	calculateGrowthVelocity,
 	projectMilestone,
-	calculateAllGrowthMetrics,
-	type GrowthRate
+	calculateAllGrowthMetrics
 } from './trendAnalysis';
 import type { DataSnapshot } from './historicalData';
 
 describe('trendAnalysis', () => {
-	const createSnapshot = (
-		daysAgo: number,
-		totalInstallations: number
-	): DataSnapshot => {
+	const createSnapshot = (daysAgo: number, totalInstallations: number): DataSnapshot => {
 		const date = new Date();
 		date.setDate(date.getDate() - daysAgo);
 		return {
@@ -211,10 +207,7 @@ describe('trendAnalysis', () => {
 		});
 
 		it('should return null with insufficient data', () => {
-			const snapshots: DataSnapshot[] = [
-				createSnapshot(1, 1000),
-				createSnapshot(0, 1100)
-			];
+			const snapshots: DataSnapshot[] = [createSnapshot(1, 1000), createSnapshot(0, 1100)];
 
 			const result = calculateGrowthVelocity(snapshots);
 
@@ -255,10 +248,7 @@ describe('trendAnalysis', () => {
 		});
 
 		it('should return null with negative growth', () => {
-			const snapshots: DataSnapshot[] = [
-				createSnapshot(30, 1500),
-				createSnapshot(0, 1000)
-			];
+			const snapshots: DataSnapshot[] = [createSnapshot(30, 1500), createSnapshot(0, 1000)];
 
 			const result = projectMilestone(snapshots, 2000);
 

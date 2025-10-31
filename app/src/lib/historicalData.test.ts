@@ -277,8 +277,22 @@ describe('HistoricalDataService', () => {
 
 		it('should return false for same day', () => {
 			const now = new Date();
-			const timestamp1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0).toISOString();
-			const timestamp2 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0).toISOString();
+			const timestamp1 = new Date(
+				now.getFullYear(),
+				now.getMonth(),
+				now.getDate(),
+				10,
+				0,
+				0
+			).toISOString();
+			const timestamp2 = new Date(
+				now.getFullYear(),
+				now.getMonth(),
+				now.getDate(),
+				15,
+				0,
+				0
+			).toISOString();
 
 			service.saveSnapshot({
 				timestamp: timestamp1,
@@ -296,7 +310,7 @@ describe('HistoricalDataService', () => {
 			const now = new Date();
 			const yesterday = new Date(now);
 			yesterday.setDate(yesterday.getDate() - 1);
-			
+
 			const timestamp1 = yesterday.toISOString();
 			const timestamp2 = now.toISOString();
 

@@ -186,9 +186,8 @@ export class HistoricalDataService {
 		estimatedSizeKB: number;
 	} {
 		const snapshots = this.getAllSnapshots();
-		const data = typeof localStorage !== 'undefined' 
-			? (localStorage.getItem(this.config.storageKey) || '') 
-			: '';
+		const data =
+			typeof localStorage !== 'undefined' ? localStorage.getItem(this.config.storageKey) || '' : '';
 		const sizeKB = new Blob([data]).size / 1024;
 
 		return {
