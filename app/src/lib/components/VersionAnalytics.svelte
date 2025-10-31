@@ -115,7 +115,9 @@
 							{/if}
 							{#if isOldVersion}
 								<span class="outdated-badge" aria-label="Outdated version" title="Consider upgrading">
-									⚠️ Outdated
+									<span aria-hidden="true">⚠️</span>
+									<span class="sr-only">Warning:</span>
+									Outdated
 								</span>
 							{/if}
 						</span>
@@ -329,5 +331,18 @@
 		.stats-footer {
 			grid-template-columns: 1fr;
 		}
+	}
+
+	/* Screen reader only class */
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
 	}
 </style>

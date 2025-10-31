@@ -28,11 +28,23 @@
 		return rate.isPositive ? '📈' : '📉';
 	}
 
+	function getGrowthIconLabel(rate: GrowthRate | null): string {
+		if (!rate) return 'No change';
+		return rate.isPositive ? 'Increasing trend' : 'Decreasing trend';
+	}
+
 	function getTrendIcon(velocity: GrowthVelocity | null): string {
 		if (!velocity) return '➖';
 		if (velocity.trend === 'accelerating') return '🚀';
 		if (velocity.trend === 'decelerating') return '🐌';
 		return '➡️';
+	}
+
+	function getTrendIconLabel(velocity: GrowthVelocity | null): string {
+		if (!velocity) return 'Unknown trend';
+		if (velocity.trend === 'accelerating') return 'Accelerating';
+		if (velocity.trend === 'decelerating') return 'Decelerating';
+		return 'Steady';
 	}
 
 	function getTrendLabel(velocity: GrowthVelocity | null): string {
@@ -51,13 +63,18 @@
 </script>
 
 <div class="growth-metrics" data-testid="growth-metrics">
-	<h3 class="text-lg font-semibold text-gray-800 mb-6">📊 Growth Analysis</h3>
+	<h3 class="text-lg font-semibold text-gray-800 mb-6">
+		<span aria-hidden="true">📊</span>
+		<span class="sr-only">Chart icon:</span>
+		Growth Analysis
+	</h3>
 
 	<div class="metrics-grid">
 		<!-- Daily Growth -->
 		<div class="metric-card" data-testid="daily-growth-card">
 			<div class="metric-header">
-				<span class="metric-icon">{getGrowthIcon(daily)}</span>
+				<span class="metric-icon" aria-hidden="true">{getGrowthIcon(daily)}</span>
+				<span class="sr-only">{getGrowthIconLabel(daily)}:</span>
 				<span class="metric-label">Daily Growth</span>
 			</div>
 			<div class="metric-value {getGrowthColor(daily)}">
@@ -71,7 +88,8 @@
 		<!-- Weekly Growth -->
 		<div class="metric-card" data-testid="weekly-growth-card">
 			<div class="metric-header">
-				<span class="metric-icon">{getGrowthIcon(weekly)}</span>
+				<span class="metric-icon" aria-hidden="true">{getGrowthIcon(weekly)}</span>
+				<span class="sr-only">{getGrowthIconLabel(weekly)}:</span>
 				<span class="metric-label">Weekly Growth</span>
 			</div>
 			<div class="metric-value {getGrowthColor(weekly)}">
@@ -85,7 +103,8 @@
 		<!-- Monthly Growth -->
 		<div class="metric-card" data-testid="monthly-growth-card">
 			<div class="metric-header">
-				<span class="metric-icon">{getGrowthIcon(monthly)}</span>
+				<span class="metric-icon" aria-hidden="true">{getGrowthIcon(monthly)}</span>
+				<span class="sr-only">{getGrowthIconLabel(monthly)}:</span>
 				<span class="metric-label">Monthly Growth</span>
 			</div>
 			<div class="metric-value {getGrowthColor(monthly)}">
@@ -99,7 +118,8 @@
 		<!-- Growth Velocity -->
 		<div class="metric-card velocity-card" data-testid="velocity-card">
 			<div class="metric-header">
-				<span class="metric-icon">{getTrendIcon(velocity)}</span>
+				<span class="metric-icon" aria-hidden="true">{getTrendIcon(velocity)}</span>
+				<span class="sr-only">{getTrendIconLabel(velocity)}:</span>
 				<span class="metric-label">Growth Trend</span>
 			</div>
 			<div class="metric-value {getTrendColor(velocity)}">
@@ -275,5 +295,18 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+	}
+
+	/* Screen reader only class */
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
 	}
 </style>

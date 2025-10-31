@@ -52,6 +52,48 @@
 
 	$: currentPage = Math.floor(offset / limit) + 1;
 	$: totalPages = Math.ceil(total / limit);
+
+	/**
+	 * Get full country name from country code
+	 */
+	function getCountryName(countryCode: string | null): string {
+		if (!countryCode) return 'Unknown';
+		// Basic mapping - could be expanded
+		const countryNames: Record<string, string> = {
+			US: 'United States',
+			GB: 'United Kingdom',
+			DE: 'Germany',
+			FR: 'France',
+			CA: 'Canada',
+			AU: 'Australia',
+			NL: 'Netherlands',
+			SE: 'Sweden',
+			NO: 'Norway',
+			DK: 'Denmark',
+			FI: 'Finland',
+			BE: 'Belgium',
+			CH: 'Switzerland',
+			AT: 'Austria',
+			ES: 'Spain',
+			IT: 'Italy',
+			PL: 'Poland',
+			RU: 'Russia',
+			BR: 'Brazil',
+			IN: 'India',
+			CN: 'China',
+			JP: 'Japan',
+			KR: 'South Korea',
+			SG: 'Singapore',
+			NZ: 'New Zealand',
+			IE: 'Ireland',
+			PT: 'Portugal',
+			GR: 'Greece',
+			CZ: 'Czech Republic',
+			RO: 'Romania',
+			HU: 'Hungary'
+		};
+		return countryNames[countryCode] || countryCode;
+	}
 </script>
 
 <div class="card p-4">
@@ -76,7 +118,7 @@
 			{#each installations as install (install.id)}
 				<div class="flex items-center justify-between p-3 bg-surface-100 rounded hover:bg-surface-200 transition-colors">
 					<div class="flex items-center gap-3">
-						<span class="text-2xl" title={install.countryCode || 'Unknown'}>
+						<span class="text-2xl" aria-label="{getCountryName(install.countryCode)} flag" title={getCountryName(install.countryCode)}>
 							{getCountryFlag(install.countryCode)}
 						</span>
 						<div>

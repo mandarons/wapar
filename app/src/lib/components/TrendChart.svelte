@@ -17,6 +17,15 @@
 	let tooltipX = 0;
 	let tooltipY = 0;
 
+	// Check for reduced motion preference
+	let prefersReducedMotion = false;
+	if (typeof window !== 'undefined') {
+		prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	}
+
+	// Accessibility: Show data table
+	let showDataTable = false;
+
 	// Calculate scales and paths
 	$: {
 		if (snapshots.length === 0) {
@@ -91,6 +100,23 @@
 		hoveredIndex = null;
 	}
 
+	// Accessibility: Generate textual summary
+	$: chartSummary = snapshots.length > 0 
+		? `Installation growth trend chart showing ${snapshots.length} data points from ${formatDate(snapshots[0].timestamp)} to ${formatDate(snapshots[snapshots.length - 1].timestamp)}. Latest total installations: ${formatNumber(snapshots[snapshots.length - 1].totalInstallations)}${showMonthlyActive ? `, monthly active: ${formatNumber(snapshots[snapshots.length - 1].monthlyActive)}` : ''}.`
+		: 'No historical data available yet.';
+
+	function toggleDataTable() {
+		showDataTable = !showDataTable;
+	}
+
+	// Keyboard navigation for data points
+	function handleDataPointKeydown(event: KeyboardEvent, index: number) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			hoveredIndex = index;
+		}
+	}
+
 	// Y-axis ticks
 	$: yTicks = [0, 0.25, 0.5, 0.75, 1].map((ratio) => ({
 		value: minInstallations + (maxInstallations - minInstallations) * ratio,
@@ -123,8 +149,21 @@
 	</div>
 {:else}
 	<div class="trend-chart-container" data-testid="trend-chart">
+		<!-- Accessibility: Screen reader description -->
+		<div class="sr-only" id="trend-chart-description" aria-live="polite">
+			{chartSummary}
+		</div>
+
 		<h3 class="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
-		<svg {width} {height} class="trend-chart" on:mouseleave={handleMouseLeave}>
+		<svg 
+			{width} 
+			{height} 
+			class="trend-chart" 
+			on:mouseleave={handleMouseLeave}
+			role="img"
+			aria-label="Installation growth trend chart"
+			aria-describedby="trend-chart-description"
+		>
 			<g transform="translate({margin.left}, {margin.top})">
 				<!-- Grid lines -->
 				{#each yTicks as tick}
@@ -204,11 +243,12 @@
 						fill="#3b82f6"
 						stroke="white"
 						stroke-width="2"
-						class="cursor-pointer transition-all"
+						class={prefersReducedMotion ? 'cursor-pointer' : 'cursor-pointer transition-all'}
 						on:mouseenter={(e) => handleMouseMove(e, index)}
+						on:keydown={(e) => handleDataPointKeydown(e, index)}
 						role="button"
 						tabindex="0"
-						aria-label="Data point for {formatDate(snapshot.timestamp)}"
+						aria-label="Data point for {formatDate(snapshot.timestamp)}: {formatNumber(snapshot.totalInstallations)} total installations{showMonthlyActive ? `, ${formatNumber(snapshot.monthlyActive)} monthly active` : ''}"
 					/>
 				{/each}
 
@@ -261,16 +301,68 @@
 		<!-- Legend -->
 		<div class="flex justify-center gap-6 mt-4 text-sm">
 			<div class="flex items-center gap-2">
-				<div class="w-8 h-0.5 bg-blue-500"></div>
+				<div class="w-8 h-0.5 bg-blue-500" aria-hidden="true"></div>
 				<span class="text-gray-700">Total Installations</span>
 			</div>
 			{#if showMonthlyActive}
 				<div class="flex items-center gap-2">
-					<div class="w-8 h-0.5 bg-green-500 border-dashed" style="border-top: 2px dashed #10b981; background: none;"></div>
+					<div class="w-8 h-0.5 bg-green-500 border-dashed" style="border-top: 2px dashed #10b981; background: none;" aria-hidden="true"></div>
 					<span class="text-gray-700">Monthly Active</span>
 				</div>
 			{/if}
 		</div>
+
+		<!-- Toggle button for data table -->
+		<div class="mt-4 text-center">
+			<button
+				on:click={toggleDataTable}
+				class="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+				aria-expanded={showDataTable}
+				aria-controls="trend-data-table"
+			>
+				{showDataTable ? 'Hide' : 'Show'} data table
+			</button>
+		</div>
+
+		<!-- Accessible data table alternative -->
+		{#if showDataTable}
+			<div id="trend-data-table" class="mt-4 overflow-x-auto" role="table" aria-label="Installation growth data">
+				<table class="min-w-full border border-gray-300 bg-white">
+					<thead class="bg-gray-100">
+						<tr>
+							<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">
+								Date
+							</th>
+							<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+								Total Installations
+							</th>
+							{#if showMonthlyActive}
+								<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+									Monthly Active
+								</th>
+							{/if}
+						</tr>
+					</thead>
+					<tbody>
+						{#each snapshots as snapshot}
+							<tr class="border-b border-gray-200">
+								<td class="px-4 py-2 text-sm text-gray-900">
+									{formatDate(snapshot.timestamp)}
+								</td>
+								<td class="px-4 py-2 text-sm text-gray-900 text-right">
+									{snapshot.totalInstallations.toLocaleString()}
+								</td>
+								{#if showMonthlyActive}
+									<td class="px-4 py-2 text-sm text-gray-900 text-right">
+										{snapshot.monthlyActive.toLocaleString()}
+									</td>
+								{/if}
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
 	</div>
 {/if}
 
@@ -284,5 +376,18 @@
 
 	.trend-chart {
 		overflow: visible;
+	}
+
+	/* Screen reader only class */
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
 	}
 </style>
