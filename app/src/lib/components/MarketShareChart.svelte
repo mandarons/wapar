@@ -39,10 +39,20 @@
 
 	let canvas: HTMLCanvasElement;
 	let chart: Chart | null = null;
+	let showDataTable = false;
 
 	$: totalInstallations = iCloudDockerTotal + haBouncieTotal;
 	$: iCloudPercentage = totalInstallations > 0 ? (iCloudDockerTotal / totalInstallations) * 100 : 0;
 	$: bounciePercentage = totalInstallations > 0 ? (haBouncieTotal / totalInstallations) * 100 : 0;
+
+	// Accessibility: Generate textual summary
+	$: chartSummary = `Market share chart showing ${chartType} visualization. iCloud Docker has ${iCloudDockerTotal.toLocaleString()} installations (${iCloudPercentage.toFixed(1)}%) and Home Assistant Bouncie has ${haBouncieTotal.toLocaleString()} installations (${bounciePercentage.toFixed(1)}%). Total installations: ${totalInstallations.toLocaleString()}.`;
+
+	// Check for reduced motion preference
+	let prefersReducedMotion = false;
+	if (typeof window !== 'undefined') {
+		prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	}
 
 	function createChart() {
 		if (!canvas) return;
@@ -72,6 +82,10 @@
 			options: {
 				responsive: true,
 				maintainAspectRatio: true,
+				animation: prefersReducedMotion ? false : {
+					duration: 750,
+					easing: 'easeInOutQuart'
+				},
 				plugins: {
 					legend: {
 						display: showLegend,
@@ -193,14 +207,126 @@
 			chart.destroy();
 		}
 	});
+
+	function toggleDataTable() {
+		showDataTable = !showDataTable;
+	}
+
+	// Keyboard navigation for canvas
+	function handleCanvasKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			toggleDataTable();
+		}
+	}
 </script>
 
 <div class="w-full h-full" data-testid="market-share-chart">
-	<canvas bind:this={canvas}></canvas>
+	<!-- Accessibility: Screen reader description -->
+	<div class="sr-only" id="chart-description" aria-live="polite">
+		{chartSummary}
+	</div>
+
+	<!-- Chart canvas -->
+	<div
+		role="img"
+		aria-label="Market share distribution chart"
+		aria-describedby="chart-description"
+	>
+		<canvas
+			bind:this={canvas}
+			tabindex="0"
+			on:keydown={handleCanvasKeydown}
+			aria-label="Press Enter to toggle data table view"
+		></canvas>
+	</div>
+
+	<!-- Toggle button for data table -->
+	<div class="mt-4 text-center">
+		<button
+			on:click={toggleDataTable}
+			class="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+			aria-expanded={showDataTable}
+			aria-controls="chart-data-table"
+		>
+			{showDataTable ? 'Hide' : 'Show'} data table
+		</button>
+	</div>
+
+	<!-- Accessible data table alternative -->
+	{#if showDataTable}
+		<div id="chart-data-table" class="mt-4 overflow-x-auto" role="table" aria-label="Market share data">
+			<table class="min-w-full border border-gray-300 bg-white">
+				<thead class="bg-gray-100">
+					<tr>
+						<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">
+							Application
+						</th>
+						<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+							Installations
+						</th>
+						<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+							Percentage
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr class="border-b border-gray-200">
+						<td class="px-4 py-2 text-sm text-gray-900">
+							<span class="inline-flex items-center gap-2">
+								<span class="w-3 h-3 rounded-full bg-blue-500" aria-hidden="true"></span>
+								iCloud Docker
+							</span>
+						</td>
+						<td class="px-4 py-2 text-sm text-gray-900 text-right">
+							{iCloudDockerTotal.toLocaleString()}
+						</td>
+						<td class="px-4 py-2 text-sm text-gray-900 text-right">
+							{iCloudPercentage.toFixed(1)}%
+						</td>
+					</tr>
+					<tr class="border-b border-gray-200">
+						<td class="px-4 py-2 text-sm text-gray-900">
+							<span class="inline-flex items-center gap-2">
+								<span class="w-3 h-3 rounded-full bg-green-500" aria-hidden="true"></span>
+								Home Assistant - Bouncie
+							</span>
+						</td>
+						<td class="px-4 py-2 text-sm text-gray-900 text-right">
+							{haBouncieTotal.toLocaleString()}
+						</td>
+						<td class="px-4 py-2 text-sm text-gray-900 text-right">
+							{bounciePercentage.toFixed(1)}%
+						</td>
+					</tr>
+					<tr class="bg-gray-50 font-semibold">
+						<td class="px-4 py-2 text-sm text-gray-900">Total</td>
+						<td class="px-4 py-2 text-sm text-gray-900 text-right">
+							{totalInstallations.toLocaleString()}
+						</td>
+						<td class="px-4 py-2 text-sm text-gray-900 text-right">100.0%</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	{/if}
 </div>
 
 <style>
 	div {
 		position: relative;
+	}
+
+	/* Screen reader only class */
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
 	}
 </style>

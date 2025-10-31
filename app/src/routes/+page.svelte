@@ -245,6 +245,32 @@
 		callback: (id: string) => handleCountryClick(id)
 	});
 	mapInitialized = true;
+
+	// Add keyboard accessibility to map countries
+	if (typeof document !== 'undefined') {
+		setTimeout(() => {
+			const countries = document.querySelectorAll('.svgMap-country');
+			countries.forEach((country) => {
+				country.setAttribute('tabindex', '0');
+				country.setAttribute('role', 'button');
+				const countryId = country.getAttribute('data-id');
+				if (countryId) {
+					const countryName = getCountryName(countryId);
+					const countryData = data.countryToCount.find(c => c.countryCode === countryId);
+					const installs = countryData ? countryData.count.toLocaleString() : '0';
+					country.setAttribute('aria-label', `${countryName}: ${installs} installations. Press Enter to view details.`);
+					
+					country.addEventListener('keydown', (e: Event) => {
+						const event = e as KeyboardEvent;
+						if (event.key === 'Enter' || event.key === ' ') {
+							event.preventDefault();
+							handleCountryClick(countryId);
+						}
+					});
+				}
+			});
+		}, 100);
+	}
 }
 
 function destroyMap() {
@@ -415,7 +441,14 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 			modalClasses:
 				'!bg-white !text-slate-900 rounded-2xl shadow-xl border border-slate-200 px-6 py-6',
 			backdropClasses: '!bg-black/40 backdrop-blur-sm',
-			buttonTextCancel: 'Close'
+			buttonTextCancel: 'Close',
+			// Accessibility improvements for modal
+			meta: {
+				role: 'dialog',
+				'aria-modal': 'true',
+				'aria-labelledby': 'modal-title',
+				'aria-describedby': 'modal-description'
+			}
 		};
 
 		modalStore.trigger(modal);
@@ -447,6 +480,12 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 		if (!marketShareChartRef) return;
 		const timestamp = new Date().toISOString().split('T')[0];
 		marketShareChartRef.exportChart(`market-share-${timestamp}.png`);
+	}
+
+	// Map accessibility: toggle data table
+	let showMapDataTable = false;
+	function toggleMapDataTable() {
+		showMapDataTable = !showMapDataTable;
 	}
 </script>
 
@@ -624,12 +663,13 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 							<div class="w-full lg:w-1/3">
 								<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
 									<h3 class="text-base font-semibold text-gray-900">Top 10 countries</h3>
-									<div class="mt-4 space-y-2">
+									<div class="mt-4 space-y-2" role="list" aria-label="Top 10 countries by installations">
 										{#each top10Countries as country, index}
 											<button
 												on:click={() => highlightCountryOnMap(country.countryCode)}
-												class="flex w-full items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+												class="flex w-full items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
 												data-testid={`country-item-${country.countryCode}`}
+												aria-label="View {getCountryName(country.countryCode)} on map: {country.count.toLocaleString()} installations, {formatPercentage(country.count, data.totalInstallations)}"
 											>
 												<span class="flex items-center gap-2">
 													<span class="font-semibold text-gray-500">#{index + 1}</span>
@@ -655,8 +695,68 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 										id="svgMap"
 										class="w-full"
 										data-testid="interactive-map"
-										aria-label="World map showing installation density"
+										role="img"
+										aria-label="Interactive world map showing installation density by country"
+										aria-describedby="map-description"
 									></div>
+									<div id="map-description" class="sr-only">
+										World map visualization showing {data.countryToCount.length} countries with installation data. 
+										Use keyboard navigation to explore countries or view the data table below for detailed information.
+									</div>
+
+									<!-- Toggle button for map data table -->
+									<div class="mt-4 text-center">
+										<button
+											on:click={toggleMapDataTable}
+											class="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
+											aria-expanded={showMapDataTable}
+											aria-controls="map-data-table"
+										>
+											{showMapDataTable ? 'Hide' : 'Show'} country data table
+										</button>
+									</div>
+
+									<!-- Accessible data table alternative for map -->
+									{#if showMapDataTable}
+										<div id="map-data-table" class="mt-4 overflow-x-auto max-h-96" role="table" aria-label="Country installation data">
+											<table class="min-w-full border border-gray-300 bg-white">
+												<thead class="bg-gray-100 sticky top-0">
+													<tr>
+														<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">
+															Rank
+														</th>
+														<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">
+															Country
+														</th>
+														<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+															Installations
+														</th>
+														<th class="px-4 py-2 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">
+															Share
+														</th>
+													</tr>
+												</thead>
+												<tbody>
+													{#each sortedCountries as country, index}
+														<tr class="border-b border-gray-200 hover:bg-gray-50">
+															<td class="px-4 py-2 text-sm text-gray-600">
+																#{index + 1}
+															</td>
+															<td class="px-4 py-2 text-sm text-gray-900">
+																{getCountryName(country.countryCode)} ({country.countryCode})
+															</td>
+															<td class="px-4 py-2 text-sm text-gray-900 text-right">
+																{country.count.toLocaleString()}
+															</td>
+															<td class="px-4 py-2 text-sm text-gray-900 text-right">
+																{formatPercentage(country.count, data.totalInstallations)}
+															</td>
+														</tr>
+													{/each}
+												</tbody>
+											</table>
+										</div>
+									{/if}
 								</div>
 							</div>
 						</div>
@@ -711,10 +811,28 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 		stroke-width: 1.5;
 	}
 
+	:global(.svgMap-country:focus) {
+		outline: 2px solid #4f46e5;
+		outline-offset: 2px;
+	}
+
 	:global(.modal .card) {
 		background: #ffffff !important;
 		border-radius: 1.25rem !important;
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 		border: none !important;
+	}
+
+	/* Screen reader only class */
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
 	}
 </style>
