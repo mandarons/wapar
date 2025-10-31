@@ -255,9 +255,9 @@ function destroyMap() {
 	mapInitialized = false;
 }
 
-onMount(() => {
+onMount(async () => {
 	if (activeTab === MAP_TAB_ID) {
-		initialiseMap();
+		await initialiseMap();
 	}
 });
 
@@ -309,7 +309,7 @@ async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
 			};
 			lastSyncedIso = usageData.createdAt ?? new Date().toISOString();
 			fetchError = null;
-			if (activeTab === MAP_TAB_ID) {
+			if (activeTab === MAP_TAB_ID && !mapInitialized) {
 				await initialiseMap();
 			} else if (mapInitialized) {
 				destroyMap();
