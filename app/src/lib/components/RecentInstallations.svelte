@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getRelativeTime } from '$lib/utils/refresh';
+	import { getCountryName } from '$lib/utils/countries';
 
 	export let installations: Array<{
 		id: string;
@@ -49,48 +50,6 @@
 
 	$: currentPage = Math.floor(offset / limit) + 1;
 	$: totalPages = Math.ceil(total / limit);
-
-	/**
-	 * Get full country name from country code
-	 */
-	function getCountryName(countryCode: string | null): string {
-		if (!countryCode) return 'Unknown';
-		// Basic mapping - could be expanded
-		const countryNames: Record<string, string> = {
-			US: 'United States',
-			GB: 'United Kingdom',
-			DE: 'Germany',
-			FR: 'France',
-			CA: 'Canada',
-			AU: 'Australia',
-			NL: 'Netherlands',
-			SE: 'Sweden',
-			NO: 'Norway',
-			DK: 'Denmark',
-			FI: 'Finland',
-			BE: 'Belgium',
-			CH: 'Switzerland',
-			AT: 'Austria',
-			ES: 'Spain',
-			IT: 'Italy',
-			PL: 'Poland',
-			RU: 'Russia',
-			BR: 'Brazil',
-			IN: 'India',
-			CN: 'China',
-			JP: 'Japan',
-			KR: 'South Korea',
-			SG: 'Singapore',
-			NZ: 'New Zealand',
-			IE: 'Ireland',
-			PT: 'Portugal',
-			GR: 'Greece',
-			CZ: 'Czech Republic',
-			RO: 'Romania',
-			HU: 'Hungary'
-		};
-		return countryNames[countryCode] || countryCode;
-	}
 </script>
 
 <div class="card p-4">

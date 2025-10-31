@@ -8,6 +8,7 @@
 	import VersionAnalytics from '$lib/components/VersionAnalytics.svelte';
 	import RecentInstallations from '$lib/components/RecentInstallations.svelte';
 	import { buildOverviewMetrics, describeUpdate, deriveLastSynced } from '$lib/utils/overview';
+	import { getCountryName } from '$lib/utils/countries';
 
 	type VersionAnalyticsPayload = {
 		versionDistribution: Array<{
@@ -201,6 +202,9 @@
 		}
 		return svgMapConstructor;
 	}
+	// Accessibility: Delay to allow third-party svgMap library to render countries before adding keyboard support
+	const MAP_INITIALIZATION_DELAY_MS = 100;
+
 	async function initialiseMap() {
 		if (typeof document === 'undefined') return;
 		const svgMap = await getSvgMapConstructor();
@@ -272,7 +276,7 @@
 						});
 					}
 				});
-			}, 100);
+			}, MAP_INITIALIZATION_DELAY_MS);
 		}
 	}
 
@@ -375,43 +379,6 @@
 	function formatPercentage(count: number, total: number): string {
 		if (total === 0) return '0%';
 		return `${((count / total) * 100).toFixed(1)}%`;
-	}
-
-	function getCountryName(code: string): string {
-		const countryNames: Record<string, string> = {
-			US: 'United States',
-			GB: 'United Kingdom',
-			DE: 'Germany',
-			FR: 'France',
-			CA: 'Canada',
-			AU: 'Australia',
-			NL: 'Netherlands',
-			SE: 'Sweden',
-			NO: 'Norway',
-			DK: 'Denmark',
-			FI: 'Finland',
-			BE: 'Belgium',
-			CH: 'Switzerland',
-			AT: 'Austria',
-			ES: 'Spain',
-			IT: 'Italy',
-			PL: 'Poland',
-			RU: 'Russia',
-			BR: 'Brazil',
-			IN: 'India',
-			CN: 'China',
-			JP: 'Japan',
-			KR: 'South Korea',
-			SG: 'Singapore',
-			NZ: 'New Zealand',
-			IE: 'Ireland',
-			PT: 'Portugal',
-			GR: 'Greece',
-			CZ: 'Czech Republic',
-			RO: 'Romania',
-			HU: 'Hungary'
-		};
-		return countryNames[code] || code;
 	}
 
 	function showCountryDetails(countryCode: string) {
