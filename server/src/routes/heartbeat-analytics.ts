@@ -57,6 +57,7 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
     
     // Engagement levels based on heartbeat frequency
     // Use raw D1 database for complex SQL queries
+    // Categories are mutually exclusive based on recent activity
     
     // Highly active: users with >7 heartbeats in last 7 days (avg >1/day)
     const highlyActiveResult = await Logger.measureOperation(
@@ -75,7 +76,7 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
     );
     const highlyActive = Number(highlyActiveResult?.count ?? 0);
     
-    // Active: users with 1-7 heartbeats in last 7 days
+    // Active: users with 1-7 heartbeats in last 7 days (excluding highly active)
     const activeResult = await Logger.measureOperation(
       'heartbeat-analytics.active',
       () => c.env.DB.prepare(`
@@ -92,19 +93,15 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
     );
     const active = Number(activeResult?.count ?? 0);
     
-    // Occasional: users with heartbeats in last 30d but <4 total (less than 1/week)
+    // Occasional: users with heartbeats in last 30d but not in last 7d
     const occasionalResult = await Logger.measureOperation(
       'heartbeat-analytics.occasional',
       () => c.env.DB.prepare(`
-        SELECT COUNT(*) as count
-        FROM (
-          SELECT installation_id, COUNT(*) as heartbeat_count
-          FROM Heartbeat
-          WHERE created_at >= ?
-          GROUP BY installation_id
-          HAVING heartbeat_count < 4
-        )
-      `).bind(last30d).first<{ count: number }>(),
+        SELECT COUNT(DISTINCT installation_id) as count
+        FROM Heartbeat
+        WHERE created_at >= ?
+          AND created_at < ?
+      `).bind(last30d, last7d).first<{ count: number }>(),
       requestContext
     );
     const occasional = Number(occasionalResult?.count ?? 0);
@@ -222,7 +219,8 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
     );
     const usersInactive14Days = Number(inactive14dResult?.count ?? 0);
     
-    // Users inactive for 30 days are just dormant installations
+    // Users inactive for 30+ days = dormant installations (no heartbeat in last 30 days)
+    // This aligns with the API spec where churn risk tracks users who haven't sent heartbeats
     const usersInactive30Days = dormant;
     
     const responseData = {
@@ -233,9 +231,9 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
         dau_mau_ratio: Math.round(dauMauRatio * 1000) / 1000
       },
       engagementLevels: {
-        highlyActive: { count: highlyActive, description: ">1 heartbeat/day" },
+        highlyActive: { count: highlyActive, description: ">7 heartbeats/week" },
         active: { count: active, description: "1-7 heartbeats/week" },
-        occasional: { count: occasional, description: "<1 heartbeat/week" },
+        occasional: { count: occasional, description: "Active in last 30d but not last 7d" },
         dormant: { count: dormant, description: "No heartbeat in 30 days" }
       },
       timeline,
