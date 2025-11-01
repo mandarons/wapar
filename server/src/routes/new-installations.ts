@@ -14,6 +14,16 @@ newInstallationsRoutes.get('/', async (c) => {
     const db = getDb(c.env);
     const period = c.req.query('period') || '30d';
     const groupBy = c.req.query('groupBy') || 'day';
+
+    // Validate period and groupBy
+    const periodPattern = /^\d+d$/;
+    const allowedGroupBy = ['day', 'week', 'month'];
+    if (!periodPattern.test(period)) {
+      return c.json({ error: "Invalid 'period' parameter. Must match pattern '\\d+d' (e.g., '30d')." }, 400);
+    }
+    if (!allowedGroupBy.includes(groupBy)) {
+      return c.json({ error: "Invalid 'groupBy' parameter. Must be one of 'day', 'week', 'month'." }, 400);
+    }
     
     Logger.info('New installations analytics request', {
       operation: 'new-installations.analytics',
