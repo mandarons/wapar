@@ -46,7 +46,10 @@
 	$: bounciePercentage = totalInstallations > 0 ? (haBouncieTotal / totalInstallations) * 100 : 0;
 
 	// Accessibility: Generate textual summary
-	$: chartSummary = `Market share chart showing ${chartType} visualization. iCloud Docker has ${iCloudDockerTotal.toLocaleString()} installations (${iCloudPercentage.toFixed(1)}%) and Home Assistant Bouncie has ${haBouncieTotal.toLocaleString()} installations (${bounciePercentage.toFixed(1)}%). Total installations: ${totalInstallations.toLocaleString()}.`;
+	$: chartSummary = `Market share chart showing ${chartType} visualization.
+iCloud Docker has ${iCloudDockerTotal.toLocaleString()} installations (${iCloudPercentage.toFixed(1)}%),
+and Home Assistant Bouncie has ${haBouncieTotal.toLocaleString()} installations (${bounciePercentage.toFixed(1)}%).
+Total installations: ${totalInstallations.toLocaleString()}.`;
 
 	// Check for reduced motion preference
 	let prefersReducedMotion = false;
@@ -220,6 +223,7 @@
 	}
 
 	// Keyboard navigation for canvas
+	// Note: Space key preventDefault is safe here as the event only fires when canvas has focus
 	function handleCanvasKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault();

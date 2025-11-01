@@ -101,10 +101,21 @@
 	}
 
 	// Accessibility: Generate textual summary
-	$: chartSummary =
-		snapshots.length > 0
-			? `Installation growth trend chart showing ${snapshots.length} data points from ${formatDate(snapshots[0].timestamp)} to ${formatDate(snapshots[snapshots.length - 1].timestamp)}. Latest total installations: ${formatNumber(snapshots[snapshots.length - 1].totalInstallations)}${showMonthlyActive ? `, monthly active: ${formatNumber(snapshots[snapshots.length - 1].monthlyActive)}` : ''}.`
-			: 'No historical data available yet.';
+	function getChartSummary(snapshots: DataSnapshot[], showMonthlyActive: boolean): string {
+		if (snapshots.length === 0) {
+			return 'No historical data available yet.';
+		}
+		const firstDate = formatDate(snapshots[0].timestamp);
+		const lastSnapshot = snapshots[snapshots.length - 1];
+		const lastDate = formatDate(lastSnapshot.timestamp);
+		const totalInstallations = formatNumber(lastSnapshot.totalInstallations);
+		const monthlyActive = showMonthlyActive
+			? `, monthly active: ${formatNumber(lastSnapshot.monthlyActive)}`
+			: '';
+		return `Installation growth trend chart showing ${snapshots.length} data points from ${firstDate} to ${lastDate}. Latest total installations: ${totalInstallations}${monthlyActive}.`;
+	}
+
+	$: chartSummary = getChartSummary(snapshots, showMonthlyActive);
 
 	function toggleDataTable() {
 		showDataTable = !showDataTable;
@@ -115,6 +126,8 @@
 		if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault();
 			hoveredIndex = index;
+			// The tooltip will be visible for sighted keyboard users
+			// Screen readers will get the full aria-label from the circle element
 		}
 	}
 
