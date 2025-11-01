@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { d1Exec, d1QueryOne, getBase, waitForCount } from './utils';
 
 const ENDPOINT = '/api/heartbeat-analytics';
