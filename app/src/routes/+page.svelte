@@ -62,6 +62,7 @@
 	let chartType: 'pie' | 'doughnut' | 'bar' = 'pie';
 	let marketShareChartRef: MarketShareChart | null = null;
 	let mapInitialized = false;
+	let mapEventListeners: Array<{ element: Element; handler: (e: Event) => void }> = [];
 
 	const fallbackVersions: VersionAnalyticsPayload = {
 		versionDistribution: [],
@@ -281,6 +282,12 @@
 	}
 
 	function destroyMap() {
+		// Clean up event listeners to prevent memory leaks
+		mapEventListeners.forEach(({ element, handler }) => {
+			element.removeEventListener('keydown', handler);
+		});
+		mapEventListeners = [];
+
 		if (mapObj?.destroy) {
 			mapObj.destroy();
 		}
@@ -379,6 +386,17 @@
 	function formatPercentage(count: number, total: number): string {
 		if (total === 0) return '0%';
 		return `${((count / total) * 100).toFixed(1)}%`;
+	}
+
+	function getCountryButtonLabel(
+		countryCode: string,
+		count: number,
+		totalInstallations: number
+	): string {
+		const name = getCountryName(countryCode);
+		const installs = count.toLocaleString();
+		const percentage = formatPercentage(count, totalInstallations);
+		return `View ${name} on map: ${installs} installations, ${percentage}`;
 	}
 
 	function showCountryDetails(countryCode: string) {
@@ -650,12 +668,11 @@
 												on:click={() => highlightCountryOnMap(country.countryCode)}
 												class="flex w-full items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
 												data-testid={`country-item-${country.countryCode}`}
-												aria-label="View {getCountryName(
-													country.countryCode
-												)} on map: {country.count.toLocaleString()} installations, {formatPercentage(
+												aria-label={getCountryButtonLabel(
+													country.countryCode,
 													country.count,
 													data.totalInstallations
-												)}"
+												)}
 											>
 												<span class="flex items-center gap-2">
 													<span class="font-semibold text-gray-500">#{index + 1}</span>
@@ -687,8 +704,8 @@
 									></div>
 									<div id="map-description" class="sr-only">
 										World map visualization showing {data.countryToCount.length} countries with installation
-										data. Use keyboard navigation to explore countries or view the data table below for
-										detailed information.
+										data. Use keyboard navigation to explore countries or press the toggle button below
+										to view the data table for detailed information.
 									</div>
 
 									<!-- Toggle button for map data table -->
