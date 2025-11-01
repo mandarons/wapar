@@ -218,7 +218,7 @@ describe(ENDPOINT, () => {
     const base = getBase();
     
     // Create a new installation without heartbeats
-    const newInstall = await createInstallation();
+    await createInstallation();
     
     const response = await fetch(`${base}${ENDPOINT}`);
     const data = await response.json();
