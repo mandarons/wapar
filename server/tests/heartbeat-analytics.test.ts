@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { d1Exec, d1QueryOne, getBase, waitForCount } from './utils';
+import { d1Exec, getBase, waitForCount } from './utils';
 
 const ENDPOINT = '/api/heartbeat-analytics';
 const INSTALL_ENDPOINT = '/api/installation';
