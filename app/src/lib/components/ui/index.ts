@@ -1,6 +1,6 @@
 /**
  * WAPAR Design System UI Components
- * 
+ *
  * Reusable, accessible components following the WAPAR design tokens
  * All components meet WCAG AA contrast requirements
  */
