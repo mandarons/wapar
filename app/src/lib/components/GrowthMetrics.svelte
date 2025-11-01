@@ -290,11 +290,11 @@
 	}
 
 	.velocity-current {
-		background: #f9fafb;
+		background: #3b82f6;
 	}
 
 	.velocity-average {
-		background: #f9fafb;
+		background: #9ca3af;
 	}
 
 	.acceleration-badge {

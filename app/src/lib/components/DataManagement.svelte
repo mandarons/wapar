@@ -341,14 +341,14 @@
 	}
 
 	.btn-primary {
-		background: #f9fafb;
+		background: #16a34a;
 		color: white;
 	}
 
 	.btn-primary:hover:not(:disabled) {
-		background: #f9fafb;
+		background: #15803d;
 		transform: translateY(-1px);
-		box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+		box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3);
 	}
 
 	.btn-secondary {
@@ -363,14 +363,14 @@
 	}
 
 	.btn-danger {
-		background: #f9fafb;
+		background: #dc2626;
 		color: white;
 	}
 
 	.btn-danger:hover:not(:disabled) {
-		background: #f9fafb;
+		background: #b91c1c;
 		transform: translateY(-1px);
-		box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
+		box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.3);
 	}
 
 	.btn-icon {
