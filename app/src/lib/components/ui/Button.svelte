@@ -36,7 +36,7 @@
 <button
 	{type}
 	{disabled}
-	class="inline-flex items-center justify-center rounded-button font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 {variantClass} {sizeClass}"
+	class="inline-flex items-center justify-center rounded-button font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 {variantClass} {sizeClass}"
 	data-testid={testId}
 	on:click
 	{...$$restProps}

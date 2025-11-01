@@ -27,11 +27,6 @@
 	}[variant];
 </script>
 
-<div
-	class="rounded-card {variantClass} {paddingClass}"
-	data-testid={testId}
-	role="region"
-	{...$$restProps}
->
+<div class="rounded-card {variantClass} {paddingClass}" data-testid={testId} {...$$restProps}>
 	<slot />
 </div>
