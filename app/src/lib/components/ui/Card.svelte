@@ -1,12 +1,12 @@
 <script lang="ts">
 	/**
 	 * Card component - Standardized card container following WAPAR design system
-	 * 
+	 *
 	 * Variants:
 	 * - default: Standard white card with border
 	 * - elevated: Card with hover effect
 	 * - flat: Card without shadow
-	 * 
+	 *
 	 * AA contrast compliant colors and accessible markup
 	 */
 	export let variant: 'default' | 'elevated' | 'flat' = 'default';
@@ -21,7 +21,8 @@
 
 	$: variantClass = {
 		default: 'bg-white border border-wapar-gray-200 shadow-card',
-		elevated: 'bg-white border border-wapar-gray-200 shadow-card hover:shadow-card-hover transition-shadow',
+		elevated:
+			'bg-white border border-wapar-gray-200 shadow-card hover:shadow-card-hover transition-shadow',
 		flat: 'bg-white border border-wapar-gray-200'
 	}[variant];
 </script>

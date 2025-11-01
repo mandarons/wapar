@@ -1,13 +1,13 @@
 <script lang="ts">
 	/**
 	 * Button component - Standardized button following WAPAR design system
-	 * 
+	 *
 	 * Variants:
 	 * - primary: Primary action button
-	 * - secondary: Secondary action button  
+	 * - secondary: Secondary action button
 	 * - outline: Outlined button
 	 * - ghost: Minimal button
-	 * 
+	 *
 	 * All variants meet AA contrast requirements
 	 */
 	export let variant: 'primary' | 'secondary' | 'outline' | 'ghost' = 'primary';
@@ -29,8 +29,7 @@
 			'bg-wapar-secondary-600 text-white hover:bg-wapar-secondary-700 focus-visible:ring-wapar-secondary-500',
 		outline:
 			'border border-wapar-gray-300 text-wapar-gray-700 hover:bg-wapar-gray-50 focus-visible:ring-wapar-gray-500',
-		ghost:
-			'text-wapar-gray-700 hover:bg-wapar-gray-100 focus-visible:ring-wapar-gray-500'
+		ghost: 'text-wapar-gray-700 hover:bg-wapar-gray-100 focus-visible:ring-wapar-gray-500'
 	}[variant];
 </script>
 

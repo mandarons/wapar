@@ -39,6 +39,14 @@ Enhanced geographic visualization with country deep-dive capabilities and top co
 
 ## 📖 Documentation Standards
 
+### Core Documentation
+
+- **[UX Guidelines](../../docs/UX_GUIDELINES.md)** - Design system, accessibility standards, and component library
+  - Design tokens and color system
+  - Typography and spacing guidelines
+  - Accessibility requirements (WCAG AA)
+  - Testing and development best practices
+
 ### Feature Documentation Template
 
 Each feature should include:
@@ -60,6 +68,13 @@ Each feature should include:
 - Keep documentation up-to-date with code changes
 
 ## 🔧 Development Workflow
+
+### Before Making Changes
+
+1. **Review the [UX Guidelines](../../docs/UX_GUIDELINES.md)** for design system standards
+2. Ensure you understand accessibility requirements (WCAG AA)
+3. Use design tokens from `tailwind.config.ts` for colors, spacing, and typography
+4. Test keyboard navigation and screen reader compatibility
 
 ### Adding New Feature Documentation
 
@@ -102,6 +117,7 @@ Each feature should include:
 
 ## 📋 Quick Links
 
+- [UX Guidelines](../../docs/UX_GUIDELINES.md) - **Start here for UI/UX development**
 - [Project Repository](https://github.com/mandarons/wapar)
 - [Live Application](https://wapar-dev.pages.dev)
 - [API Documentation](../../server/README.md)

@@ -574,7 +574,6 @@
 									data-testid="manual-refresh-button"
 								>
 									{#if isRefreshing}
-										
 										Refreshing
 									{:else}
 										Refresh data

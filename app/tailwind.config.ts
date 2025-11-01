@@ -14,7 +14,7 @@ export default {
 		extend: {
 			// Design tokens for WAPAR design system
 			spacing: {
-				'section': '2rem',
+				section: '2rem',
 				'section-lg': '3rem',
 				'card-padding': '1.5rem',
 				'card-padding-sm': '1rem'
@@ -25,7 +25,7 @@ export default {
 				'heading-md': ['1.25rem', { lineHeight: '1.75rem', fontWeight: '600' }],
 				'heading-sm': ['1.125rem', { lineHeight: '1.5rem', fontWeight: '600' }],
 				'body-lg': ['1rem', { lineHeight: '1.75rem', fontWeight: '400' }],
-				'body': ['0.875rem', { lineHeight: '1.5rem', fontWeight: '400' }],
+				body: ['0.875rem', { lineHeight: '1.5rem', fontWeight: '400' }],
 				'body-sm': ['0.75rem', { lineHeight: '1.25rem', fontWeight: '400' }]
 			},
 			colors: {
@@ -102,11 +102,11 @@ export default {
 				}
 			},
 			borderRadius: {
-				'card': '0.5rem',
-				'button': '0.375rem'
+				card: '0.5rem',
+				button: '0.375rem'
 			},
 			boxShadow: {
-				'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+				card: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
 				'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
 			}
 		}

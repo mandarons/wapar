@@ -118,8 +118,6 @@
 									aria-label="Outdated version"
 									title="Consider upgrading"
 								>
-									
-									
 									Outdated
 								</span>
 							{/if}
@@ -336,7 +334,5 @@
 		.stats-footer {
 			grid-template-columns: 1fr;
 		}
-	}
-
 	}
 </style>
