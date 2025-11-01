@@ -73,7 +73,7 @@ describe(ENDPOINT, () => {
     // install1: active today (should be in DAU, WAU, MAU)
     await createHeartbeat(install1, now.toISOString());
     
-    // install2: active yesterday (should be in DAU, WAU, MAU)
+    // install2: active exactly 24 hours ago (may or may not be in DAU depending on whether DAU includes the boundary; clarify DAU logic if needed)
     await createHeartbeat(install2, yesterday);
     
     // install3: active week ago (should be in WAU, MAU but not DAU)
