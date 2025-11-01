@@ -28,6 +28,7 @@ export const installationAppVersionIdx = index('idx_installation_app_version').o
 export const installationCountryCodeIdx = index('idx_installation_country_code').on(installations.countryCode);
 export const installationCreatedAtIdx = index('idx_installation_created_at').on(installations.createdAt);
 export const installationUpdatedAtIdx = index('idx_installation_updated_at').on(installations.updatedAt);
+export const installationPreviousIdIdx = index('idx_installation_previous_id').on(installations.previousId);
 export const heartbeatInstallationIdIdx = index('idx_heartbeat_installation_id').on(heartbeats.installationId);
 export const heartbeatCreatedAtIdx = index('idx_heartbeat_created_at').on(heartbeats.createdAt);
 

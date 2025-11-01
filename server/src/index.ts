@@ -4,6 +4,7 @@ import { heartbeatRoutes } from './routes/heartbeat';
 import { usageRoutes } from './routes/usage';
 import { versionAnalyticsRoutes } from './routes/version-analytics';
 import { recentInstallationsRoutes } from './routes/recent-installations';
+import { newInstallationsRoutes } from './routes/new-installations';
 import { handleValidationError, handleGenericError } from './utils/errors';
 import { scheduled } from './jobs/enrich-ip';
 import { Logger } from './utils/logger';
@@ -208,6 +209,7 @@ app.route('/api/heartbeat', heartbeatRoutes);
 app.route('/api/usage', usageRoutes);
 app.route('/api/version-analytics', versionAnalyticsRoutes);
 app.route('/api/recent-installations', recentInstallationsRoutes);
+app.route('/api/new-installations', newInstallationsRoutes);
 
 export default app;
 export { scheduled };
