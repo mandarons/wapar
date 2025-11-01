@@ -210,7 +210,7 @@
 	}
 
 	.metric-card {
-		background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+		background: #f9fafb;
 		border: 1px solid #e5e7eb;
 		border-radius: 0.5rem;
 		padding: 1.25rem;
@@ -225,7 +225,7 @@
 	}
 
 	.velocity-card {
-		background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+		background: #f9fafb;
 		border-color: #bfdbfe;
 	}
 
@@ -290,11 +290,11 @@
 	}
 
 	.velocity-current {
-		background: linear-gradient(to right, #3b82f6, #60a5fa);
+		background: #f9fafb;
 	}
 
 	.velocity-average {
-		background: linear-gradient(to right, #6b7280, #9ca3af);
+		background: #f9fafb;
 	}
 
 	.acceleration-badge {

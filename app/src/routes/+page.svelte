@@ -574,7 +574,7 @@
 									data-testid="manual-refresh-button"
 								>
 									{#if isRefreshing}
-										<span class="mr-2 inline-block animate-spin" aria-hidden="true">⏳</span>
+										
 										Refreshing
 									{:else}
 										Refresh data
