@@ -7,6 +7,11 @@ import { handleGenericError } from '../utils/errors';
 
 export const newInstallationsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
+// Helper function to round a number to one decimal place
+function roundToOneDecimal(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
 newInstallationsRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
@@ -32,7 +37,8 @@ newInstallationsRoutes.get('/', async (c) => {
     });
     
     // Calculate date threshold based on period
-    const daysAgo = parseInt(period.replace('d', ''));
+    // Safe to use parseInt here as period is validated by regex above
+    const daysAgo = parseInt(period.replace('d', ''), 10);
     const sinceDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
     
     // Count new users (previousId is NULL)
@@ -76,14 +82,13 @@ newInstallationsRoutes.get('/', async (c) => {
     const newUserRate = total > 0 ? (totalNew / total) * 100 : 0;
     
     // Determine date format for grouping
-    let dateFormat: string;
-    if (groupBy === 'day') {
-      dateFormat = '%Y-%m-%d';
-    } else if (groupBy === 'week') {
-      dateFormat = '%Y-W%V'; // ISO 8601 week number
-    } else {
-      dateFormat = '%Y-%m';
-    }
+    // Use a whitelist map to prevent SQL injection
+    const dateFormatMap: Record<string, string> = {
+      'day': '%Y-%m-%d',
+      'week': '%Y-W%V', // ISO 8601 week number
+      'month': '%Y-%m'
+    };
+    const dateFormat = dateFormatMap[groupBy]; // Safe because groupBy is validated above
     
     // Timeline of new vs reinstalls using raw D1 query
     // This is necessary because SQLite's strftime is not supported in Drizzle ORM
@@ -141,17 +146,17 @@ newInstallationsRoutes.get('/', async (c) => {
     const topCountriesWithPercentage = topCountries.map(c => ({
       countryCode: c.countryCode,
       count: Number(c.count),
-      percentage: totalNew > 0 ? Math.round((Number(c.count) / totalNew) * 1000) / 10 : 0
+      percentage: totalNew > 0 ? roundToOneDecimal((Number(c.count) / totalNew) * 100) : 0
     }));
     
     // Calculate reinstall rate
-    const reinstallRate = total > 0 ? Math.round((totalReinstalls / total) * 1000) / 10 : 0;
+    const reinstallRate = total > 0 ? roundToOneDecimal((totalReinstalls / total) * 100) : 0;
     
     const responseData = {
       summary: {
         totalNew: Number(totalNew),
         totalReinstalls: Number(totalReinstalls),
-        newUserRate: Math.round(newUserRate * 10) / 10,
+        newUserRate: roundToOneDecimal(newUserRate),
         period
       },
       timeline,
