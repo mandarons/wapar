@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { getDb } from '../db/client';
-import { installations, heartbeats } from '../db/schema';
+import { heartbeats } from '../db/schema';
 import { count, countDistinct, gte } from 'drizzle-orm';
 import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
