@@ -7,6 +7,7 @@
 	import MarketShareChart from '$lib/components/MarketShareChart.svelte';
 	import VersionAnalytics from '$lib/components/VersionAnalytics.svelte';
 	import RecentInstallations from '$lib/components/RecentInstallations.svelte';
+	import HeartbeatAnalytics from '$lib/components/HeartbeatAnalytics.svelte';
 	import { buildOverviewMetrics, describeUpdate, deriveLastSynced } from '$lib/utils/overview';
 	import { getCountryName } from '$lib/utils/countries';
 
@@ -37,6 +38,36 @@
 		installationsLast7d: number;
 	};
 
+	type HeartbeatAnalyticsPayload = {
+		activeUsers: {
+			daily: number;
+			weekly: number;
+			monthly: number;
+			dau_mau_ratio: number;
+		};
+		engagementLevels: {
+			highlyActive: { count: number; description: string };
+			active: { count: number; description: string };
+			occasional: { count: number; description: string };
+			dormant: { count: number; description: string };
+		};
+		timeline: Array<{
+			date: string;
+			activeUsers: number;
+			totalHeartbeats: number;
+		}>;
+		healthMetrics: {
+			avgHeartbeatsPerUser: number;
+			avgTimeBetweenHeartbeats: string;
+			heartbeatFailureRate: number;
+		};
+		churnRisk: {
+			usersInactive7Days: number;
+			usersInactive14Days: number;
+			usersInactive30Days: number;
+		};
+	};
+
 	export let data: {
 		totalInstallations: number;
 		monthlyActive: number;
@@ -46,6 +77,7 @@
 		haBouncie: { total: number };
 		versionAnalytics?: VersionAnalyticsPayload;
 		recentInstallations?: RecentInstallationsPayload;
+		heartbeatAnalytics?: HeartbeatAnalyticsPayload;
 	};
 
 	interface SvgMapInstance {
@@ -102,6 +134,11 @@
 			description: 'Release adoption, outdated installs, and upgrade rate.'
 		},
 		{
+			id: 'heartbeat',
+			label: 'Active Usage',
+			description: 'User engagement metrics, DAU/WAU/MAU, and churn risk analysis.'
+		},
+		{
 			id: 'recent',
 			label: 'Recent installs',
 			description: 'Latest installation activity captured by WAPAR.'
@@ -126,6 +163,9 @@
 		}
 		if (tab.id === 'recent') {
 			return Boolean(data.recentInstallations);
+		}
+		if (tab.id === 'heartbeat') {
+			return Boolean(data.heartbeatAnalytics);
 		}
 		return true;
 	});
@@ -784,6 +824,16 @@
 							latestVersion={data.versionAnalytics.latestVersion}
 							outdatedInstallations={data.versionAnalytics.outdatedInstallations}
 							upgradeRate={data.versionAnalytics.upgradeRate}
+						/>
+					</div>
+				{:else if tab.id === 'heartbeat' && data.heartbeatAnalytics}
+					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+						<HeartbeatAnalytics
+							activeUsers={data.heartbeatAnalytics.activeUsers}
+							engagementLevels={data.heartbeatAnalytics.engagementLevels}
+							timeline={data.heartbeatAnalytics.timeline}
+							healthMetrics={data.heartbeatAnalytics.healthMetrics}
+							churnRisk={data.heartbeatAnalytics.churnRisk}
 						/>
 					</div>
 				{:else if tab.id === 'recent' && data.recentInstallations}
