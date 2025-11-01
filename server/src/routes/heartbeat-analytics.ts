@@ -12,7 +12,6 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
   
   try {
     const db = getDb(c.env);
-    const period = c.req.query('period') || '30d';
     
     const now = new Date();
     
