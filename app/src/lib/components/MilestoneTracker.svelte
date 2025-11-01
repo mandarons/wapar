@@ -178,7 +178,7 @@
 		right: -0.25rem;
 		width: calc(100% + 0.5rem);
 		height: 3px;
-		background: #f9fafb;
+		background: #e5e7eb;
 		z-index: -1;
 	}
 
@@ -229,7 +229,7 @@
 		transition:
 			width 0.5s ease,
 			background-color 0.3s ease;
-		background: #f9fafb;
+		background: #22c55e;
 	}
 
 	.projection-card {
