@@ -69,7 +69,6 @@ describe(ENDPOINT, () => {
     const now = new Date();
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const monthAgo = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000).toISOString();
     
     // install1: active today (should be in DAU, WAU, MAU)
     await createHeartbeat(install1, now.toISOString());
