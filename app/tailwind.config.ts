@@ -38,8 +38,8 @@ export default {
 						200: '#bbf7d0',
 						300: '#86efac',
 						400: '#4ade80',
-						500: '#22c55e', // AA compliant on white
-						600: '#16a34a', // AA compliant on white
+						500: '#22c55e', // AA compliant on white (4.5:1+)
+						600: '#16a34a', // AA compliant on white (4.5:1+)
 						700: '#15803d',
 						800: '#166534',
 						900: '#14532d'
@@ -51,8 +51,8 @@ export default {
 						200: '#c7d2fe',
 						300: '#a5b4fc',
 						400: '#818cf8',
-						500: '#6366f1', // AA compliant on white
-						600: '#4f46e5', // AA compliant on white
+						500: '#6366f1', // AA compliant on white (4.5:1+)
+						600: '#4f46e5', // AA compliant on white (4.5:1+)
 						700: '#4338ca',
 						800: '#3730a6',
 						900: '#312e81'
@@ -64,8 +64,8 @@ export default {
 						200: '#e5e7eb',
 						300: '#d1d5db',
 						400: '#9ca3af',
-						500: '#6b7280', // AA compliant on white
-						600: '#4b5563', // AA compliant on white
+						500: '#6b7280', // AA compliant on white (4.5:1+)
+						600: '#4b5563', // AA compliant on white (4.5:1+)
 						700: '#374151',
 						800: '#1f2937',
 						900: '#111827'

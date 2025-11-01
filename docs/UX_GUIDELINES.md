@@ -290,8 +290,8 @@ Use Tailwind's responsive prefixes for adaptive layouts:
 ### Color Contrast
 
 **All text must meet WCAG AA requirements:**
-- Normal text (< 18px): 4.5:1 contrast ratio
-- Large text (≥ 18px or 14px bold): 3:1 contrast ratio
+- Normal text (< 18pt / 24px): 4.5:1 contrast ratio
+- Large text (≥ 18pt / 24px or ≥ 14pt / 18.5px bold): 3:1 contrast ratio
 
 **Tools for testing:**
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
