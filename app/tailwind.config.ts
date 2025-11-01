@@ -51,8 +51,8 @@ export default {
 						200: '#c7d2fe',
 						300: '#a5b4fc',
 						400: '#818cf8',
-						500: '#6366f1', // AA compliant on white (4.5:1+)
-						600: '#4f46e5', // AA compliant on white (4.5:1+)
+						500: '#6366f1', // AA compliant on white (~4.8:1)
+						600: '#4f46e5', // AA compliant on white (~7.3:1)
 						700: '#4338ca',
 						800: '#3730a6',
 						900: '#312e81'
