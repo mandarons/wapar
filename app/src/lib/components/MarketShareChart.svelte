@@ -226,7 +226,9 @@ Total installations: ${totalInstallations.toLocaleString()}.`;
 	// Note: Space key preventDefault is safe here as the event only fires when canvas has focus
 	function handleCanvasKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
+			if (event.key === ' ') {
+				event.preventDefault();
+			}
 			toggleDataTable();
 		}
 	}
