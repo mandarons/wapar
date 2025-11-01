@@ -3,8 +3,6 @@ import { d1Exec, getBase, waitForCount } from './utils';
 
 const ENDPOINT = '/api/heartbeat-analytics';
 const INSTALL_ENDPOINT = '/api/installation';
-const HEARTBEAT_ENDPOINT = '/api/heartbeat';
-
 function randomAppName() {
   const apps = ['icloud-drive-docker', 'icloud-docker', 'ha-bouncie'];
   return apps[Math.floor(Math.random() * apps.length)];
