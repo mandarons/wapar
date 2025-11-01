@@ -118,8 +118,8 @@
 									aria-label="Outdated version"
 									title="Consider upgrading"
 								>
-									<span aria-hidden="true">⚠️</span>
-									<span class="sr-only">Warning:</span>
+									
+									
 									Outdated
 								</span>
 							{/if}
@@ -276,14 +276,14 @@
 
 	.bar {
 		height: 2rem;
-		background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+		background: #3b82f6;
 		border-radius: 0.25rem;
 		transition: width 0.3s ease;
 		min-width: 2rem;
 	}
 
 	.bar.outdated {
-		background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+		background: #f59e0b;
 	}
 
 	.bar-label {
@@ -338,16 +338,5 @@
 		}
 	}
 
-	/* Screen reader only class */
-	.sr-only {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		white-space: nowrap;
-		border-width: 0;
 	}
 </style>

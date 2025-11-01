@@ -178,7 +178,7 @@
 		right: -0.25rem;
 		width: calc(100% + 0.5rem);
 		height: 3px;
-		background: linear-gradient(to right, currentColor, transparent);
+		background: #f9fafb;
 		z-index: -1;
 	}
 
@@ -229,18 +229,18 @@
 		transition:
 			width 0.5s ease,
 			background-color 0.3s ease;
-		background: linear-gradient(to right, currentColor, currentColor);
+		background: #f9fafb;
 	}
 
 	.projection-card {
-		background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+		background: #f9fafb;
 		border: 1px solid #bae6fd;
 		border-radius: 0.5rem;
 		padding: 1rem;
 	}
 
 	.celebration-card {
-		background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+		background: #f9fafb;
 		border: 2px solid #fbbf24;
 		border-radius: 0.5rem;
 		padding: 2rem;
@@ -248,7 +248,7 @@
 	}
 
 	.achievement-badge {
-		background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+		background: #f9fafb;
 		border-radius: 0.5rem;
 		padding: 1rem;
 		border: 1px solid #d1d5db;

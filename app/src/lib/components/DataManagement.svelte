@@ -264,7 +264,7 @@
 	}
 
 	.stat-card {
-		background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+		background: #f9fafb;
 		border: 1px solid #e5e7eb;
 		border-radius: 0.5rem;
 		padding: 1rem;
@@ -341,12 +341,12 @@
 	}
 
 	.btn-primary {
-		background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+		background: #f9fafb;
 		color: white;
 	}
 
 	.btn-primary:hover:not(:disabled) {
-		background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+		background: #f9fafb;
 		transform: translateY(-1px);
 		box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
 	}
@@ -363,12 +363,12 @@
 	}
 
 	.btn-danger {
-		background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+		background: #f9fafb;
 		color: white;
 	}
 
 	.btn-danger:hover:not(:disabled) {
-		background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+		background: #f9fafb;
 		transform: translateY(-1px);
 		box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
 	}
@@ -422,7 +422,7 @@
 		display: flex;
 		gap: 1rem;
 		padding: 1rem;
-		background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+		background: #f9fafb;
 		border: 1px solid #bfdbfe;
 		border-radius: 0.5rem;
 	}

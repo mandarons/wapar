@@ -40,16 +40,14 @@
 </script>
 
 <div
-	class="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+	class="bg-white rounded-card shadow-card p-card-padding border border-wapar-gray-200"
 	data-testid="geographic-analysis"
 >
-	<h3 class="text-lg font-semibold text-gray-900 mb-4">
-		<span aria-hidden="true">🌍</span>
-		<span class="sr-only">Globe icon:</span>
+	<h3 class="text-heading-md text-wapar-gray-900 mb-4">
 		Geographic App Distribution Analysis
 	</h3>
 
-	<p class="text-sm text-gray-600 mb-6">
+	<p class="text-body text-wapar-gray-600 mb-6">
 		Estimated regional distribution based on proportional market share. Toggle between views to
 		compare app-specific geographic patterns.
 	</p>
@@ -57,46 +55,40 @@
 	<!-- Layer Toggle -->
 	<div class="flex justify-center mb-6">
 		<div
-			class="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1"
+			class="inline-flex rounded-button border border-wapar-gray-300 bg-wapar-gray-50 p-1"
 			role="group"
 			aria-label="Application filter"
 		>
 			<button
 				on:click={() => (selectedLayer = 'both')}
-				class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedLayer === 'both'
-					? 'bg-white text-blue-600 shadow-sm'
-					: 'text-gray-700 hover:text-gray-900'}"
+				class="px-4 py-2 text-body font-medium rounded-button transition-colors {selectedLayer === 'both'
+					? 'bg-white text-wapar-secondary-600 shadow-sm'
+					: 'text-wapar-gray-700 hover:text-wapar-gray-900'}"
 				data-testid="layer-both"
 				aria-pressed={selectedLayer === 'both'}
 			>
-				<span aria-hidden="true">📊</span>
-				<span class="sr-only">Chart icon:</span>
 				Both Apps
 			</button>
 			<button
 				on:click={() => (selectedLayer = 'icloud')}
-				class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedLayer ===
+				class="px-4 py-2 text-body font-medium rounded-button transition-colors {selectedLayer ===
 				'icloud'
-					? 'bg-white text-blue-600 shadow-sm'
-					: 'text-gray-700 hover:text-gray-900'}"
+					? 'bg-white text-wapar-secondary-600 shadow-sm'
+					: 'text-wapar-gray-700 hover:text-wapar-gray-900'}"
 				data-testid="layer-icloud"
 				aria-pressed={selectedLayer === 'icloud'}
 			>
-				<span aria-hidden="true">☁️</span>
-				<span class="sr-only">Cloud icon:</span>
 				iCloud Docker
 			</button>
 			<button
 				on:click={() => (selectedLayer = 'bouncie')}
-				class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedLayer ===
+				class="px-4 py-2 text-body font-medium rounded-button transition-colors {selectedLayer ===
 				'bouncie'
-					? 'bg-white text-green-600 shadow-sm'
-					: 'text-gray-700 hover:text-gray-900'}"
+					? 'bg-white text-wapar-primary-600 shadow-sm'
+					: 'text-wapar-gray-700 hover:text-wapar-gray-900'}"
 				data-testid="layer-bouncie"
 				aria-pressed={selectedLayer === 'bouncie'}
 			>
-				<span aria-hidden="true">🏠</span>
-				<span class="sr-only">House icon:</span>
 				HA Bouncie
 			</button>
 		</div>
@@ -106,27 +98,25 @@
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 		<!-- iCloud Docker Top Countries -->
 		{#if selectedLayer === 'both' || selectedLayer === 'icloud'}
-			<div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-				<h4 class="text-md font-semibold text-blue-900 mb-3 flex items-center gap-2">
-					<span class="text-xl" aria-hidden="true">☁️</span>
-					<span class="sr-only">Cloud icon:</span>
+			<div class="bg-wapar-secondary-50 rounded-card p-4 border border-wapar-secondary-200">
+				<h4 class="text-heading-sm text-wapar-secondary-900 mb-3">
 					iCloud Docker - Top 5 Countries
 				</h4>
 				<div class="space-y-2">
 					{#each topICloudCountries as country, index}
 						<div
-							class="flex items-center justify-between bg-white rounded p-2 border border-blue-100"
+							class="flex items-center justify-between bg-white rounded p-2 border border-wapar-secondary-100"
 							data-testid="icloud-country-{country.countryCode}"
 						>
 							<div class="flex items-center gap-2">
-								<span class="text-xs font-bold text-blue-600 w-6">#{index + 1}</span>
-								<span class="text-sm font-medium">{getCountryName(country.countryCode)}</span>
+								<span class="text-xs font-bold text-wapar-secondary-600 w-6">#{index + 1}</span>
+								<span class="text-body font-medium">{getCountryName(country.countryCode)}</span>
 							</div>
 							<div class="text-right">
-								<div class="text-sm font-semibold text-blue-600">
+								<div class="text-body font-semibold text-wapar-secondary-600">
 									~{country.iCloudEstimate.toLocaleString()}
 								</div>
-								<div class="text-xs text-gray-600">
+								<div class="text-body-sm text-wapar-gray-600">
 									{country.iCloudPercentage.toFixed(1)}%
 								</div>
 							</div>
@@ -138,27 +128,25 @@
 
 		<!-- HA Bouncie Top Countries -->
 		{#if selectedLayer === 'both' || selectedLayer === 'bouncie'}
-			<div class="bg-green-50 rounded-lg p-4 border border-green-200">
-				<h4 class="text-md font-semibold text-green-900 mb-3 flex items-center gap-2">
-					<span class="text-xl" aria-hidden="true">🏠</span>
-					<span class="sr-only">House icon:</span>
+			<div class="bg-wapar-primary-50 rounded-card p-4 border border-wapar-primary-200">
+				<h4 class="text-heading-sm text-wapar-primary-900 mb-3">
 					HA Bouncie - Top 5 Countries
 				</h4>
 				<div class="space-y-2">
 					{#each topBouncieCountries as country, index}
 						<div
-							class="flex items-center justify-between bg-white rounded p-2 border border-green-100"
+							class="flex items-center justify-between bg-white rounded p-2 border border-wapar-primary-100"
 							data-testid="bouncie-country-{country.countryCode}"
 						>
 							<div class="flex items-center gap-2">
-								<span class="text-xs font-bold text-green-600 w-6">#{index + 1}</span>
-								<span class="text-sm font-medium">{getCountryName(country.countryCode)}</span>
+								<span class="text-xs font-bold text-wapar-primary-600 w-6">#{index + 1}</span>
+								<span class="text-body font-medium">{getCountryName(country.countryCode)}</span>
 							</div>
 							<div class="text-right">
-								<div class="text-sm font-semibold text-green-600">
+								<div class="text-body font-semibold text-wapar-primary-600">
 									~{country.bouncieEstimate.toLocaleString()}
 								</div>
-								<div class="text-xs text-gray-600">
+								<div class="text-body-sm text-wapar-gray-600">
 									{country.bounciePercentage.toFixed(1)}%
 								</div>
 							</div>
@@ -170,13 +158,11 @@
 	</div>
 
 	<!-- Regional Insights -->
-	<div class="mt-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 border border-gray-200">
-		<h4 class="text-md font-semibold text-gray-900 mb-3">
-			<span aria-hidden="true">💡</span>
-			<span class="sr-only">Light bulb icon:</span>
+	<div class="mt-6 bg-wapar-info-50 rounded-card p-4 border border-wapar-info-200">
+		<h4 class="text-heading-sm text-wapar-gray-900 mb-3">
 			Regional Insights
 		</h4>
-		<div class="space-y-2 text-sm text-gray-700">
+		<div class="space-y-2 text-body text-wapar-gray-700">
 			<p>
 				<span class="font-semibold">Market Coverage:</span> Both apps collectively serve
 				{countryToCount.length} countries worldwide.
@@ -194,16 +180,5 @@
 </div>
 
 <style>
-	/* Screen reader only class */
-	.sr-only {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		white-space: nowrap;
-		border-width: 0;
 	}
 </style>
