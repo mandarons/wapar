@@ -161,12 +161,12 @@ Used for text, borders, and neutral UI elements.
 
 ### Semantic Colors
 
-| Color | Shade 600 | Usage |
-|-------|-----------|-------|
-| Success | `#16a34a` | Success states, positive growth |
-| Warning | `#d97706` | Warnings, outdated versions |
-| Error | `#dc2626` | Errors, negative states |
-| Info | `#2563eb` | Informational messages |
+| Color   | Shade | Hex       | Usage                        |
+|---------|-------|-----------|------------------------------|
+| Success | 600   | `#16a34a` | Success states, positive growth |
+| Warning | 600   | `#d97706` | Warnings, outdated versions     |
+| Error   | 600   | `#dc2626` | Errors, negative states         |
+| Info    | 600   | `#2563eb` | Informational messages          |
 
 **All semantic colors meet AA contrast requirements on white backgrounds.**
 
