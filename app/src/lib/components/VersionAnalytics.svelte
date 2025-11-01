@@ -115,7 +115,7 @@
 							{#if isOldVersion}
 								<span
 									class="outdated-badge"
-									aria-label="Outdated version"
+									aria-label="Warning: Outdated version"
 									title="Consider upgrading"
 								>
 									Outdated

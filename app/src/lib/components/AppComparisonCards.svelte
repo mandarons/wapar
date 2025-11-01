@@ -16,6 +16,13 @@
 		return `${sign}${growth.toFixed(1)}%`;
 	}
 
+	function getGrowthLabel(growth: number | null): string {
+		if (growth === null) return '';
+		if (growth > 0) return 'Increasing';
+		if (growth < 0) return 'Decreasing';
+		return 'Stable';
+	}
+
 	function getGrowthColor(growth: number | null): string {
 		if (growth === null) return 'text-wapar-gray-500';
 		if (growth > 0) return 'text-wapar-success-600';
@@ -67,12 +74,17 @@
 					>
 						Growth Trend
 					</p>
-					<p
-						class="text-2xl font-bold {getGrowthColor(iCloudDockerGrowth)}"
-						data-testid="icloud-growth"
-					>
-						{formatGrowth(iCloudDockerGrowth)}
-					</p>
+					<div class="flex items-baseline gap-2">
+						<p
+							class="text-2xl font-bold {getGrowthColor(iCloudDockerGrowth)}"
+							data-testid="icloud-growth"
+						>
+							{formatGrowth(iCloudDockerGrowth)}
+						</p>
+						<span class="text-body text-wapar-gray-600">
+							({getGrowthLabel(iCloudDockerGrowth)})
+						</span>
+					</div>
 				</div>
 			{/if}
 
@@ -128,12 +140,17 @@
 					<p class="text-body-sm text-wapar-primary-700 mb-1 uppercase tracking-wide font-semibold">
 						Growth Trend
 					</p>
-					<p
-						class="text-2xl font-bold {getGrowthColor(haBouncieGrowth)}"
-						data-testid="bouncie-growth"
-					>
-						{formatGrowth(haBouncieGrowth)}
-					</p>
+					<div class="flex items-baseline gap-2">
+						<p
+							class="text-2xl font-bold {getGrowthColor(haBouncieGrowth)}"
+							data-testid="bouncie-growth"
+						>
+							{formatGrowth(haBouncieGrowth)}
+						</p>
+						<span class="text-body text-wapar-gray-600">
+							({getGrowthLabel(haBouncieGrowth)})
+						</span>
+					</div>
 				</div>
 			{/if}
 

@@ -38,7 +38,7 @@ export default {
 						200: '#bbf7d0',
 						300: '#86efac',
 						400: '#4ade80',
-						500: '#22c55e', // AA compliant on white (4.5:1+)
+						500: '#22c55e', // AA for large text (3:1)
 						600: '#16a34a', // AA compliant on white (4.5:1+)
 						700: '#15803d',
 						800: '#166534',
