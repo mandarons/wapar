@@ -70,7 +70,7 @@ newInstallationsRoutes.get('/', async (c) => {
     if (groupBy === 'day') {
       dateFormat = '%Y-%m-%d';
     } else if (groupBy === 'week') {
-      dateFormat = '%Y-W%W';
+      dateFormat = '%Y-W%V'; // ISO 8601 week number
     } else {
       dateFormat = '%Y-%m';
     }
@@ -147,7 +147,6 @@ newInstallationsRoutes.get('/', async (c) => {
       timeline,
       topCountriesNewUsers: topCountriesWithPercentage,
       reinstallPatterns: {
-        avgTimeBetweenReinstalls: 'TBD', // Optional: calculate later if needed
         reinstallRate
       }
     };
