@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { getBase, waitForCount } from './utils';
+import { getBase, waitForCount, d1Exec } from './utils';
 
 const ENDPOINT = '/api/version-analytics';
 const INSTALL_ENDPOINT = '/api/installation';
+const HEARTBEAT_ENDPOINT = '/api/heartbeat';
 
 function randomAppName() {
   const apps = ['icloud-drive-docker', 'icloud-docker', 'ha-bouncie'];
@@ -18,6 +19,15 @@ async function createInstallation(appVersion: string): Promise<string> {
   });
   const body = await res.json();
   return body.id as string;
+}
+
+async function sendHeartbeat(installationId: string): Promise<void> {
+  const base = getBase();
+  await fetch(`${base}${HEARTBEAT_ENDPOINT}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ installationId })
+  });
 }
 
 describe(ENDPOINT, () => {
@@ -58,6 +68,15 @@ describe(ENDPOINT, () => {
       [id1, id2, id3, id4],
       4
     );
+
+    // Send heartbeats to make them active
+    await sendHeartbeat(id1);
+    await sendHeartbeat(id2);
+    await sendHeartbeat(id3);
+    await sendHeartbeat(id4);
+
+    // Wait for heartbeats to be recorded
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN ('${id1}', '${id2}', '${id3}', '${id4}')`, 4);
 
     // Fetch version analytics
     const res = await fetch(`${base}${ENDPOINT}`);
@@ -302,6 +321,14 @@ describe(ENDPOINT, () => {
       ids,
       versions.length
     );
+
+    // Send heartbeats to make them active
+    for (const id of ids) {
+      await sendHeartbeat(id);
+    }
+
+    // Wait for heartbeats
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (${ids.map(id => `'${id}'`).join(', ')})`, ids.length);
 
     const res = await fetch(`${base}${ENDPOINT}`);
     expect(res.status).toBe(200);
