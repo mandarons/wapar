@@ -9,8 +9,11 @@ on:
 
 jobs:
   test-backend:
-    name: Test Backend
+    name: Test Backend - ${{ matrix.test-type }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-type: [unit, e2e]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,8 +36,43 @@ jobs:
         if: steps.cache-server.outputs.cache-hit != 'true'
         run: cd server && bun install --frozen-lockfile
 
-      - name: Run server tests
-        run: cd server && bun run test --run --reporter=basic
+      - name: Run server ${{ matrix.test-type }} tests
+        run: cd server && bun run test:${{ matrix.test-type }} --run --reporter=basic
+
+  test-frontend:
+    name: Test Frontend - ${{ matrix.test-type }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-type: [unit, e2e]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache frontend dependencies
+        uses: actions/cache@v4
+        id: cache-app
+        with:
+          path: app/node_modules
+          key: ${{ runner.os }}-bun-app-${{ hashFiles('app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-app-
+
+      - name: Install frontend dependencies
+        if: steps.cache-app.outputs.cache-hit != 'true'
+        run: cd app && bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        if: matrix.test-type == 'e2e'
+        run: cd app && bunx playwright install --with-deps chromium
+
+      - name: Run frontend ${{ matrix.test-type }} tests
+        run: cd app && bun run test:${{ matrix.test-type }} --run --reporter=dot
 
   deploy-backend:
     name: Deploy Backend to Production
@@ -74,7 +112,7 @@ jobs:
   deploy-frontend:
     name: Deploy Frontend to Production
     runs-on: ubuntu-latest
-    # Frontend can deploy without waiting for backend tests (parallel optimization)
+    needs: test-frontend
     permissions:
       contents: read
       deployments: write
