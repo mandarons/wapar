@@ -68,8 +68,13 @@ jobs:
         if: matrix.test-type == 'e2e'
         run: cd app && bunx playwright install --with-deps chromium
 
-      - name: Run frontend ${{ matrix.test-type }} tests
-        run: cd app && bun run test:${{ matrix.test-type }} --run --reporter=dot
+      - name: Run frontend unit tests
+        if: matrix.test-type == 'unit'
+        run: cd app && bun run test:unit --run --reporter=dot
+
+      - name: Run frontend e2e tests
+        if: matrix.test-type == 'e2e'
+        run: cd app && bun run test:e2e
 
   deploy-backend:
     name: Deploy Backend to Staging
