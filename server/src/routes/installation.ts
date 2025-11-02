@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import type { IncomingRequestCfProperties } from '@cloudflare/workers-types';
 import { getDb } from '../db/client';
 import { installations, type NewInstallation } from '../db/schema';
 import { handleValidationError, handleGenericError } from '../utils/errors';
@@ -118,6 +119,12 @@ installationRoutes.post('/', async (c) => {
     const now = new Date().toISOString();
     const ipAddress = validatedData.ipAddress || c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || '0.0.0.0';
     
+    // Extract geo data from Cloudflare's request.cf object (just-in-time enrichment)
+    // Cloudflare automatically provides this data on all requests at no cost
+    const cfData = c.req.raw.cf as IncomingRequestCfProperties | undefined;
+    const countryCode = validatedData.countryCode || (cfData?.country as string) || null;
+    const region = validatedData.region || (cfData?.region as string) || null;
+    
     // Log warning if IP address fallback is used
     if (!validatedData.ipAddress && ipAddress === '0.0.0.0') {
       Logger.warning('Installation created with fallback IP address', {
@@ -132,6 +139,19 @@ installationRoutes.post('/', async (c) => {
       });
     }
     
+    // Log geo enrichment status
+    if (countryCode) {
+      Logger.info('Installation enriched with Cloudflare geo data', {
+        operation: 'installation.geo_enrichment',
+        metadata: {
+          countryCode,
+          region: region || 'unknown',
+          source: validatedData.countryCode ? 'client' : 'cloudflare'
+        },
+        ...requestContext
+      });
+    }
+    
     const newInstallation: NewInstallation = {
       id: installationId,
       appName: validatedData.appName,
@@ -139,8 +159,8 @@ installationRoutes.post('/', async (c) => {
       ipAddress,
       previousId: validatedData.previousId || null,
       data: validatedData.data || null,
-      countryCode: validatedData.countryCode || null,
-      region: validatedData.region || null,
+      countryCode,
+      region,
       createdAt: now,
       updatedAt: now,
     };
@@ -153,7 +173,8 @@ installationRoutes.post('/', async (c) => {
           appName: validatedData.appName, 
           appVersion: validatedData.appVersion,
           hasPreviousId: !!validatedData.previousId,
-          hasGeoData: !!(validatedData.countryCode && validatedData.region)
+          hasGeoData: !!(countryCode && region),
+          geoSource: validatedData.countryCode ? 'client' : (countryCode ? 'cloudflare' : 'none')
         },
         ...requestContext
       }

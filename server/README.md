@@ -64,8 +64,15 @@ Returns comprehensive app version distribution analytics.
 
 **Performance:** Optimized for fast response times (<500ms)
 
-Scheduled job:
-- Hourly cron to enrich IP geo info.
+## Geographic Data Enrichment
+
+Installation records are **automatically enriched with geographic data** (country code and region) using Cloudflare's built-in request metadata available on `request.cf`. This data is captured immediately when installations are created, with no external API calls or delays.
+
+**Benefits:**
+- ✅ Immediate geographic data availability (no waiting for background jobs)
+- ✅ Zero external dependencies (no rate limits or API failures)
+- ✅ Free and reliable (provided automatically by Cloudflare on all requests)
+- ✅ Better UX (maps and analytics populate in real-time)
 
 ## Testing
 
@@ -85,7 +92,6 @@ Tests are written with Vitest and run against a real Worker started in-process v
     - `POST /__test/reset` – clears tables with retry and returns `{ ok: true }`.
     - `POST /__test/exec` – executes a SQL statement.
     - `POST /__test/queryOne` – returns a single row as `{ ok, data }`.
-    - `POST /__test/run-scheduled` – mocks `fetch` and invokes the cron `scheduled` handler.
   - Routes are guarded in `src/index.ts` and enabled in dev only.
     - Guard flag: `ENABLE_TEST_ROUTES`.
     - `wrangler.toml` sets `ENABLE_TEST_ROUTES = "1"` under `[dev].vars` and disables by default for production.
@@ -93,10 +99,10 @@ Tests are written with Vitest and run against a real Worker started in-process v
 
 - Covered endpoints:
   - `GET /api` – health.
-  - `POST /api/installation` – create installation (valid/invalid payloads).
+  - `POST /api/installation` – create installation with automatic geo enrichment (valid/invalid payloads, client-provided geo data).
   - `POST /api/heartbeat` – one-per-day behavior; invalid/non-existent installation.
   - `GET /api/usage` – empty and non-empty aggregates.
-  - Cron: `src/jobs/enrich-ip.ts` – ip-to-geo enrichment via mocked `fetch`.
+  - `GET /api/version-analytics` – version distribution and upgrade metrics.
 
 ## CI
 
@@ -112,5 +118,5 @@ A GitHub Actions workflow runs the Workers app tests on push/PR when files under
 ## Notes
 
 - D1 binding is configured in `wrangler.toml` under `[[d1_databases]]`.
-- Adjust cron behavior via `[triggers].crons`.
+- Geographic data is automatically captured from Cloudflare's `request.cf` object on incoming requests.
 - If you add new tables/columns, update `schema.sql` and re-apply to your local DB.

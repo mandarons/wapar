@@ -94,12 +94,12 @@ This automatically:
 
 ### Production Environment (default)
 - `DRIZZLE_LOG="false"` - Disables Drizzle query logging
-- Cron jobs enabled (hourly IP enrichment)
+- Geographic data automatically captured from Cloudflare's `request.cf` object
 
 ### Staging Environment (`--env staging`)
 - Database: `wapar-db-staging`
 - `DRIZZLE_LOG="true"` - Enables query logging
-- No cron jobs (Wrangler limitation)
+- Geographic data automatically captured from Cloudflare's `request.cf` object
 
 ### Development Environment (`npm run dev`)
 - `ENABLE_TEST_ROUTES="1"` - Enables test routes
