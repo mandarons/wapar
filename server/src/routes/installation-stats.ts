@@ -1,29 +1,12 @@
 import { Hono } from 'hono';
 import { getDb } from '../db/client';
 import { installations } from '../db/schema';
-import { count, countDistinct, desc, gte, isNotNull, and } from 'drizzle-orm';
+import { count, countDistinct, desc, isNotNull, and } from 'drizzle-orm';
 import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
+import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
 
 export const installationStatsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
-
-// Get activity threshold in days from environment variable, default to 3 days
-function getActivityThresholdDays(env: any): number {
-  const envValue = env?.ACTIVITY_THRESHOLD_DAYS;
-  if (envValue) {
-    const parsed = parseInt(envValue, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      return parsed;
-    }
-  }
-  return 3; // Default to 3 days
-}
-
-// Calculate the cutoff date for active installations
-function getActivityCutoffDate(thresholdDays: number): string {
-  const cutoff = new Date(Date.now() - thresholdDays * 24 * 60 * 60 * 1000);
-  return cutoff.toISOString();
-}
 
 installationStatsRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
@@ -46,10 +29,7 @@ installationStatsRoutes.get('/', async (c) => {
       'installation_stats.active',
       () => db.select({ count: count() })
         .from(installations)
-        .where(and(
-          isNotNull(installations.lastHeartbeatAt),
-          gte(installations.lastHeartbeatAt, cutoffDate)
-        )),
+        .where(createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate)),
       {
         metadata: { cutoffDate, thresholdDays },
         ...requestContext
@@ -68,10 +48,7 @@ installationStatsRoutes.get('/', async (c) => {
         count: count()
       })
         .from(installations)
-        .where(and(
-          isNotNull(installations.lastHeartbeatAt),
-          gte(installations.lastHeartbeatAt, cutoffDate)
-        ))
+        .where(createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate))
         .groupBy(installations.appVersion)
         .orderBy(desc(count())),
       {
@@ -97,8 +74,8 @@ installationStatsRoutes.get('/', async (c) => {
       })
         .from(installations)
         .where(and(
-          isNotNull(installations.lastHeartbeatAt),
-          gte(installations.lastHeartbeatAt, cutoffDate)
+          createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate),
+          isNotNull(installations.countryCode)
         ))
         .groupBy(installations.countryCode)
         .orderBy(desc(count())),
@@ -108,12 +85,10 @@ installationStatsRoutes.get('/', async (c) => {
       }
     );
 
-    const activeCountryDistribution = activeCountriesResult
-      .filter((r) => r.country_code !== null)
-      .map((r) => ({
-        countryCode: r.country_code,
-        count: Number(r.count)
-      }));
+    const activeCountryDistribution = activeCountriesResult.map((r) => ({
+      countryCode: r.country_code,
+      count: Number(r.count)
+    }));
 
     const responseData = {
       totalInstallations,
