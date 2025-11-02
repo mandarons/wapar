@@ -10,6 +10,7 @@ export const installations = sqliteTable('Installation', {
   data: text('data'),
   countryCode: text('country_code'),
   region: text('region'),
+  lastHeartbeatAt: text('last_heartbeat_at'),
   createdAt: text('created_at').default(sql`(datetime('now'))`).notNull(),
   updatedAt: text('updated_at').default(sql`(datetime('now'))`).notNull(),
 });
@@ -29,6 +30,7 @@ export const installationCountryCodeIdx = index('idx_installation_country_code')
 export const installationCreatedAtIdx = index('idx_installation_created_at').on(installations.createdAt);
 export const installationUpdatedAtIdx = index('idx_installation_updated_at').on(installations.updatedAt);
 export const installationPreviousIdIdx = index('idx_installation_previous_id').on(installations.previousId);
+export const installationLastHeartbeatAtIdx = index('idx_installation_last_heartbeat_at').on(installations.lastHeartbeatAt);
 export const heartbeatInstallationIdIdx = index('idx_heartbeat_installation_id').on(heartbeats.installationId);
 export const heartbeatCreatedAtIdx = index('idx_heartbeat_created_at').on(heartbeats.createdAt);
 

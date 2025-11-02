@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getDb } from '../db/client';
 import { installations, heartbeats } from '../db/schema';
-import { count, countDistinct, eq, isNotNull, gte, desc } from 'drizzle-orm';
+import { count, countDistinct, eq, isNotNull, gte, desc, and } from 'drizzle-orm';
 import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 
@@ -14,6 +14,10 @@ usageRoutes.get('/', async (c) => {
     const now = new Date().toUTCString();
     const db = getDb(c.env);
 
+    // Get activity threshold from environment, default to 3 days
+    const thresholdDays = parseInt(c.env?.ACTIVITY_THRESHOLD_DAYS || '3', 10);
+    const cutoffDate = new Date(Date.now() - thresholdDays * 24 * 60 * 60 * 1000).toISOString();
+
     // Total installations count
     const totalInstallationsResult = await Logger.measureOperation(
       'usage.total_installations',
@@ -21,6 +25,22 @@ usageRoutes.get('/', async (c) => {
       requestContext
     );
     const totalInstallations = totalInstallationsResult[0]?.count ?? 0;
+
+    // Active installations (based on lastHeartbeatAt within threshold)
+    const activeInstallationsResult = await Logger.measureOperation(
+      'usage.active_installations',
+      () => db.select({ count: count() })
+        .from(installations)
+        .where(and(
+          isNotNull(installations.lastHeartbeatAt),
+          gte(installations.lastHeartbeatAt, cutoffDate)
+        )),
+      {
+        metadata: { cutoffDate, thresholdDays },
+        ...requestContext
+      }
+    );
+    const activeInstallations = activeInstallationsResult[0]?.count ?? 0;
 
     // Monthly active installations (last 30 days)
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -36,7 +56,7 @@ usageRoutes.get('/', async (c) => {
     );
     const monthlyActive = monthlyActiveResult[0]?.count ?? 0;
 
-    // Country counts - fix ORDER BY to reference the count function
+    // Country counts for active installations only
     const countryToCount = await Logger.measureOperation(
       'usage.country_counts',
       () => db.select({
@@ -44,10 +64,16 @@ usageRoutes.get('/', async (c) => {
         count: count()
       })
         .from(installations)
-        .where(isNotNull(installations.countryCode))
+        .where(and(
+          isNotNull(installations.lastHeartbeatAt),
+          gte(installations.lastHeartbeatAt, cutoffDate)
+        ))
         .groupBy(installations.countryCode)
         .orderBy(desc(count())),
-      requestContext
+      {
+        metadata: { cutoffDate, thresholdDays },
+        ...requestContext
+      }
     );
 
     // App-specific counts
@@ -73,12 +99,17 @@ usageRoutes.get('/', async (c) => {
 
     const responseData = {
       totalInstallations,
+      activeInstallations,
+      staleInstallations: totalInstallations - activeInstallations,
       monthlyActive,
+      activityThresholdDays: thresholdDays,
       createdAt: now,
-      countryToCount: countryToCount.map((r) => ({ 
-        countryCode: r.country_code, 
-        count: Number(r.count) 
-      })),
+      countryToCount: countryToCount
+        .filter((r) => r.country_code !== null)
+        .map((r) => ({ 
+          countryCode: r.country_code, 
+          count: Number(r.count) 
+        })),
       iCloudDocker: { total: iCloudDockerTotal },
       haBouncie: { total: haBouncieTotal },
     };
@@ -100,6 +131,8 @@ usageRoutes.get('/', async (c) => {
       operation: 'usage.analytics',
       metadata: { 
         totalInstallations,
+        activeInstallations,
+        staleInstallations: totalInstallations - activeInstallations,
         monthlyActive,
         countriesWithData: countryToCount.length,
         topApps: { iCloudDockerTotal, haBouncieTotal }

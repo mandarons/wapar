@@ -77,12 +77,14 @@ const syncDb = async (sync = true) => {
       data TEXT,
       country_code TEXT,
       region TEXT,
+      last_heartbeat_at TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     )`);
     
     await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_app_name ON Installation(app_name)`);
     await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_country_code ON Installation(country_code)`);
+    await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_last_heartbeat_at ON Installation(last_heartbeat_at)`);
     
     await d1Exec(`CREATE TABLE IF NOT EXISTS Heartbeat (
       id TEXT PRIMARY KEY,

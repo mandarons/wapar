@@ -71,6 +71,9 @@ describe(ENDPOINT, () => {
     await d1Exec(`INSERT INTO Heartbeat (id, installation_id, created_at, updated_at) VALUES (?, ?, datetime('now'), datetime('now'))`, [crypto.randomUUID(), id1]);
     await d1Exec(`INSERT INTO Heartbeat (id, installation_id, created_at, updated_at) VALUES (?, ?, datetime('now'), datetime('now'))`, [crypto.randomUUID(), id2]);
 
+    // Update lastHeartbeatAt to make them active installations
+    await d1Exec(`UPDATE Installation SET last_heartbeat_at = datetime('now') WHERE id IN (?, ?)`, [id1, id2]);
+
     // Wait for heartbeats to be created
     await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN ('${id1}', '${id2}')`, 2);
 
