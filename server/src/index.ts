@@ -6,6 +6,7 @@ import { versionAnalyticsRoutes } from './routes/version-analytics';
 import { recentInstallationsRoutes } from './routes/recent-installations';
 import { newInstallationsRoutes } from './routes/new-installations';
 import { heartbeatAnalyticsRoutes } from './routes/heartbeat-analytics';
+import { installationStatsRoutes } from './routes/installation-stats';
 import { handleValidationError, handleGenericError } from './utils/errors';
 import { Logger } from './utils/logger';
 import { ensureMigrations } from './db/migrations';
@@ -152,5 +153,6 @@ app.route('/api/version-analytics', versionAnalyticsRoutes);
 app.route('/api/recent-installations', recentInstallationsRoutes);
 app.route('/api/new-installations', newInstallationsRoutes);
 app.route('/api/heartbeat-analytics', heartbeatAnalyticsRoutes);
+app.route('/api/installation-stats', installationStatsRoutes);
 
 export default app;

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getDb } from '../db/client';
 import { installations } from '../db/schema';
-import { count, desc, gte } from 'drizzle-orm';
+import { count, desc, gte, and, isNotNull } from 'drizzle-orm';
 import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 import { findLatestVersion, compareVersions } from '../utils/version';
@@ -14,7 +14,11 @@ versionAnalyticsRoutes.get('/', async (c) => {
   try {
     const db = getDb(c.env);
 
-    // Get version distribution
+    // Get activity threshold from environment, default to 3 days
+    const thresholdDays = parseInt(c.env?.ACTIVITY_THRESHOLD_DAYS || '3', 10);
+    const cutoffDate = new Date(Date.now() - thresholdDays * 24 * 60 * 60 * 1000).toISOString();
+
+    // Get version distribution for active installations only
     const versionDistributionResult = await Logger.measureOperation(
       'version_analytics.distribution',
       () => db.select({
@@ -22,9 +26,16 @@ versionAnalyticsRoutes.get('/', async (c) => {
         count: count()
       })
         .from(installations)
+        .where(and(
+          isNotNull(installations.lastHeartbeatAt),
+          gte(installations.lastHeartbeatAt, cutoffDate)
+        ))
         .groupBy(installations.appVersion)
         .orderBy(desc(count())),
-      requestContext
+      {
+        metadata: { cutoffDate, thresholdDays },
+        ...requestContext
+      }
     );
 
     // Calculate total installations
