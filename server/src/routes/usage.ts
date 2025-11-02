@@ -4,6 +4,7 @@ import { installations, heartbeats } from '../db/schema';
 import { count, countDistinct, eq, isNotNull, gte, desc, and } from 'drizzle-orm';
 import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
+import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
 
 export const usageRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -15,8 +16,8 @@ usageRoutes.get('/', async (c) => {
     const db = getDb(c.env);
 
     // Get activity threshold from environment, default to 3 days
-    const thresholdDays = parseInt(c.env?.ACTIVITY_THRESHOLD_DAYS || '3', 10);
-    const cutoffDate = new Date(Date.now() - thresholdDays * 24 * 60 * 60 * 1000).toISOString();
+    const thresholdDays = getActivityThresholdDays(c.env);
+    const cutoffDate = getActivityCutoffDate(thresholdDays);
 
     // Total installations count
     const totalInstallationsResult = await Logger.measureOperation(
@@ -31,10 +32,7 @@ usageRoutes.get('/', async (c) => {
       'usage.active_installations',
       () => db.select({ count: count() })
         .from(installations)
-        .where(and(
-          isNotNull(installations.lastHeartbeatAt),
-          gte(installations.lastHeartbeatAt, cutoffDate)
-        )),
+        .where(createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate)),
       {
         metadata: { cutoffDate, thresholdDays },
         ...requestContext
@@ -65,8 +63,8 @@ usageRoutes.get('/', async (c) => {
       })
         .from(installations)
         .where(and(
-          isNotNull(installations.lastHeartbeatAt),
-          gte(installations.lastHeartbeatAt, cutoffDate)
+          createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate),
+          isNotNull(installations.countryCode)
         ))
         .groupBy(installations.countryCode)
         .orderBy(desc(count())),
@@ -104,12 +102,10 @@ usageRoutes.get('/', async (c) => {
       monthlyActive,
       activityThresholdDays: thresholdDays,
       createdAt: now,
-      countryToCount: countryToCount
-        .filter((r) => r.country_code !== null)
-        .map((r) => ({ 
-          countryCode: r.country_code, 
-          count: Number(r.count) 
-        })),
+      countryToCount: countryToCount.map((r) => ({ 
+        countryCode: r.country_code, 
+        count: Number(r.count) 
+      })),
       iCloudDocker: { total: iCloudDockerTotal },
       haBouncie: { total: haBouncieTotal },
     };
