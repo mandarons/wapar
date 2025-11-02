@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getBase, queryOne, d1QueryOne } from './utils';
+import { getBase, d1QueryOne } from './utils';
 
 const ENDPOINT = '/api/installation';
 
