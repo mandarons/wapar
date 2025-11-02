@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getBase, queryOne } from './utils';
+import { getBase, queryOne, d1QueryOne } from './utils';
 
 const ENDPOINT = '/api/installation';
 
@@ -248,5 +248,95 @@ describe(ENDPOINT, () => {
     const body = await res.json();
     expect(body.id).toBeDefined();
   });
-});
 
+  // Geo data enrichment tests
+  it('POST should accept and store client-provided geo data', async () => {
+    const base = getBase();
+    const appName = randomAppName();
+    const appVersion = randomVersion();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        appName,
+        appVersion,
+        countryCode: 'US',
+        region: 'California'
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBeDefined();
+    
+    // Verify geo data was stored in database
+    const installation = await d1QueryOne<{ country_code: string; region: string }>(
+      'SELECT country_code, region FROM Installation WHERE id = ?',
+      [body.id]
+    );
+    
+    expect(installation).toBeDefined();
+    expect(installation?.country_code).toBe('US');
+    expect(installation?.region).toBe('California');
+  });
+
+  it('POST should handle installations without geo data gracefully', async () => {
+    const base = getBase();
+    const appName = randomAppName();
+    const appVersion = randomVersion();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        appName,
+        appVersion
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBeDefined();
+    
+    // Verify installation was created even without geo data
+    // Note: In production with Cloudflare, request.cf would provide geo data
+    // In test environment, it may be null
+    const installation = await d1QueryOne<{ id: string; app_name: string }>(
+      'SELECT id, app_name FROM Installation WHERE id = ?',
+      [body.id]
+    );
+    
+    expect(installation).toBeDefined();
+    expect(installation?.app_name).toBe(appName);
+  });
+
+  it('POST with form-encoded geo data should succeed', async () => {
+    const base = getBase();
+    const formData = new URLSearchParams({
+      appName: 'icloud-docker',
+      appVersion: '1.0.0',
+      countryCode: 'CA',
+      region: 'Ontario'
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString()
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBeDefined();
+    
+    // Verify geo data was stored
+    const installation = await d1QueryOne<{ country_code: string; region: string }>(
+      'SELECT country_code, region FROM Installation WHERE id = ?',
+      [body.id]
+    );
+    
+    expect(installation?.country_code).toBe('CA');
+    expect(installation?.region).toBe('Ontario');
+  });
+});

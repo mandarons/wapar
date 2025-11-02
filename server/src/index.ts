@@ -7,7 +7,6 @@ import { recentInstallationsRoutes } from './routes/recent-installations';
 import { newInstallationsRoutes } from './routes/new-installations';
 import { heartbeatAnalyticsRoutes } from './routes/heartbeat-analytics';
 import { handleValidationError, handleGenericError } from './utils/errors';
-import { scheduled } from './jobs/enrich-ip';
 import { Logger } from './utils/logger';
 import { ensureMigrations } from './db/migrations';
 
@@ -146,65 +145,6 @@ app.post('/api', async (c) => {
   return c.notFound();
 });
 
-// Test endpoint for scheduled function (localhost only)
-app.post('/__test/run-scheduled', async (c) => {
-  const requestContext = Logger.getRequestContext(c);
-  const host = new URL(c.req.url).hostname;
-  const isLocalhost = host === '127.0.0.1' || host === 'localhost';
-  
-  if (!isLocalhost) {
-    Logger.warning('Non-localhost access to test scheduled endpoint', {
-      operation: 'test_scheduled.unauthorized',
-      metadata: { host },
-      ...requestContext
-    });
-    return c.notFound();
-  }
-  
-  try {
-    const body = await c.req.json();
-    const mockEvent: ScheduledController = {
-      cron: '0 * * * *',
-      scheduledTime: Date.now(),
-      noRetry: () => {} 
-    };
-    
-    // Pass mock batch data through environment for testing
-    const testEnv = {
-      ...c.env,
-      __TEST_BATCH_DATA: body.batch
-    };
-    
-    Logger.info('Test scheduled job triggered', {
-      operation: 'test_scheduled.trigger',
-      metadata: { 
-        batchSize: body.batch?.length || 0,
-        cron: mockEvent.cron
-      },
-      ...requestContext
-    });
-    
-    await scheduled(mockEvent, testEnv, { 
-      waitUntil: () => {}, 
-      passThroughOnException: () => {},
-      props: {} // Required property for ExecutionContext
-    });
-    
-    Logger.success('Test scheduled job completed', {
-      operation: 'test_scheduled.complete'
-    });
-    
-    return c.json({ ok: true });
-  } catch (error) {
-    Logger.error('Test scheduled job failed', {
-      operation: 'test_scheduled.error',
-      error: error as Error,
-      ...requestContext
-    });
-    return c.json({ error: String(error) }, 500);
-  }
-});
-
 app.route('/api/installation', installationRoutes);
 app.route('/api/heartbeat', heartbeatRoutes);
 app.route('/api/usage', usageRoutes);
@@ -214,4 +154,3 @@ app.route('/api/new-installations', newInstallationsRoutes);
 app.route('/api/heartbeat-analytics', heartbeatAnalyticsRoutes);
 
 export default app;
-export { scheduled };

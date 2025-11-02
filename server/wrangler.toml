@@ -12,8 +12,7 @@ database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40"
 migrations_dir = "drizzle"
 
 # Production environment (default) - deployed from main branch
-[triggers]
-crons = ["0 * * * *"]
+# Note: Cron triggers removed - geo enrichment now happens just-in-time using Cloudflare's request.cf data
 
 [vars]
 # Drizzle configuration for production
@@ -35,8 +34,7 @@ database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40"
 DRIZZLE_LOG = "true"
 
 # Staging environment - deployed from PRs
-# Note: Cron jobs are only configured for the default (production) environment.
-# Wrangler does not support per-environment cron triggers, so crons do not run in staging.
+# Note: Geo enrichment now happens just-in-time using Cloudflare's request.cf data (no cron needed)
 [env.staging]
 
 [[env.staging.d1_databases]]

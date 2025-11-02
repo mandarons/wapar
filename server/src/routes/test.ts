@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { scheduled } from '../jobs/enrich-ip';
 import { getDb } from '../db/client';
 import { installations, heartbeats } from '../db/schema';
 
@@ -114,22 +113,5 @@ testRoutes.post('/queryOne', async (c) => {
     return c.json({ ok: true, data: row ?? null });
   } catch (err) {
     return c.json({ ok: false, data: null }, 200);
-  }
-});
-
-// Invoke the cron scheduled handler with a mocked batch supplied in the request.
-testRoutes.post('/run-scheduled', async (c) => {
-  try {
-    const { batch } = await c.req.json<{ batch: Array<{ query: string; countryCode: string; region: string }> }>();
-    const originalFetch = globalThis.fetch;
-    (globalThis as any).fetch = async () => ({ ok: true, json: async () => batch }) as any;
-    try {
-      await scheduled({} as any, c.env as any, {} as any);
-    } finally {
-      (globalThis as any).fetch = originalFetch;
-    }
-    return c.json({ ok: true });
-  } catch (err) {
-    return c.json({ ok: false, error: String((err as Error).message || err) }, 200);
   }
 });
