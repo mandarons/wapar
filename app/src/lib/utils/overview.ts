@@ -50,7 +50,9 @@ export function buildOverviewMetrics(input: OverviewMetricInput): OverviewMetric
 			label: 'Total installations',
 			value: formatInstallCount(input.totalInstallations),
 			testId: 'total-installations',
-			subtitle: input.createdAt ? `Since ${new Date(input.createdAt).toLocaleDateString()}` : 'All time'
+			subtitle: input.createdAt
+				? `Since ${new Date(input.createdAt).toLocaleDateString()}`
+				: 'All time'
 		},
 		{
 			label: 'Stale installations',
@@ -59,7 +61,7 @@ export function buildOverviewMetrics(input: OverviewMetricInput): OverviewMetric
 			subtitle: `No heartbeat in ${input.activityThresholdDays}+ days`
 		}
 	];
-	
+
 	return metrics;
 }
 
@@ -73,11 +75,11 @@ function formatChangeDescriptor(label: string, value: number | null): string | n
 }
 
 export function describeUpdate(input: OverviewSummaryInput): string {
-	const segments: string[] = [
-		'Tracking adoption for iCloud Docker and HA Bouncie integrations.'
-	];
+	const segments: string[] = ['Tracking adoption for iCloud Docker and HA Bouncie integrations.'];
 
-	const createdDate = input.createdAt ? new Date(input.createdAt).toLocaleDateString() : 'the beginning';
+	const createdDate = input.createdAt
+		? new Date(input.createdAt).toLocaleDateString()
+		: 'the beginning';
 	segments.push(
 		`${formatInstallCount(input.activeInstallations)} active installations (${formatInstallCount(input.totalInstallations)} total since ${createdDate}) across ${input.countryCount} ${
 			input.countryCount === 1 ? 'country' : 'countries'
