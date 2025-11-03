@@ -9,10 +9,37 @@ const API_URL =
 
 export const load: PageServerLoad = async () => {
 	try {
-		let res = await fetch(`${API_URL}/api/usage`);
-		const waparData = await res.json();
-		res = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
-		const haData = await res.json();
+		// Fetch WAPAR usage data
+		let waparData;
+		try {
+			const res = await fetch(`${API_URL}/api/usage`);
+			waparData = await res.json();
+		} catch (error) {
+			console.warn('Failed to fetch WAPAR usage data:', error);
+			waparData = {
+				totalInstallations: 0,
+				activeInstallations: 0,
+				staleInstallations: 0,
+				monthlyActive: 0,
+				activityThresholdDays: 3,
+				createdAt: new Date().toISOString(),
+				countryToCount: [],
+				iCloudDocker: { total: 0 },
+				haBouncie: { total: 0 }
+			};
+		}
+
+		// Fetch Home Assistant analytics data
+		let haData;
+		try {
+			const res = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
+			haData = await res.json();
+		} catch (error) {
+			console.warn('Failed to fetch Home Assistant analytics:', error);
+			haData = {
+				bouncie: { total: 0 }
+			};
+		}
 
 		// Fetch version analytics
 		let versionAnalytics;
@@ -76,6 +103,15 @@ export const load: PageServerLoad = async () => {
 		}
 
 		const data = { ...waparData };
+		
+		// Ensure iCloudDocker and haBouncie always exist with defaults
+		if (!data.iCloudDocker) {
+			data.iCloudDocker = { total: 0 };
+		}
+		if (!haData.bouncie) {
+			haData.bouncie = { total: 0 };
+		}
+		
 		data.totalInstallations = haData.bouncie.total + (data.iCloudDocker?.total || 0);
 		data.haBouncie = haData.bouncie;
 		data.versionAnalytics = versionAnalytics;

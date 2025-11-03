@@ -391,8 +391,9 @@
 
 			data = {
 				...usageData,
-				totalInstallations: haData.bouncie.total + usageData.iCloudDocker.total,
-				haBouncie: haData.bouncie,
+				totalInstallations: (haData.bouncie?.total ?? 0) + (usageData.iCloudDocker?.total ?? 0),
+				haBouncie: haData.bouncie ?? { total: 0 },
+				iCloudDocker: usageData.iCloudDocker ?? { total: 0 },
 				versionAnalytics,
 				recentInstallations
 			};
@@ -419,8 +420,8 @@
 		totalInstallations: data.totalInstallations,
 		activeInstallations: data.activeInstallations,
 		staleInstallations: data.staleInstallations,
-		iCloudDockerTotal: data.iCloudDocker.total,
-		haBouncieTotal: data.haBouncie.total,
+		iCloudDockerTotal: data.iCloudDocker?.total ?? 0,
+		haBouncieTotal: data.haBouncie?.total ?? 0,
 		activityThresholdDays: data.activityThresholdDays,
 		createdAt: data.createdAt
 	});
@@ -432,14 +433,14 @@
 	$: overviewSummary = describeUpdate({
 		totalInstallations: data.totalInstallations,
 		activeInstallations: data.activeInstallations,
-		countryCount: data.countryToCount.length,
+		countryCount: data.countryToCount?.length ?? 0,
 		installationsLast24h: data.recentInstallations?.installationsLast24h ?? null,
 		installationsLast7d: data.recentInstallations?.installationsLast7d ?? null,
 		createdAt: data.createdAt
 	});
 
 	$: lastSyncedMeta = deriveLastSynced(lastSyncedIso);
-	$: sortedCountries = [...data.countryToCount].sort((a, b) => b.count - a.count);
+	$: sortedCountries = [...(data.countryToCount ?? [])].sort((a, b) => b.count - a.count);
 	$: top10Countries = sortedCountries.slice(0, 10);
 
 	function formatPercentage(count: number, total: number): string {
@@ -459,7 +460,7 @@
 	}
 
 	function showCountryDetails(countryCode: string) {
-		const countryData = data.countryToCount.find((entry) => entry.countryCode === countryCode);
+		const countryData = data.countryToCount?.find((entry) => entry.countryCode === countryCode);
 		if (!countryData) return;
 
 		const countryName = getCountryName(countryCode);
@@ -481,7 +482,7 @@
 </div>
 <div class="flex justify-between">
 <span class="font-semibold">Ranking:</span>
-<span>#${ranking} of ${data.countryToCount.length}</span>
+<span>#${ranking} of ${data.countryToCount?.length ?? 0}</span>
 </div>
 </div>
 `,
@@ -721,10 +722,10 @@
 									iCloud Docker
 								</p>
 								<p class="mt-2 text-3xl font-semibold text-blue-900">
-									{formatInstallCount(data.iCloudDocker.total)}
+									{formatInstallCount(data.iCloudDocker?.total ?? 0)}
 								</p>
 								<p class="mt-1 text-xs text-blue-600">
-									{formatPercentage(data.iCloudDocker.total, data.totalInstallations)} of total
+									{formatPercentage(data.iCloudDocker?.total ?? 0, data.totalInstallations)} of total
 								</p>
 							</div>
 							<div class="rounded-md border border-purple-200 bg-purple-50 p-4">
@@ -732,10 +733,10 @@
 									Home Assistant – Bouncie
 								</p>
 								<p class="mt-2 text-3xl font-semibold text-purple-900">
-									{formatInstallCount(data.haBouncie.total)}
+									{formatInstallCount(data.haBouncie?.total ?? 0)}
 								</p>
 								<p class="mt-1 text-xs text-purple-600">
-									{formatPercentage(data.haBouncie.total, data.totalInstallations)} of total
+									{formatPercentage(data.haBouncie?.total ?? 0, data.totalInstallations)} of total
 								</p>
 							</div>
 						</div>
@@ -772,8 +773,8 @@
 						<div class="mx-auto w-full max-w-2xl" style="height: 400px;">
 							<MarketShareChart
 								bind:this={marketShareChartRef}
-								iCloudDockerTotal={data.iCloudDocker.total}
-								haBouncieTotal={data.haBouncie.total}
+								iCloudDockerTotal={data.iCloudDocker?.total ?? 0}
+								haBouncieTotal={data.haBouncie?.total ?? 0}
 								{chartType}
 								showLegend={true}
 								title=""
@@ -837,7 +838,7 @@
 										aria-describedby="map-description"
 									></div>
 									<div id="map-description" class="sr-only">
-										World map visualization showing {data.countryToCount.length} countries with installation
+										World map visualization showing {data.countryToCount?.length ?? 0} countries with installation
 										data. Use keyboard navigation to explore countries or press the toggle button below
 										to view the data table for detailed information.
 									</div>
@@ -915,38 +916,51 @@
 				{:else if tab.id === 'versions' && data.versionAnalytics}
 					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 						<VersionAnalytics
-							versionDistribution={data.versionAnalytics.versionDistribution}
-							latestVersion={data.versionAnalytics.latestVersion}
-							outdatedInstallations={data.versionAnalytics.outdatedInstallations}
-							upgradeRate={data.versionAnalytics.upgradeRate}
+							versionDistribution={data.versionAnalytics?.versionDistribution ?? []}
+							latestVersion={data.versionAnalytics?.latestVersion ?? null}
+							outdatedInstallations={data.versionAnalytics?.outdatedInstallations ?? 0}
+							upgradeRate={data.versionAnalytics?.upgradeRate ?? { last7Days: 0, last30Days: 0 }}
 						/>
 					</div>
 				{:else if tab.id === 'heartbeat' && data.heartbeatAnalytics}
 					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 						<HeartbeatAnalytics
-							activeUsers={data.heartbeatAnalytics.activeUsers}
-							engagementLevels={data.heartbeatAnalytics.engagementLevels}
-							timeline={data.heartbeatAnalytics.timeline}
-							healthMetrics={data.heartbeatAnalytics.healthMetrics}
-							churnRisk={data.heartbeatAnalytics.churnRisk}
+							activeUsers={data.heartbeatAnalytics?.activeUsers ?? { daily: 0, weekly: 0, monthly: 0, dau_mau_ratio: 0 }}
+							engagementLevels={data.heartbeatAnalytics?.engagementLevels ?? {
+								highlyActive: { count: 0, description: '>7 heartbeats/week' },
+								active: { count: 0, description: '1-7 heartbeats/week' },
+								occasional: { count: 0, description: 'Active in last 30d but not last 7d' },
+								dormant: { count: 0, description: 'No heartbeat in 30 days' }
+							}}
+							timeline={data.heartbeatAnalytics?.timeline ?? []}
+							healthMetrics={data.heartbeatAnalytics?.healthMetrics ?? {
+								avgHeartbeatsPerUser: 0,
+								avgTimeBetweenHeartbeats: '0 hours',
+								heartbeatFailureRate: 0
+							}}
+							churnRisk={data.heartbeatAnalytics?.churnRisk ?? {
+								usersInactive7Days: 0,
+								usersInactive14Days: 0,
+								usersInactive30Days: 0
+			}}
 						/>
 					</div>
 				{:else if tab.id === 'recent' && data.recentInstallations}
 					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 						<RecentInstallations
-							installations={data.recentInstallations.installations}
-							total={data.recentInstallations.total}
-							limit={data.recentInstallations.limit}
-							offset={data.recentInstallations.offset}
-							installationsLast24h={data.recentInstallations.installationsLast24h}
-							installationsLast7d={data.recentInstallations.installationsLast7d}
+							installations={data.recentInstallations?.installations ?? []}
+							total={data.recentInstallations?.total ?? 0}
+							limit={data.recentInstallations?.limit ?? 20}
+							offset={data.recentInstallations?.offset ?? 0}
+							installationsLast24h={data.recentInstallations?.installationsLast24h ?? 0}
+							installationsLast7d={data.recentInstallations?.installationsLast7d ?? 0}
 						/>
 					</div>
 				{:else if tab.id === 'insights'}
 					<GeographicAppAnalysis
-						iCloudDockerTotal={data.iCloudDocker.total}
-						haBouncieTotal={data.haBouncie.total}
-						countryToCount={data.countryToCount}
+						iCloudDockerTotal={data.iCloudDocker?.total ?? 0}
+						haBouncieTotal={data.haBouncie?.total ?? 0}
+						countryToCount={data.countryToCount ?? []}
 					/>
 				{/if}
 			</div>
