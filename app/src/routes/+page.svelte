@@ -425,6 +425,10 @@
 		createdAt: data.createdAt
 	});
 
+	$: stalePercentage =
+		data.totalInstallations > 0 ? (data.staleInstallations / data.totalInstallations) * 100 : 0;
+	$: isHighStale = stalePercentage > 25;
+
 	$: overviewSummary = describeUpdate({
 		totalInstallations: data.totalInstallations,
 		activeInstallations: data.activeInstallations,
@@ -637,18 +641,13 @@
 							</div>
 						</div>
 						<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-							{#each overviewMetrics as metric, index}
+							{#each overviewMetrics as metric}
 								{@const isStaleCard = metric.testId === 'stale-installations'}
-								{@const stalePercentage =
-									data.totalInstallations > 0
-										? (data.staleInstallations / data.totalInstallations) * 100
-										: 0}
-								{@const isHighStale = stalePercentage > 25}
 								<div
 									class={`rounded-md border p-4 ${
 										isStaleCard && isHighStale
 											? 'border-amber-300 bg-amber-50'
-											: index === 0
+											: metric.isPrimary
 												? 'border-indigo-300 bg-indigo-50'
 												: 'border-gray-200'
 									}`}
@@ -659,7 +658,7 @@
 											class={`text-xs font-medium uppercase tracking-wide ${
 												isStaleCard && isHighStale
 													? 'text-amber-700'
-													: index === 0
+													: metric.isPrimary
 														? 'text-indigo-700'
 														: 'text-gray-500'
 											}`}
@@ -679,7 +678,7 @@
 										class={`mt-2 text-3xl font-semibold ${
 											isStaleCard && isHighStale
 												? 'text-amber-900'
-												: index === 0
+												: metric.isPrimary
 													? 'text-indigo-900'
 													: 'text-gray-900'
 										}`}
@@ -692,7 +691,7 @@
 											class={`mt-1 text-xs ${
 												isStaleCard && isHighStale
 													? 'text-amber-600'
-													: index === 0
+													: metric.isPrimary
 														? 'text-indigo-600'
 														: 'text-gray-500'
 											}`}
