@@ -86,6 +86,7 @@ export function getActivityCutoffDate(thresholdDays: number): string {
  * 
  * @example
  * // Combined with other conditions
+ * import { and, eq } from 'drizzle-orm';
  * const usInstalls = await db
  *   .select()
  *   .from(installations)

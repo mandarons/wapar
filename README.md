@@ -323,7 +323,7 @@ wapar/
 ### Environment Variables
 
 **Backend** (`wrangler.toml`):
-- `ACTIVITY_THRESHOLD_DAYS`: Activity threshold in days (default: 3)
+- `ACTIVITY_THRESHOLD_DAYS`: Activity threshold in days (default: "3")
 - `DRIZZLE_LOG`: Enable Drizzle ORM logging (default: "false")
 - `ENABLE_TEST_ROUTES`: Enable test-only routes (dev only)
 
