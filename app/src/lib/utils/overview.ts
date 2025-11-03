@@ -45,7 +45,7 @@ export function buildOverviewMetrics(input: OverviewMetricInput): OverviewMetric
 			label: 'Active installations',
 			value: formatInstallCount(input.activeInstallations),
 			testId: 'active-installations',
-			subtitle: `Heartbeat within last ${input.activityThresholdDays} days`,
+			subtitle: `Heartbeat within last ${input.activityThresholdDays} ${input.activityThresholdDays === 1 ? 'day' : 'days'}`,
 			isPrimary: true
 		},
 		{
