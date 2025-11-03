@@ -6,9 +6,9 @@ test.beforeEach(async ({ page }) => {
 
 test('shows overview metrics in a single summary card', async ({ page }) => {
 	await expect(page.getByTestId('overview-card')).toBeVisible();
+	await expect(page.getByTestId('active-installations')).not.toBeEmpty();
 	await expect(page.getByTestId('total-installations')).not.toBeEmpty();
-	await expect(page.getByTestId('icloud-drive-docker-total-installations')).not.toBeEmpty();
-	await expect(page.getByTestId('ha-bouncie-total-installations')).not.toBeEmpty();
+	await expect(page.getByTestId('stale-installations')).not.toBeEmpty();
 });
 
 test('provides descriptive summary and last synced timestamp', async ({ page }) => {
