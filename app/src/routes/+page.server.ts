@@ -83,11 +83,14 @@ export const load: PageServerLoad = async () => {
 		data.heartbeatAnalytics = heartbeatAnalytics;
 
 		// Ensure we have the required fields with defaults if API didn't provide them
-		if (typeof data.activeInstallations === 'undefined') {
-			data.activeInstallations = data.totalInstallations;
-		}
-		if (typeof data.staleInstallations === 'undefined') {
-			data.staleInstallations = 0;
+		if (typeof data.activeInstallations === 'undefined' || typeof data.staleInstallations === 'undefined') {
+			console.warn(
+				'activeInstallations or staleInstallations missing from API response. Using estimated values.'
+			);
+			// Estimate: Assume 10% of installations are stale if not provided
+			const estimatedStale = Math.round(data.totalInstallations * 0.1);
+			data.activeInstallations = data.totalInstallations - estimatedStale;
+			data.staleInstallations = estimatedStale;
 		}
 		if (typeof data.activityThresholdDays === 'undefined') {
 			data.activityThresholdDays = 3;
