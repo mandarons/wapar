@@ -39,7 +39,8 @@ describe('buildOverviewMetrics', () => {
 			expect.objectContaining({
 				label: 'Active installations',
 				testId: 'active-installations',
-				subtitle: 'Heartbeat within last 3 days'
+				subtitle: 'Heartbeat within last 3 days',
+				isPrimary: true
 			})
 		);
 		expect(metrics[1]).toEqual(
@@ -49,6 +50,7 @@ describe('buildOverviewMetrics', () => {
 			})
 		);
 		expect(metrics[1].subtitle).toContain('Since');
+		expect(metrics[1].isPrimary).toBeUndefined();
 		expect(metrics[2]).toEqual(
 			expect.objectContaining({
 				label: 'Stale installations',
@@ -56,6 +58,7 @@ describe('buildOverviewMetrics', () => {
 				subtitle: 'No heartbeat in 3+ days'
 			})
 		);
+		expect(metrics[2].isPrimary).toBeUndefined();
 	});
 
 	it('handles different activity thresholds', () => {
