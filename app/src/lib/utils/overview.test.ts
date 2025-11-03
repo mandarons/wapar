@@ -26,46 +26,93 @@ describe('buildOverviewMetrics', () => {
 	it('returns formatted metric entries with stable test ids', () => {
 		const metrics = buildOverviewMetrics({
 			totalInstallations: 2488,
+			activeInstallations: 1900,
+			staleInstallations: 588,
 			iCloudDockerTotal: 1400,
-			haBouncieTotal: 1088
+			haBouncieTotal: 1088,
+			activityThresholdDays: 3,
+			createdAt: '2024-01-01T00:00:00Z'
 		});
 
 		expect(metrics).toHaveLength(3);
 		expect(metrics[0]).toEqual(
 			expect.objectContaining({
-				label: 'Total installations',
-				testId: 'total-installations'
+				label: 'Active installations',
+				testId: 'active-installations',
+				subtitle: 'Heartbeat within last 3 days'
 			})
 		);
 		expect(metrics[1]).toEqual(
 			expect.objectContaining({
-				value: expect.stringMatching(/1,400|1\u00a0400/),
-				testId: 'icloud-drive-docker-total-installations'
+				label: 'Total installations',
+				testId: 'total-installations'
 			})
 		);
-		expect(metrics[2].label).toBe('Home Assistant – Bouncie');
+		expect(metrics[1].subtitle).toContain('Since');
+		expect(metrics[2]).toEqual(
+			expect.objectContaining({
+				label: 'Stale installations',
+				testId: 'stale-installations',
+				subtitle: 'No heartbeat in 3+ days'
+			})
+		);
+	});
+
+	it('handles different activity thresholds', () => {
+		const metrics = buildOverviewMetrics({
+			totalInstallations: 1000,
+			activeInstallations: 800,
+			staleInstallations: 200,
+			iCloudDockerTotal: 600,
+			haBouncieTotal: 400,
+			activityThresholdDays: 7,
+			createdAt: null
+		});
+
+		expect(metrics[0].subtitle).toBe('Heartbeat within last 7 days');
+		expect(metrics[2].subtitle).toBe('No heartbeat in 7+ days');
+	});
+
+	it('shows "All time" when createdAt is null', () => {
+		const metrics = buildOverviewMetrics({
+			totalInstallations: 1000,
+			activeInstallations: 800,
+			staleInstallations: 200,
+			iCloudDockerTotal: 600,
+			haBouncieTotal: 400,
+			activityThresholdDays: 3,
+			createdAt: null
+		});
+
+		expect(metrics[1].subtitle).toBe('All time');
 	});
 });
 
 describe('describeUpdate', () => {
-	it('summarises total installations and country coverage', () => {
+	it('summarises active and total installations with country coverage', () => {
 		const summary = describeUpdate({
 			totalInstallations: 2500,
+			activeInstallations: 1800,
 			countryCount: 35,
 			installationsLast24h: null,
-			installationsLast7d: null
+			installationsLast7d: null,
+			createdAt: '2024-01-01T00:00:00Z'
 		});
 
-		expect(summary).toMatch(/2(,|\u00a0)?500/);
+		expect(summary).toMatch(/1(,|\u00a0)?800/); // active
+		expect(summary).toMatch(/2(,|\u00a0)?500/); // total
 		expect(summary).toContain('35 countries');
+		expect(summary).toContain('since');
 	});
 
 	it('mentions daily and weekly changes when provided', () => {
 		const summary = describeUpdate({
 			totalInstallations: 2500,
+			activeInstallations: 1800,
 			countryCount: 8,
 			installationsLast24h: 12,
-			installationsLast7d: 58
+			installationsLast7d: 58,
+			createdAt: '2024-01-01T00:00:00Z'
 		});
 
 		expect(summary).toMatch(/12(,|\u00a0)?/);
@@ -76,9 +123,11 @@ describe('describeUpdate', () => {
 	it('mentions only daily changes when weekly data missing', () => {
 		const summary = describeUpdate({
 			totalInstallations: 100,
+			activeInstallations: 75,
 			countryCount: 4,
 			installationsLast24h: 5,
-			installationsLast7d: null
+			installationsLast7d: null,
+			createdAt: null
 		});
 
 		expect(summary).toContain('last 24 hours');
@@ -88,9 +137,11 @@ describe('describeUpdate', () => {
 	it('mentions only weekly changes when daily data missing', () => {
 		const summary = describeUpdate({
 			totalInstallations: 100,
+			activeInstallations: 75,
 			countryCount: 4,
 			installationsLast24h: null,
-			installationsLast7d: 15
+			installationsLast7d: 15,
+			createdAt: null
 		});
 
 		expect(summary).toContain('last 7 days');
@@ -100,12 +151,27 @@ describe('describeUpdate', () => {
 	it('handles singular country phrasing', () => {
 		const summary = describeUpdate({
 			totalInstallations: 12,
+			activeInstallations: 10,
 			countryCount: 1,
 			installationsLast24h: null,
-			installationsLast7d: null
+			installationsLast7d: null,
+			createdAt: null
 		});
 
 		expect(summary).toContain('1 country');
+	});
+
+	it('uses "the beginning" when createdAt is null', () => {
+		const summary = describeUpdate({
+			totalInstallations: 100,
+			activeInstallations: 75,
+			countryCount: 5,
+			installationsLast24h: null,
+			installationsLast7d: null,
+			createdAt: null
+		});
+
+		expect(summary).toContain('the beginning');
 	});
 });
 

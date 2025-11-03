@@ -6,19 +6,26 @@ export interface OverviewMetric {
 	label: string;
 	value: string;
 	testId: string;
+	subtitle?: string;
 }
 
 export interface OverviewMetricInput {
 	totalInstallations: number;
+	activeInstallations: number;
+	staleInstallations: number;
 	iCloudDockerTotal: number;
 	haBouncieTotal: number;
+	activityThresholdDays: number;
+	createdAt: string | null;
 }
 
 export interface OverviewSummaryInput {
 	totalInstallations: number;
+	activeInstallations: number;
 	countryCount: number;
 	installationsLast24h: number | null;
 	installationsLast7d: number | null;
+	createdAt: string | null;
 }
 
 export interface LastSyncedMeta {
@@ -32,23 +39,28 @@ export function formatInstallCount(value: number): string {
 }
 
 export function buildOverviewMetrics(input: OverviewMetricInput): OverviewMetric[] {
-	return [
+	const metrics = [
+		{
+			label: 'Active installations',
+			value: formatInstallCount(input.activeInstallations),
+			testId: 'active-installations',
+			subtitle: `Heartbeat within last ${input.activityThresholdDays} days`
+		},
 		{
 			label: 'Total installations',
 			value: formatInstallCount(input.totalInstallations),
-			testId: 'total-installations'
+			testId: 'total-installations',
+			subtitle: input.createdAt ? `Since ${new Date(input.createdAt).toLocaleDateString()}` : 'All time'
 		},
 		{
-			label: 'iCloud Docker',
-			value: formatInstallCount(input.iCloudDockerTotal),
-			testId: 'icloud-drive-docker-total-installations'
-		},
-		{
-			label: 'Home Assistant – Bouncie',
-			value: formatInstallCount(input.haBouncieTotal),
-			testId: 'ha-bouncie-total-installations'
+			label: 'Stale installations',
+			value: formatInstallCount(input.staleInstallations),
+			testId: 'stale-installations',
+			subtitle: `No heartbeat in ${input.activityThresholdDays}+ days`
 		}
 	];
+	
+	return metrics;
 }
 
 function formatChangeDescriptor(label: string, value: number | null): string | null {
@@ -62,11 +74,15 @@ function formatChangeDescriptor(label: string, value: number | null): string | n
 
 export function describeUpdate(input: OverviewSummaryInput): string {
 	const segments: string[] = [
-		'Tracking adoption for iCloud Docker and HA Bouncie integrations.',
-		`${formatInstallCount(input.totalInstallations)} total installations across ${input.countryCount} ${
+		'Tracking adoption for iCloud Docker and HA Bouncie integrations.'
+	];
+
+	const createdDate = input.createdAt ? new Date(input.createdAt).toLocaleDateString() : 'the beginning';
+	segments.push(
+		`${formatInstallCount(input.activeInstallations)} active installations (${formatInstallCount(input.totalInstallations)} total since ${createdDate}) across ${input.countryCount} ${
 			input.countryCount === 1 ? 'country' : 'countries'
 		}.`
-	];
+	);
 
 	const daily = formatChangeDescriptor('24 hours', input.installationsLast24h);
 	const weekly = formatChangeDescriptor('7 days', input.installationsLast7d);
