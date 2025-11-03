@@ -81,7 +81,7 @@ export const load: PageServerLoad = async () => {
 		data.versionAnalytics = versionAnalytics;
 		data.recentInstallations = recentInstallationsData;
 		data.heartbeatAnalytics = heartbeatAnalytics;
-		
+
 		// Ensure we have the required fields with defaults if API didn't provide them
 		if (typeof data.activeInstallations === 'undefined') {
 			data.activeInstallations = data.totalInstallations;
@@ -92,7 +92,7 @@ export const load: PageServerLoad = async () => {
 		if (typeof data.activityThresholdDays === 'undefined') {
 			data.activityThresholdDays = 3;
 		}
-		
+
 		return data;
 	} catch (error) {
 		// Return mock data for development/testing

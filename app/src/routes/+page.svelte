@@ -8,7 +8,12 @@
 	import VersionAnalytics from '$lib/components/VersionAnalytics.svelte';
 	import RecentInstallations from '$lib/components/RecentInstallations.svelte';
 	import HeartbeatAnalytics from '$lib/components/HeartbeatAnalytics.svelte';
-	import { buildOverviewMetrics, describeUpdate, deriveLastSynced, formatInstallCount } from '$lib/utils/overview';
+	import {
+		buildOverviewMetrics,
+		describeUpdate,
+		deriveLastSynced,
+		formatInstallCount
+	} from '$lib/utils/overview';
 	import { getCountryName } from '$lib/utils/countries';
 
 	type VersionAnalyticsPayload = {
@@ -134,7 +139,8 @@
 		{
 			id: 'versions',
 			label: 'Versions',
-			description: 'Release adoption, outdated installs, and upgrade rate (active installations only).'
+			description:
+				'Release adoption, outdated installs, and upgrade rate (active installations only).'
 		},
 		{
 			id: 'heartbeat',
@@ -633,7 +639,10 @@
 						<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
 							{#each overviewMetrics as metric, index}
 								{@const isStaleCard = metric.testId === 'stale-installations'}
-								{@const stalePercentage = data.totalInstallations > 0 ? (data.staleInstallations / data.totalInstallations) * 100 : 0}
+								{@const stalePercentage =
+									data.totalInstallations > 0
+										? (data.staleInstallations / data.totalInstallations) * 100
+										: 0}
 								{@const isHighStale = stalePercentage > 25}
 								<div
 									class={`rounded-md border p-4 ${
@@ -646,13 +655,15 @@
 									data-testid={`overview-metric-${metric.testId}`}
 								>
 									<div class="flex items-start justify-between">
-										<p class={`text-xs font-medium uppercase tracking-wide ${
-											isStaleCard && isHighStale
-												? 'text-amber-700'
-												: index === 0
-													? 'text-indigo-700'
-													: 'text-gray-500'
-										}`}>
+										<p
+											class={`text-xs font-medium uppercase tracking-wide ${
+												isStaleCard && isHighStale
+													? 'text-amber-700'
+													: index === 0
+														? 'text-indigo-700'
+														: 'text-gray-500'
+											}`}
+										>
 											{metric.label}
 										</p>
 										{#if isStaleCard && isHighStale}
@@ -664,23 +675,28 @@
 											</span>
 										{/if}
 									</div>
-									<p class={`mt-2 text-3xl font-semibold ${
-										isStaleCard && isHighStale
-											? 'text-amber-900'
-											: index === 0
-												? 'text-indigo-900'
-												: 'text-gray-900'
-									}`} data-testid={metric.testId}>
+									<p
+										class={`mt-2 text-3xl font-semibold ${
+											isStaleCard && isHighStale
+												? 'text-amber-900'
+												: index === 0
+													? 'text-indigo-900'
+													: 'text-gray-900'
+										}`}
+										data-testid={metric.testId}
+									>
 										{metric.value}
 									</p>
 									{#if metric.subtitle}
-										<p class={`mt-1 text-xs ${
-											isStaleCard && isHighStale
-												? 'text-amber-600'
-												: index === 0
-													? 'text-indigo-600'
-													: 'text-gray-500'
-										}`}>
+										<p
+											class={`mt-1 text-xs ${
+												isStaleCard && isHighStale
+													? 'text-amber-600'
+													: index === 0
+														? 'text-indigo-600'
+														: 'text-gray-500'
+											}`}
+										>
 											{metric.subtitle}
 										</p>
 									{/if}
@@ -696,7 +712,7 @@
 								Comparison of installation share between supported integrations.
 							</p>
 						</div>
-						
+
 						<!-- App totals cards -->
 						<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
 							<div class="rounded-md border border-blue-200 bg-blue-50 p-4">
