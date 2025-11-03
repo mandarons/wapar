@@ -18,6 +18,13 @@ migrations_dir = "drizzle"
 # Drizzle configuration for production
 DRIZZLE_LOG = "false"
 
+# Activity threshold for active/stale installation classification
+# An installation is considered "active" if it has sent a heartbeat within this threshold
+# Installations without a recent heartbeat are considered "stale"
+# Default: 3 days (if not specified)
+# Uncomment and set to customize:
+# ACTIVITY_THRESHOLD_DAYS = "7"  # Consider installations active for 7 days
+
 [observability.logs]
 enabled = true
 
@@ -32,6 +39,11 @@ database_id = "1522fcf7-4e32-4b84-8b13-67920f3c2a40"
 
 [env.dev.vars]
 DRIZZLE_LOG = "true"
+
+# Test routes are enabled in development for testing
+# These routes (/__test/*) allow tests to interact with the database
+# They are automatically disabled in production for security
+# ENABLE_TEST_ROUTES is set to "1" to enable these routes in dev mode
 
 # Staging environment - deployed from PRs
 # Note: Geo enrichment now happens just-in-time using Cloudflare's request.cf data (no cron needed)
