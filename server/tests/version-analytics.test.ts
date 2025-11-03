@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getBase, waitForCount, d1Exec } from './utils';
+import { getBase, waitForCount } from './utils';
 
 const ENDPOINT = '/api/version-analytics';
 const INSTALL_ENDPOINT = '/api/installation';
@@ -76,7 +76,11 @@ describe(ENDPOINT, () => {
     await sendHeartbeat(id4);
 
     // Wait for heartbeats to be recorded
-    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN ('${id1}', '${id2}', '${id3}', '${id4}')`, 4);
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (?, ?, ?, ?)',
+      [id1, id2, id3, id4],
+      4
+    );
 
     // Fetch version analytics
     const res = await fetch(`${base}${ENDPOINT}`);
@@ -328,7 +332,11 @@ describe(ENDPOINT, () => {
     }
 
     // Wait for heartbeats
-    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (${ids.map(id => `'${id}'`).join(', ')})`, ids.length);
+    await waitForCount(
+      `SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (${ids.map(() => '?').join(', ')})`,
+      ids,
+      ids.length
+    );
 
     const res = await fetch(`${base}${ENDPOINT}`);
     expect(res.status).toBe(200);

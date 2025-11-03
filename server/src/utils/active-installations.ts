@@ -2,7 +2,7 @@
  * Utility functions for active installations tracking
  */
 
-import { and, gte, isNotNull, sql } from 'drizzle-orm';
+import { and, gte, isNotNull } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 /**

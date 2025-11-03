@@ -205,16 +205,16 @@ heartbeatRoutes.post('/', async (c) => {
       });
     } else {
       // Even if heartbeat exists for today, update lastHeartbeatAt to current time
-      const now = new Date().toISOString();
+      const duplicateNow = new Date().toISOString();
       await Logger.measureOperation(
         'heartbeat.update_installation',
         () => db.update(installations)
-          .set({ lastHeartbeatAt: now })
+          .set({ lastHeartbeatAt: duplicateNow })
           .where(eq(installations.id, body.installationId)),
         {
           metadata: { 
             installationId: body.installationId,
-            lastHeartbeatAt: now
+            lastHeartbeatAt: duplicateNow
           },
           ...requestContext
         }
