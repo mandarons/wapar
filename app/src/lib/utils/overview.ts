@@ -7,6 +7,7 @@ export interface OverviewMetric {
 	value: string;
 	testId: string;
 	subtitle?: string;
+	isPrimary?: boolean;
 }
 
 export interface OverviewMetricInput {
@@ -44,7 +45,8 @@ export function buildOverviewMetrics(input: OverviewMetricInput): OverviewMetric
 			label: 'Active installations',
 			value: formatInstallCount(input.activeInstallations),
 			testId: 'active-installations',
-			subtitle: `Heartbeat within last ${input.activityThresholdDays} days`
+			subtitle: `Heartbeat within last ${input.activityThresholdDays} days`,
+			isPrimary: true
 		},
 		{
 			label: 'Total installations',
