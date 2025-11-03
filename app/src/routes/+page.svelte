@@ -8,7 +8,7 @@
 	import VersionAnalytics from '$lib/components/VersionAnalytics.svelte';
 	import RecentInstallations from '$lib/components/RecentInstallations.svelte';
 	import HeartbeatAnalytics from '$lib/components/HeartbeatAnalytics.svelte';
-	import { buildOverviewMetrics, describeUpdate, deriveLastSynced } from '$lib/utils/overview';
+	import { buildOverviewMetrics, describeUpdate, deriveLastSynced, formatInstallCount } from '$lib/utils/overview';
 	import { getCountryName } from '$lib/utils/countries';
 
 	type VersionAnalyticsPayload = {
@@ -70,7 +70,10 @@
 
 	export let data: {
 		totalInstallations: number;
+		activeInstallations: number;
+		staleInstallations: number;
 		monthlyActive: number;
+		activityThresholdDays: number;
 		createdAt: string | null;
 		countryToCount: { countryCode: string; count: number }[];
 		iCloudDocker: { total: number };
@@ -116,22 +119,22 @@
 		{
 			id: 'overview',
 			label: 'Overview',
-			description: 'Install totals, summary text, and manual refresh controls.'
+			description: 'Active, total, and stale installation counts with summary statistics.'
 		},
 		{
 			id: 'distribution',
 			label: 'Distribution',
-			description: 'Market share comparison between iCloud Docker and HA Bouncie.'
+			description: 'Market share comparison between supported integrations.'
 		},
 		{
 			id: 'geography',
 			label: 'Geography',
-			description: 'Regional coverage, top countries, and world map.'
+			description: 'Regional coverage, top countries, and world map (active installations only).'
 		},
 		{
 			id: 'versions',
 			label: 'Versions',
-			description: 'Release adoption, outdated installs, and upgrade rate.'
+			description: 'Release adoption, outdated installs, and upgrade rate (active installations only).'
 		},
 		{
 			id: 'heartbeat',
@@ -408,15 +411,21 @@
 
 	$: overviewMetrics = buildOverviewMetrics({
 		totalInstallations: data.totalInstallations,
+		activeInstallations: data.activeInstallations,
+		staleInstallations: data.staleInstallations,
 		iCloudDockerTotal: data.iCloudDocker.total,
-		haBouncieTotal: data.haBouncie.total
+		haBouncieTotal: data.haBouncie.total,
+		activityThresholdDays: data.activityThresholdDays,
+		createdAt: data.createdAt
 	});
 
 	$: overviewSummary = describeUpdate({
 		totalInstallations: data.totalInstallations,
+		activeInstallations: data.activeInstallations,
 		countryCount: data.countryToCount.length,
 		installationsLast24h: data.recentInstallations?.installationsLast24h ?? null,
-		installationsLast7d: data.recentInstallations?.installationsLast7d ?? null
+		installationsLast7d: data.recentInstallations?.installationsLast7d ?? null,
+		createdAt: data.createdAt
 	});
 
 	$: lastSyncedMeta = deriveLastSynced(lastSyncedIso);
@@ -622,17 +631,59 @@
 							</div>
 						</div>
 						<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-							{#each overviewMetrics as metric}
+							{#each overviewMetrics as metric, index}
+								{@const isStaleCard = metric.testId === 'stale-installations'}
+								{@const stalePercentage = data.totalInstallations > 0 ? (data.staleInstallations / data.totalInstallations) * 100 : 0}
+								{@const isHighStale = stalePercentage > 25}
 								<div
-									class="rounded-md border border-gray-200 p-4"
+									class={`rounded-md border p-4 ${
+										isStaleCard && isHighStale
+											? 'border-amber-300 bg-amber-50'
+											: index === 0
+												? 'border-indigo-300 bg-indigo-50'
+												: 'border-gray-200'
+									}`}
 									data-testid={`overview-metric-${metric.testId}`}
 								>
-									<p class="text-xs font-medium uppercase tracking-wide text-gray-500">
-										{metric.label}
-									</p>
-									<p class="mt-2 text-3xl font-semibold text-gray-900" data-testid={metric.testId}>
+									<div class="flex items-start justify-between">
+										<p class={`text-xs font-medium uppercase tracking-wide ${
+											isStaleCard && isHighStale
+												? 'text-amber-700'
+												: index === 0
+													? 'text-indigo-700'
+													: 'text-gray-500'
+										}`}>
+											{metric.label}
+										</p>
+										{#if isStaleCard && isHighStale}
+											<span
+												class="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-800"
+												title="High percentage of stale installations"
+											>
+												⚠️ {stalePercentage.toFixed(0)}%
+											</span>
+										{/if}
+									</div>
+									<p class={`mt-2 text-3xl font-semibold ${
+										isStaleCard && isHighStale
+											? 'text-amber-900'
+											: index === 0
+												? 'text-indigo-900'
+												: 'text-gray-900'
+									}`} data-testid={metric.testId}>
 										{metric.value}
 									</p>
+									{#if metric.subtitle}
+										<p class={`mt-1 text-xs ${
+											isStaleCard && isHighStale
+												? 'text-amber-600'
+												: index === 0
+													? 'text-indigo-600'
+													: 'text-gray-500'
+										}`}>
+											{metric.subtitle}
+										</p>
+									{/if}
 								</div>
 							{/each}
 						</div>
@@ -645,6 +696,33 @@
 								Comparison of installation share between supported integrations.
 							</p>
 						</div>
+						
+						<!-- App totals cards -->
+						<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<div class="rounded-md border border-blue-200 bg-blue-50 p-4">
+								<p class="text-xs font-medium uppercase tracking-wide text-blue-700">
+									iCloud Docker
+								</p>
+								<p class="mt-2 text-3xl font-semibold text-blue-900">
+									{formatInstallCount(data.iCloudDocker.total)}
+								</p>
+								<p class="mt-1 text-xs text-blue-600">
+									{formatPercentage(data.iCloudDocker.total, data.totalInstallations)} of total
+								</p>
+							</div>
+							<div class="rounded-md border border-purple-200 bg-purple-50 p-4">
+								<p class="text-xs font-medium uppercase tracking-wide text-purple-700">
+									Home Assistant – Bouncie
+								</p>
+								<p class="mt-2 text-3xl font-semibold text-purple-900">
+									{formatInstallCount(data.haBouncie.total)}
+								</p>
+								<p class="mt-1 text-xs text-purple-600">
+									{formatPercentage(data.haBouncie.total, data.totalInstallations)} of total
+								</p>
+							</div>
+						</div>
+
 						<div
 							class="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
 						>
