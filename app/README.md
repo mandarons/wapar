@@ -157,7 +157,9 @@ The dashboard uses SvelteKit's `+page.server.ts` to fetch data from multiple sou
 
 ### Active/Stale Metric Handling
 
-The frontend gracefully handles both new and legacy API responses:
+The frontend gracefully handles both new and legacy API responses.
+
+**From `src/routes/+page.server.ts`:**
 
 ```typescript
 // Ensure we have required fields with defaults if API didn't provide them
