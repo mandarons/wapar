@@ -76,19 +76,34 @@ export const load: PageServerLoad = async () => {
 		}
 
 		const data = { ...waparData };
-		data.totalInstallations = haData.bouncie.total + data.iCloudDocker.total;
+		data.totalInstallations = haData.bouncie.total + (data.iCloudDocker?.total || 0);
 		data.haBouncie = haData.bouncie;
 		data.versionAnalytics = versionAnalytics;
 		data.recentInstallations = recentInstallationsData;
 		data.heartbeatAnalytics = heartbeatAnalytics;
+		
+		// Ensure we have the required fields with defaults if API didn't provide them
+		if (typeof data.activeInstallations === 'undefined') {
+			data.activeInstallations = data.totalInstallations;
+		}
+		if (typeof data.staleInstallations === 'undefined') {
+			data.staleInstallations = 0;
+		}
+		if (typeof data.activityThresholdDays === 'undefined') {
+			data.activityThresholdDays = 3;
+		}
+		
 		return data;
 	} catch (error) {
 		// Return mock data for development/testing
 		console.warn('Failed to fetch data, using mock data:', error);
 		return {
 			totalInstallations: 1000,
+			activeInstallations: 750,
+			staleInstallations: 250,
 			monthlyActive: 600,
-			createdAt: new Date().toISOString(),
+			activityThresholdDays: 3,
+			createdAt: new Date('2024-01-01').toISOString(),
 			countryToCount: [
 				{ countryCode: 'US', count: 350 },
 				{ countryCode: 'GB', count: 150 },
