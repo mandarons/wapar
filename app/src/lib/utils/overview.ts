@@ -60,7 +60,7 @@ export function buildOverviewMetrics(input: OverviewMetricInput): OverviewMetric
 			label: 'Stale installations',
 			value: formatInstallCount(input.staleInstallations),
 			testId: 'stale-installations',
-			subtitle: `No heartbeat in ${input.activityThresholdDays}+ days`
+			subtitle: `No heartbeat in ${input.activityThresholdDays}+ ${input.activityThresholdDays === 1 ? 'day' : 'days'}`
 		}
 	];
 
