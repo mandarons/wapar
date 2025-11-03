@@ -41,14 +41,14 @@ describe(ENDPOINT, () => {
     // Create 3 installations
     const id1 = await createInstallation();
     const id2 = await createInstallation();
-    const id3 = await createInstallation();
+    await createInstallation();
 
     // Send heartbeats for 2 of them (making them active)
     await sendHeartbeat(id1);
     await sendHeartbeat(id2);
 
     // Wait for heartbeats to be recorded
-    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN ('${id1}', '${id2}')`, 2);
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (?, ?)', [id1, id2], 2);
 
     // Fetch stats
     const res = await fetch(`${base}${ENDPOINT}`);
@@ -89,7 +89,7 @@ describe(ENDPOINT, () => {
 
     // Send heartbeat to make it active
     await sendHeartbeat(id);
-    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${id}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [id], 1);
 
     // Fetch stats
     const res = await fetch(`${base}${ENDPOINT}`);
@@ -124,8 +124,6 @@ describe(ENDPOINT, () => {
   });
 
   it('should track lastHeartbeatAt when heartbeat is sent', async () => {
-    const base = getBase();
-    
     // Create installation
     const id = await createInstallation();
     
@@ -138,7 +136,7 @@ describe(ENDPOINT, () => {
     
     // Send heartbeat
     await sendHeartbeat(id);
-    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${id}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [id], 1);
     
     // Verify lastHeartbeatAt is now set
     const afterRow = await d1QueryOne<{ last_heartbeat_at: string }>(
@@ -156,12 +154,10 @@ describe(ENDPOINT, () => {
   });
 
   it('should update lastHeartbeatAt even on duplicate heartbeat', async () => {
-    const base = getBase();
-    
     // Create installation and send first heartbeat
     const id = await createInstallation();
     await sendHeartbeat(id);
-    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${id}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [id], 1);
     
     // Get initial lastHeartbeatAt
     const firstRow = await d1QueryOne<{ last_heartbeat_at: string }>(
@@ -197,7 +193,7 @@ describe(ENDPOINT, () => {
     // Create active installation
     const id = await createInstallation();
     await sendHeartbeat(id);
-    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${id}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [id], 1);
     
     // Fetch stats
     const res = await fetch(`${base}${ENDPOINT}`);

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getDb } from '../db/client';
 import { installations } from '../db/schema';
-import { count, countDistinct, desc, isNotNull, and } from 'drizzle-orm';
+import { count, desc, isNotNull, and } from 'drizzle-orm';
 import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
