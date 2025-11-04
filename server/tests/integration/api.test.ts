@@ -190,7 +190,9 @@ describe('Deployed API Integration Tests', () => {
     expect(response.ok).toBe(true);
     
     const data = await response.json();
-    expect(Array.isArray(data)).toBe(true);
+    // Returns an object with versionDistribution array
+    expect(data).toHaveProperty('versionDistribution');
+    expect(Array.isArray(data.versionDistribution)).toBe(true);
   });
 
   test('recent installations endpoint returns data', async () => {
@@ -198,7 +200,9 @@ describe('Deployed API Integration Tests', () => {
     expect(response.ok).toBe(true);
     
     const data = await response.json();
-    expect(Array.isArray(data)).toBe(true);
+    // Returns an object with installations array
+    expect(data).toHaveProperty('installations');
+    expect(Array.isArray(data.installations)).toBe(true);
   });
 
   test('new installations endpoint returns data', async () => {
@@ -206,7 +210,9 @@ describe('Deployed API Integration Tests', () => {
     expect(response.ok).toBe(true);
     
     const data = await response.json();
-    expect(Array.isArray(data)).toBe(true);
+    // Returns an object with summary and timeline
+    expect(data).toHaveProperty('summary');
+    expect(data).toHaveProperty('timeline');
   });
 
   test('heartbeat analytics endpoint returns data', async () => {
@@ -214,17 +220,19 @@ describe('Deployed API Integration Tests', () => {
     expect(response.ok).toBe(true);
     
     const data = await response.json();
-    expect(Array.isArray(data)).toBe(true);
+    // Returns an object with activeUsers and engagementLevels
+    expect(data).toHaveProperty('activeUsers');
+    expect(data).toHaveProperty('engagementLevels');
   });
 
   test('can create installation with optional data field', async () => {
     const installationData = {
       appName: 'integration-test-data',
       appVersion: '1.0.0-test',
-      data: {
+      data: JSON.stringify({
         platform: 'linux',
         features: ['sync', 'cleanup']
-      }
+      })
     };
     
     const response = await fetch(`${API_BASE_URL}/api/installation`, {
