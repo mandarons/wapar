@@ -204,6 +204,7 @@ jobs:
     name: Integration Tests (Deployed Environment)
     runs-on: ubuntu-latest
     needs: [deploy-backend, deploy-frontend]
+    if: ${{ success() && needs.deploy-backend.result == 'success' && needs.deploy-frontend.result == 'success' }}
     permissions:
       contents: read
     steps:
