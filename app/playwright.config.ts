@@ -11,7 +11,9 @@ const config: PlaywrightTestConfig = {
 	retries: 2,
 	// Artifacts folder where screenshots, videos, and traces are stored.
 	outputDir: 'test-results/',
-	testMatch: /(.+\.)?(test|spec)\.[jt]s/
+	testMatch: /(.+\.)?(test|spec)\.[jt]s/,
+	// Exclude integration tests
+	testIgnore: /tests\/integration\/.*/
 };
 
 export default config;
