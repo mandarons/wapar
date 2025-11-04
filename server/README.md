@@ -8,9 +8,9 @@ cd server
 bun install
 ```
 
-2. Create D1 database and apply schema
+2. Apply database migrations
 ```bash
-bunx wrangler d1 execute wapar-db --file=./schema.sql
+bunx wrangler d1 migrations apply wapar-db --local
 ```
 
 3. Run locally
@@ -338,4 +338,9 @@ A GitHub Actions workflow runs the Workers app tests on push/PR when files under
 
 - D1 binding is configured in `wrangler.toml` under `[[d1_databases]]`.
 - Geographic data is automatically captured from Cloudflare's `request.cf` object on incoming requests.
-- If you add new tables/columns, update `schema.sql` and re-apply to your local DB.
+- **Schema Management**: Use Drizzle migrations only (`drizzle/` folder).
+- To add new tables/columns:
+  1. Update `src/db/schema.ts`
+  2. Run `npm run db:generate` to create migration
+  3. Apply with `npm run db:deploy:local` for local or `npm run db:deploy` for production
+  4. Migrations are automatically applied during CI/CD deployment

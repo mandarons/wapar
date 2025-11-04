@@ -106,6 +106,12 @@ jobs:
       - name: Install server dependencies (if needed)
         run: cd server && (bun install --frozen-lockfile || true)
 
+      - name: Apply database migrations to production
+        run: cd server && bunx wrangler d1 migrations apply wapar-db --remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Deploy Workers to production
         uses: cloudflare/wrangler-action@v3
         with:
