@@ -4,8 +4,26 @@
 
 set -e
 
+# Parse environment argument (default to staging)
+ENV=${1:-staging}
+
+if [ "$ENV" != "staging" ] && [ "$ENV" != "production" ]; then
+  echo "Error: Invalid environment. Use 'staging' or 'production'"
+  echo "Usage: $0 [staging|production]"
+  exit 1
+fi
+
+# Set database name based on environment
+if [ "$ENV" = "production" ]; then
+  DB_NAME="wapar-db"
+  ENV_FLAG=""
+else
+  DB_NAME="DB"
+  ENV_FLAG="--env staging"
+fi
+
 echo "=================================================="
-echo "Fixing migration state in production database"
+echo "Fixing migration state in $ENV environment"
 echo "=================================================="
 echo ""
 
@@ -17,17 +35,17 @@ echo ""
 
 # Check current database structure
 echo "Checking current database structure..."
-bunx wrangler d1 execute wapar-db --remote --command="SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
+bunx wrangler d1 execute $DB_NAME $ENV_FLAG --remote --command="SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
 
 echo ""
 echo "Checking if d1_migrations table exists..."
-bunx wrangler d1 execute wapar-db --remote --command="SELECT name FROM sqlite_master WHERE type='table' AND name='d1_migrations';"
+bunx wrangler d1 execute $DB_NAME $ENV_FLAG --remote --command="SELECT name FROM sqlite_master WHERE type='table' AND name='d1_migrations';"
 
 echo ""
 echo "Manually marking migrations 0000 and 0001 as applied..."
 
 # Mark first two migrations as applied
-bunx wrangler d1 execute wapar-db --remote --command="
+bunx wrangler d1 execute $DB_NAME $ENV_FLAG --remote --command="
 CREATE TABLE IF NOT EXISTS d1_migrations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
@@ -39,19 +57,19 @@ INSERT OR IGNORE INTO d1_migrations (name) VALUES ('0001_add_previousid_index.sq
 
 echo ""
 echo "Checking migration status..."
-bunx wrangler d1 migrations list wapar-db --remote
+bunx wrangler d1 migrations list $DB_NAME $ENV_FLAG --remote
 
 echo ""
 echo "Now applying remaining migration (0002)..."
-bunx wrangler d1 migrations apply wapar-db --remote
+bunx wrangler d1 migrations apply $DB_NAME $ENV_FLAG --remote
 
 echo ""
 echo "✅ Migration state fixed!"
 echo ""
 echo "Verifying the last_heartbeat_at column exists..."
-bunx wrangler d1 execute wapar-db --remote --command="PRAGMA table_info(Installation);"
+bunx wrangler d1 execute $DB_NAME $ENV_FLAG --remote --command="PRAGMA table_info(Installation);"
 
 echo ""
 echo "=================================================="
-echo "✅ Fix complete!"
+echo "✅ Fix complete for $ENV environment!"
 echo "=================================================="
