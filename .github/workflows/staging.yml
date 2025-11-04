@@ -200,10 +200,66 @@ jobs:
     outputs:
       pages-url: ${{ steps.extract-url.outputs.url }}
 
+  integration-tests:
+    name: Integration Tests (Deployed Environment)
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      
+      - name: Wait for deployments to stabilize
+        run: sleep 30
+      
+      # Backend API Tests (TypeScript/Bun)
+      - name: Install backend dependencies
+        run: |
+          cd server
+          bun install --frozen-lockfile
+      
+      - name: Run backend API integration tests
+        run: |
+          cd server
+          bun run test:integration
+        env:
+          STAGING_API_URL: https://wapar-api-staging.${{ secrets.CLOUDFLARE_SUBDOMAIN }}
+      
+      # Frontend E2E Tests (Playwright)
+      - name: Install frontend dependencies
+        run: |
+          cd app
+          bun install --frozen-lockfile
+      
+      - name: Install Playwright browsers
+        run: |
+          cd app
+          bunx playwright install --with-deps chromium
+      
+      - name: Run frontend integration tests
+        run: |
+          cd app
+          bunx playwright test --config=playwright.config.integration.ts
+        env:
+          STAGING_FRONTEND_URL: ${{ needs.deploy-frontend.outputs.pages-url }}
+          STAGING_API_URL: https://wapar-api-staging.${{ secrets.CLOUDFLARE_SUBDOMAIN }}
+      
+      - name: Upload Playwright results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-integration-results
+          path: app/playwright-report/
+          retention-days: 7
+
   comment-pr:
     name: Comment on PR
     runs-on: ubuntu-latest
-    needs: [deploy-backend, deploy-frontend]
+    needs: [deploy-backend, deploy-frontend, integration-tests]
     permissions:
       pull-requests: write
     steps:
