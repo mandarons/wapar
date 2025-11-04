@@ -91,7 +91,9 @@ test.describe('Deployed Frontend Integration Tests', () => {
     expect(response.ok()).toBeTruthy();
     
     const data = await response.json();
-    expect(Array.isArray(data)).toBe(true);
+    // Returns an object with versionDistribution array
+    expect(data).toHaveProperty('versionDistribution');
+    expect(Array.isArray(data.versionDistribution)).toBe(true);
   });
 
   test('API should return recent installations', async ({ request }) => {
@@ -100,7 +102,9 @@ test.describe('Deployed Frontend Integration Tests', () => {
     expect(response.ok()).toBeTruthy();
     
     const data = await response.json();
-    expect(Array.isArray(data)).toBe(true);
+    // Returns an object with installations array
+    expect(data).toHaveProperty('installations');
+    expect(Array.isArray(data.installations)).toBe(true);
   });
 
   test('API should return new installations', async ({ request }) => {
@@ -109,7 +113,9 @@ test.describe('Deployed Frontend Integration Tests', () => {
     expect(response.ok()).toBeTruthy();
     
     const data = await response.json();
-    expect(Array.isArray(data)).toBe(true);
+    // Returns an object with summary and timeline
+    expect(data).toHaveProperty('summary');
+    expect(data).toHaveProperty('timeline');
   });
 
   test('API should return heartbeat analytics', async ({ request }) => {
@@ -118,7 +124,9 @@ test.describe('Deployed Frontend Integration Tests', () => {
     expect(response.ok()).toBeTruthy();
     
     const data = await response.json();
-    expect(Array.isArray(data)).toBe(true);
+    // Returns an object with activeUsers and engagementLevels
+    expect(data).toHaveProperty('activeUsers');
+    expect(data).toHaveProperty('engagementLevels');
   });
 
   test('should display distribution insights', async ({ page }) => {
