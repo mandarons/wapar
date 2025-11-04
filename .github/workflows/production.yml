@@ -67,8 +67,18 @@ jobs:
         if: steps.cache-app.outputs.cache-hit != 'true'
         run: cd app && bun install --frozen-lockfile
 
-      - name: Install Playwright browsers
+      - name: Cache Playwright browsers
         if: matrix.test-type == 'e2e'
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright browsers
+        if: matrix.test-type == 'e2e' && steps.playwright-cache.outputs.cache-hit != 'true'
         run: cd app && bunx playwright install --with-deps chromium
 
       - name: Run frontend unit tests
@@ -214,7 +224,17 @@ jobs:
       - name: Install frontend dependencies
         run: cd app && bun install --frozen-lockfile
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache-integration
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('app/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache-integration.outputs.cache-hit != 'true'
         run: cd app && bunx playwright install --with-deps chromium
 
       - name: Run frontend integration tests
