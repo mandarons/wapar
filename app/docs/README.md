@@ -9,10 +9,29 @@ docs/
 ├── contrib/           # Contributor documentation
 │   └── features/      # Feature-specific documentation
 │       └── interactive-geographic-map/  # Interactive map feature docs
+├── UX_GUIDELINES.md  # Design system and UX guidelines
+├── ACCESSIBILITY*.md # Accessibility documentation
 └── README.md         # This file
 ```
 
 ## 🎯 Documentation Organization
+
+### [UX Guidelines](./UX_GUIDELINES.md)
+
+Comprehensive design system and UX guidelines:
+- Design principles and tokens
+- Component library
+- Typography and color system
+- Spacing and layout patterns
+- Accessibility standards
+- Testing guidelines
+
+### [Accessibility Documentation](./ACCESSIBILITY.md)
+
+Complete accessibility implementation:
+- [ACCESSIBILITY.md](./ACCESSIBILITY.md) - Overview and standards
+- [ACCESSIBILITY_IMPLEMENTATION.md](./ACCESSIBILITY_IMPLEMENTATION.md) - Technical implementation
+- [ACCESSIBILITY_TESTING.md](./ACCESSIBILITY_TESTING.md) - Testing procedures
 
 ### Feature Documentation (`contrib/features/`)
 

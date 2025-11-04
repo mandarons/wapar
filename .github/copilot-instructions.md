@@ -13,18 +13,18 @@ This is a **serverless application analytics platform** migrated from Node.js/Po
 ### Workers Backend (`server/`)
 ```bash
 # Initial D1 database setup (required before first run)
-bunx wrangler d1 execute wapar-db --file=./schema.sql
+bunx wrangler d1 migrations apply wapar-db --local
 
 # Development
 bun run dev  # wrangler dev on localhost:8787
 
 # Database operations
-bun run db:deploy        # Deploy schema to local D1
-bun run db:deploy:remote # Deploy schema to production D1
 bun run db:generate      # Generate Drizzle migrations
+bun run db:deploy        # Apply migrations to local D1
+bun run db:deploy:remote # Apply migrations to production D1
 
 # Deploy
-bun run deploy  # Runs db:deploy + wrangler deploy
+bun run deploy  # Applies migrations + wrangler deploy
 ```
 
 ### Frontend (`app/`)
@@ -81,6 +81,19 @@ Uses `svgmap` library in `+page.svelte` for installation mapping.
 - `app/src/routes/+page.server.ts` - Multi-source data fetching
 - `scripts/migrate-to-d1.ts` - PostgreSQL migration patterns
 
+## Documentation Structure
+
+### Server Documentation (`server/docs/`)
+- **DEPLOYMENT.md** - Workers deployment and D1 setup
+- **ENVIRONMENTS.md** - Staging/production environments, CI/CD workflows
+- **ACTIVE_INSTALLATIONS.md** - Active installation tracking feature
+- **FORM_ENCODING_SUPPORT.md** - API request format documentation
+
+### Frontend Documentation (`app/docs/`)
+- **UX_GUIDELINES.md** - Design system, components, accessibility standards
+- **ACCESSIBILITY*.md** - Accessibility implementation and testing
+- **contrib/features/** - Feature-specific documentation
+
 ## Migration Context
 
-Legacy references to `server/` folder in Dockerfile indicate this was migrated from traditional Node.js setup. Current architecture is fully serverless on Cloudflare platform.
+Legacy references to `server/` folder in Dockerfile indicate this was migrated from traditional Node.js setup. Current architecture is fully serverless on Cloudflare platform. Schema management uses **Drizzle migrations only** - no schema.sql file.
