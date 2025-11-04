@@ -13,7 +13,7 @@
     "db:deploy:local": "wrangler d1 migrations apply wapar-db",
     "db:list": "wrangler d1 migrations list wapar-db",
     "test": "vitest",
-    "test:unit": "vitest tests --exclude tests/e2e",
+    "test:unit": "vitest tests --exclude tests/e2e --exclude tests/integration",
     "test:e2e": "vitest tests/e2e",
     "test:integration": "vitest run tests/integration/ --config tests/integration/vitest.config.ts",
     "test:all": "vitest"
