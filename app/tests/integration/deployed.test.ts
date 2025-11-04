@@ -137,10 +137,7 @@ test.describe('Deployed Frontend Integration Tests', () => {
     // Navigate to distribution tab
     await page.getByTestId('tab-distribution').click();
     
-    // Wait for chart to load
-    await page.waitForTimeout(1000);
-    
-    // Verify distribution content is visible
+    // Wait for distribution content to appear
     await expect(page.locator('text=Distribution insights')).toBeVisible();
   });
 

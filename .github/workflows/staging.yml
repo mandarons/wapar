@@ -214,6 +214,8 @@ jobs:
           bun-version: latest
       
       - name: Wait for deployments to stabilize
+        # Allow time for Workers and Pages to fully deploy and propagate globally
+        # Cloudflare deployments may take a few seconds to be fully accessible
         run: sleep 30
       
       # Backend API Tests (TypeScript/Bun)

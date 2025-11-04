@@ -7,6 +7,9 @@ import { describe, test, expect } from 'vitest';
 // Get staging API URL from environment
 const API_BASE_URL = process.env.STAGING_API_URL || 'http://localhost:8787';
 
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 describe('Deployed API Integration Tests', () => {
   
   test('health endpoint returns status', async () => {
@@ -37,8 +40,7 @@ describe('Deployed API Integration Tests', () => {
     expect(data).toHaveProperty('id');
     
     // Verify it's a valid UUID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    expect(data.id).toMatch(uuidRegex);
+    expect(data.id).toMatch(UUID_REGEX);
   });
 
   test('can submit heartbeat via POST', async () => {
@@ -73,8 +75,7 @@ describe('Deployed API Integration Tests', () => {
     expect(data).toHaveProperty('id');
     
     // Verify it's a valid UUID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    expect(data.id).toMatch(uuidRegex);
+    expect(data.id).toMatch(UUID_REGEX);
   });
 
   test('usage analytics endpoint returns valid data', async () => {
