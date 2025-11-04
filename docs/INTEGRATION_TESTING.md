@@ -133,7 +133,7 @@ jobs:
    ↓
 6. Run Integration Tests ⭐ NEW
    ├─ Backend API Tests (14 tests)
-   └─ Frontend E2E Tests (15 tests)
+   └─ Frontend E2E Tests (13 tests)
    ↓
 7. Comment PR with Results
 ```
@@ -158,7 +158,7 @@ jobs:
 - ✅ Malformed JSON handling
 - ✅ Optional data field support
 
-### Frontend Integration Tests (15 tests)
+### Frontend Integration Tests (13 tests)
 
 - ✅ Page loading
 - ✅ Overview metrics display
