@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
-import { resetDb, getBase, waitForCount, d1Exec } from './utils';
+import { resetDb, getBase } from './utils';
 
 describe('Error Handlers', () => {
   let base: string;

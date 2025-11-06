@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, mock, spyOn } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll, spyOn } from 'bun:test';
 import { Logger } from '../src/utils/logger';
 import { Hono } from 'hono';
 
