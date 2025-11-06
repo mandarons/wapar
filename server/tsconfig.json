@@ -9,5 +9,6 @@
     "types": ["bun-types"],
     "outDir": "dist"
   },
-  "include": ["src/**/*", "tests/**/*"]
+  "include": ["src/**/*", "tests/**/*"],
+  "exclude": ["tests/**/*.test.ts"]
 }
