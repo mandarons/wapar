@@ -1,0 +1,67 @@
+# Node modules (will be installed in Docker)
+node_modules/
+
+# Test files and coverage
+tests/
+coverage/
+*.test.ts
+*.test.js
+test-results/
+playwright-report/
+
+# Development files
+.git/
+.github/
+.vscode/
+.devcontainer/
+*.md
+!README.md
+
+# Build artifacts
+dist/
+build/
+
+# Database files (will be created in container)
+*.db
+*.db-shm
+*.db-wal
+local.db*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Scripts (not needed in production)
+run.sh
+scripts/seed-staging.js
+scripts/performance-test.js
+
+# Documentation
+docs/
+
+# Bun
+.bun/
+
+# TypeScript
+*.tsbuildinfo
+
+# Vitest
+vitest.config.ts

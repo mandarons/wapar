@@ -27,9 +27,43 @@ The server will start on `http://localhost:8787`.
 For detailed documentation, see the [docs/](./docs/) directory:
 
 - **[Local Development](./docs/LOCAL_DEVELOPMENT.md)** - Complete local setup guide with SQLite
+- **[Docker Deployment](./DOCKER.md)** - Production deployment with Docker (recommended)
 - **[Test Coverage](./docs/TEST_COVERAGE_REPORT.md)** - Test coverage metrics and testing guide
 - **[Active Installations](./docs/ACTIVE_INSTALLATIONS.md)** - Installation activity tracking
 - **[Form Encoding](./docs/FORM_ENCODING_SUPPORT.md)** - API request format documentation
+
+## Production Deployment
+
+### Docker (Recommended)
+
+```bash
+# Using Docker Compose
+docker-compose up -d
+
+# Or using Docker CLI
+docker build -t wapar-server .
+docker run -d -p 8787:8787 -v wapar-data:/data wapar-server
+```
+
+See [DOCKER.md](./DOCKER.md) for complete Docker deployment guide.
+
+### Manual Deployment
+
+```bash
+# 1. Install dependencies
+bun install --production
+
+# 2. Set environment variables
+export NODE_ENV=production
+export PORT=8787
+export DB_PATH=/path/to/local.db
+
+# 3. Apply migrations
+bun run db:push
+
+# 4. Start server
+bun run start
+```
 
 ## Development
 
