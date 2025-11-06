@@ -147,7 +147,7 @@ export async function resetDb() {
   }
 }
 
-export async function d1Exec(sql: string, params: unknown[] = []): Promise<void> {
+export async function d1Exec(sql: string, params: any[] = []): Promise<void> {
   const sqlite = getTestSqlite();
   if (!sqlite) {
     throw new Error('Database not initialized');
@@ -166,7 +166,7 @@ export async function d1Exec(sql: string, params: unknown[] = []): Promise<void>
   }
 }
 
-export async function d1QueryOne<T = any>(sql: string, params: unknown[] = []): Promise<T | null> {
+export async function d1QueryOne<T = any>(sql: string, params: any[] = []): Promise<T | null> {
   const sqlite = getTestSqlite();
   if (!sqlite) {
     throw new Error('Database not initialized');
