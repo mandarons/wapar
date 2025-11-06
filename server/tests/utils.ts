@@ -13,111 +13,12 @@ function getTestSqlite(): Database {
   return (globalThis as any).__testSqlite;
 }
 
-function getTestMockD1(): any {
-  return (globalThis as any).__testMockD1;
-}
-
 export function getBase(): string {
   const testPort = getTestPort();
   if (!testPort) {
     throw new Error('Test server not started');
   }
   return `http://127.0.0.1:${testPort}`;
-}
-
-// Create mock D1 database for tests
-function createMockD1(db: Database): any {
-  return {
-    prepare: (query: string) => {
-      const stmt = db.query(query);
-      
-      return {
-        bind: (...params: any[]) => {
-          return {
-            run: async () => {
-              const result = stmt.run(...params);
-              return {
-                success: true,
-                meta: {
-                  duration: 0,
-                  rows_read: 0,
-                  rows_written: result.changes,
-                },
-                results: [],
-              };
-            },
-            all: async () => {
-              const results = stmt.all(...params);
-              return {
-                success: true,
-                meta: {
-                  duration: 0,
-                },
-                results,
-              };
-            },
-            first: async (colName?: string) => {
-              const result = stmt.get(...params);
-              if (!result) return null;
-              if (colName) return (result as any)[colName];
-              return result;
-            },
-            raw: async () => {
-              const results = stmt.values(...params);
-              return results;
-            },
-          };
-        },
-        run: async () => {
-          const result = stmt.run();
-          return {
-            success: true,
-            meta: {
-              duration: 0,
-              rows_read: 0,
-              rows_written: result.changes,
-            },
-            results: [],
-          };
-        },
-        all: async () => {
-          const results = stmt.all();
-          return {
-            success: true,
-            meta: {
-              duration: 0,
-            },
-            results,
-          };
-        },
-        first: async (colName?: string) => {
-          const result = stmt.get();
-          if (!result) return null;
-          if (colName) return (result as any)[colName];
-          return result;
-        },
-        raw: async () => {
-          const results = stmt.values();
-          return results;
-        },
-      };
-    },
-    dump: async () => new ArrayBuffer(0),
-    batch: async (statements: any[]) => {
-      const results = [];
-      for (const stmt of statements) {
-        results.push(await stmt.all());
-      }
-      return results;
-    },
-    exec: async (query: string) => {
-      db.exec(query);
-      return {
-        count: 0,
-        duration: 0,
-      };
-    },
-  } as any;
 }
 
 async function initializeTestDatabase() {
