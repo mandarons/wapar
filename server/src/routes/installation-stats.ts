@@ -3,7 +3,6 @@ import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
 import { installations } from '../db/schema';
 import { count, desc, isNotNull, and } from 'drizzle-orm';
-import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
 
@@ -12,10 +11,9 @@ export const installationStatsRoutes = new Hono<{ Bindings: { DB: D1Database } }
 installationStatsRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
-  try {
-    const db = getDb(c.env);
-    const thresholdDays = getActivityThresholdDays(c.env);
-    const cutoffDate = getActivityCutoffDate(thresholdDays);
+  const db = getDb(c.env);
+  const thresholdDays = getActivityThresholdDays(c.env);
+  const cutoffDate = getActivityCutoffDate(thresholdDays);
 
     // Total installations count (all time)
     const totalInstallationsResult = await Logger.measureOperation(
@@ -114,12 +112,4 @@ installationStatsRoutes.get('/', async (c) => {
     });
 
     return c.json(responseData);
-  } catch (error) {
-    Logger.error('Installation stats failed', {
-      operation: 'installation_stats.get',
-      error: error as Error,
-      ...requestContext
-    });
-    return handleGenericError(c, error as Error);
-  }
 });

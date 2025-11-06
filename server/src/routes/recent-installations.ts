@@ -4,30 +4,28 @@ import { getDb } from '../db/client';
 import { installations } from '../db/schema';
 import { desc, eq, and, gte, count, type SQL } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
-import { handleGenericError } from '../utils/errors';
 
 export const recentInstallationsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
 recentInstallationsRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
-  try {
-    const db = getDb(c.env);
-    
-    // Parse query parameters
-    const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);
-    const offset = Math.max(parseInt(c.req.query('offset') || '0'), 0);
-    const appName = c.req.query('appName');
-    
-    Logger.info('Recent installations request', {
-      operation: 'recent-installations.fetch',
-      metadata: { limit, offset, appName },
-      ...requestContext
-    });
-    
-    // Build query conditions
-    const conditions: SQL[] = [];
-    if (appName) {
+  const db = getDb(c.env);
+  
+  // Parse query parameters
+  const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100);
+  const offset = Math.max(parseInt(c.req.query('offset') || '0'), 0);
+  const appName = c.req.query('appName');
+  
+  Logger.info('Recent installations request', {
+    operation: 'recent-installations.fetch',
+    metadata: { limit, offset, appName },
+    ...requestContext
+  });
+  
+  // Build query conditions
+  const conditions: SQL[] = [];
+  if (appName) {
       conditions.push(eq(installations.appName, appName));
     }
     
@@ -95,12 +93,4 @@ recentInstallationsRoutes.get('/', async (c) => {
     });
     
     return c.json(responseData);
-  } catch (error) {
-    Logger.error('Recent installations fetch failed', {
-      operation: 'recent-installations.fetch',
-      error: error as Error,
-      ...requestContext
-    });
-    return handleGenericError(c, error as Error);
-  }
 });

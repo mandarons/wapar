@@ -96,5 +96,6 @@ Uses `svgmap` library in `+page.svelte` for installation mapping.
 
 This application runs locally with SQLite. Legacy Cloudflare references have been removed. Schema management uses **Drizzle migrations** with the drizzle.config.ts file pointing to local.db.
 
-Use context7 tool for documentation, when available.
+## Guidelines for AI Contributions
+Use context7 tool for documentation, when available. Commit changes only when all tests are passing.
 ```

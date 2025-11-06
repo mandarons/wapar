@@ -190,8 +190,12 @@ describe(ENDPOINT, () => {
   it('should filter country distribution to active installations only', async () => {
     const base = getBase();
     
-    // Create active installation
+    // Create active installation with country code
     const id = await createInstallation();
+    
+    // Set country code for this installation
+    await d1Exec(`UPDATE Installation SET country_code = 'US', region = 'California' WHERE id = ?`, [id]);
+    
     await sendHeartbeat(id);
     await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [id], 1);
     
@@ -201,5 +205,11 @@ describe(ENDPOINT, () => {
     
     // Should have country distribution array
     expect(Array.isArray(stats.activeCountryDistribution)).toBe(true);
+    
+    // Find our installation in the distribution
+    const usEntry = stats.activeCountryDistribution.find((c: any) => c.countryCode === 'US');
+    if (usEntry) {
+      expect(usEntry.count).toBeGreaterThanOrEqual(1);
+    }
   });
 });

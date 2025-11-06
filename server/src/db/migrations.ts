@@ -12,6 +12,11 @@ import type { D1Database } from '../types/database';
  * This function logs migration info but doesn't run them at runtime.
  */
 export async function ensureMigrations(db: D1Database): Promise<void> {
+  // Test mode: allow simulating migration errors
+  if (process.env.TEST_MIGRATION_ERROR === 'true') {
+    throw new Error('Simulated migration error for testing');
+  }
+  
   Logger.info('Migrations are managed via drizzle-kit', {
     operation: 'migrations.info',
     metadata: {

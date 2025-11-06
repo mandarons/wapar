@@ -304,4 +304,35 @@ describe('New Installations API', () => {
       expect(country.countryCode).toBeTruthy();
     });
   });
+
+  it('should reject invalid groupBy parameter', async () => {
+    const base = getBase();
+    
+    const response = await fetch(`${base}${ENDPOINT}?period=30d&groupBy=invalid`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(400);
+    expect(data).toHaveProperty('error');
+    expect(data.error).toContain('groupBy');
+  });
+
+  it('should reject invalid period parameter', async () => {
+    const base = getBase();
+    
+    // Test invalid format (no 'd' suffix)
+    const response1 = await fetch(`${base}${ENDPOINT}?period=30`);
+    const data1 = await response1.json();
+    
+    expect(response1.status).toBe(400);
+    expect(data1).toHaveProperty('error');
+    expect(data1.error).toContain('period');
+    
+    // Test invalid format (letters instead of numbers)
+    const response2 = await fetch(`${base}${ENDPOINT}?period=thirtydays`);
+    const data2 = await response2.json();
+    
+    expect(response2.status).toBe(400);
+    expect(data2).toHaveProperty('error');
+    expect(data2.error).toContain('period');
+  });
 });

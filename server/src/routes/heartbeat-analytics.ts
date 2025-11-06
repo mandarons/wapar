@@ -3,7 +3,6 @@ import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
 import { heartbeats } from '../db/schema';
 import { countDistinct, gte } from 'drizzle-orm';
-import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 
 export const heartbeatAnalyticsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
@@ -11,16 +10,15 @@ export const heartbeatAnalyticsRoutes = new Hono<{ Bindings: { DB: D1Database } 
 heartbeatAnalyticsRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
-  try {
-    const db = getDb(c.env);
-    
-    const now = new Date();
-    
-    // Calculate time windows
-    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-    const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const last14d = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
-    const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const db = getDb(c.env);
+  
+  const now = new Date();
+  
+  // Calculate time windows
+  const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const last14d = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
     
     // Daily Active Users (DAU)
     const dauResult = await Logger.measureOperation(
@@ -256,12 +254,4 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
     });
     
     return c.json(responseData);
-  } catch (error) {
-    Logger.error('Heartbeat analytics failed', {
-      operation: 'heartbeat-analytics.error',
-      error: error as Error,
-      ...requestContext
-    });
-    return handleGenericError(c, error as Error);
-  }
 });

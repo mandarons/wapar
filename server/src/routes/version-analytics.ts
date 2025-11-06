@@ -3,7 +3,6 @@ import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
 import { installations } from '../db/schema';
 import { count, desc, gte } from 'drizzle-orm';
-import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 import { findLatestVersion, compareVersions } from '../utils/version';
 import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
@@ -13,12 +12,11 @@ export const versionAnalyticsRoutes = new Hono<{ Bindings: { DB: D1Database } }>
 versionAnalyticsRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
-  try {
-    const db = getDb(c.env);
+  const db = getDb(c.env);
 
-    // Get activity threshold from environment, default to 3 days
-    const thresholdDays = getActivityThresholdDays(c.env);
-    const cutoffDate = getActivityCutoffDate(thresholdDays);
+  // Get activity threshold from environment, default to 3 days
+  const thresholdDays = getActivityThresholdDays(c.env);
+  const cutoffDate = getActivityCutoffDate(thresholdDays);
 
     // Get version distribution for active installations only
     const versionDistributionResult = await Logger.measureOperation(
@@ -126,12 +124,4 @@ versionAnalyticsRoutes.get('/', async (c) => {
     });
 
     return c.json(responseData);
-  } catch (error) {
-    Logger.error('Version analytics failed', {
-      operation: 'version_analytics.analytics',
-      error: error as Error,
-      ...requestContext
-    });
-    return handleGenericError(c, error as Error);
-  }
 });

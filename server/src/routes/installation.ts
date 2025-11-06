@@ -3,7 +3,6 @@ import { z } from 'zod';
 import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
 import { installations, type NewInstallation } from '../db/schema';
-import { handleValidationError, handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 
 const installationSchema = z.object({
@@ -31,25 +30,24 @@ export const installationRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 installationRoutes.post('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
-  try {
-    // Get raw body text first for debugging
-    const rawBody = await c.req.text();
-    const contentType = c.req.header('content-type') || '';
-    
-    // Log raw body for debugging (truncated for security)
-    Logger.info('Installation request received', {
-      operation: 'installation.request',
-      metadata: { 
-        bodyLength: rawBody.length,
-        bodyPreview: rawBody.substring(0, 100),
-        contentType: contentType
-      },
-      ...requestContext
-    });
+  // Get raw body text first for debugging
+  const rawBody = await c.req.text();
+  const contentType = c.req.header('content-type') || '';
+  
+  // Log raw body for debugging (truncated for security)
+  Logger.info('Installation request received', {
+    operation: 'installation.request',
+    metadata: { 
+      bodyLength: rawBody.length,
+      bodyPreview: rawBody.substring(0, 100),
+      contentType: contentType
+    },
+    ...requestContext
+  });
 
-    // Parse body based on content type
-    let parsedBody;
-    if (contentType.includes('application/x-www-form-urlencoded')) {
+  // Parse body based on content type
+  let parsedBody;
+  if (contentType.includes('application/x-www-form-urlencoded')) {
       // Parse form-encoded data (legacy support for older icloud-docker clients)
       const formData = new URLSearchParams(rawBody);
       
@@ -80,36 +78,18 @@ installationRoutes.post('/', async (c) => {
       });
     } else {
       // Default to JSON parsing (recommended for all new clients)
-      try {
-        const rawParsed = JSON.parse(rawBody);
-        
-        // Transform snake_case to camelCase for backward compatibility
-        parsedBody = {
-          appName: rawParsed.appName || rawParsed.app_name,
-          appVersion: rawParsed.appVersion || rawParsed.app_version,
-          ipAddress: rawParsed.ipAddress || rawParsed.ip_address,
-          previousId: rawParsed.previousId || rawParsed.previous_id,
-          data: rawParsed.data,
-          countryCode: rawParsed.countryCode || rawParsed.country_code,
-          region: rawParsed.region
-        };
-      } catch (parseError) {
-        Logger.error('JSON parsing failed', {
-          operation: 'installation.json_parse',
-          error: parseError as Error,
-          metadata: { 
-            bodyLength: rawBody.length,
-            bodyPreview: rawBody.substring(0, 200),
-            contentType: contentType
-          },
-          ...requestContext
-        });
-        return c.json({ 
-          message: 'Invalid JSON in request body', 
-          statusCode: 400,
-          details: (parseError as Error).message
-        }, 400);
-      }
+      const rawParsed = JSON.parse(rawBody);
+      
+      // Transform snake_case to camelCase for backward compatibility
+      parsedBody = {
+        appName: rawParsed.appName || rawParsed.app_name,
+        appVersion: rawParsed.appVersion || rawParsed.app_version,
+        ipAddress: rawParsed.ipAddress || rawParsed.ip_address,
+        previousId: rawParsed.previousId || rawParsed.previous_id,
+        data: rawParsed.data,
+        countryCode: rawParsed.countryCode || rawParsed.country_code,
+        region: rawParsed.region
+      };
     }
 
     const validatedData = installationSchema.parse(parsedBody);
@@ -187,22 +167,4 @@ installationRoutes.post('/', async (c) => {
     });
 
     return c.json({ id: installationId }, 201);
-  } catch (error) {
-    if ((error as any).name === 'ZodError') {
-      Logger.error('Installation validation failed', {
-        operation: 'installation.validation',
-        error: error as Error,
-        metadata: { validationErrors: (error as any).errors },
-        ...requestContext
-      });
-      return handleValidationError(c, error as Error);
-    }
-    
-    Logger.error('Installation creation failed', {
-      operation: 'installation.create',
-      error: error as Error,
-      ...requestContext
-    });
-    return handleGenericError(c, error as Error);
-  }
 });
