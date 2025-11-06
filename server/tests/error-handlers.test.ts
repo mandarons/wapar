@@ -99,6 +99,60 @@ describe('Error Handlers', () => {
       // Without X-Test-SQL header, should return 404
       expect(response.status).toBe(404);
     });
+
+    it('should execute SQL with X-Test-SQL: exec header', async () => {
+      const response = await fetch(`${base}/api`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Test-SQL': 'exec'
+        },
+        body: JSON.stringify({
+          sql: 'SELECT 1',
+          params: []
+        })
+      });
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('ok', true);
+    });
+
+    it('should query SQL with X-Test-SQL: query header', async () => {
+      const response = await fetch(`${base}/api`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Test-SQL': 'query'
+        },
+        body: JSON.stringify({
+          sql: 'SELECT 1 as value',
+          params: []
+        })
+      });
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('value', 1);
+    });
+
+    it('should handle SQL execution errors', async () => {
+      const response = await fetch(`${base}/api`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Test-SQL': 'exec'
+        },
+        body: JSON.stringify({
+          sql: 'INVALID SQL SYNTAX',
+          params: []
+        })
+      });
+
+      expect(response.status).toBe(500);
+      const data = await response.json();
+      expect(data).toHaveProperty('error');
+    });
   });
 
   describe('Generic Error Handler', () => {

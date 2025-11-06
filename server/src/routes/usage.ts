@@ -2,7 +2,6 @@ import { Hono } from 'hono';
 import { getDb } from '../db/client';
 import { installations, heartbeats } from '../db/schema';
 import { count, countDistinct, eq, isNotNull, gte, desc, and } from 'drizzle-orm';
-import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
 import type { D1Database } from '../types/database';
@@ -12,13 +11,12 @@ export const usageRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 usageRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
-  try {
-    const now = new Date().toUTCString();
-    const db = getDb(c.env);
+  const now = new Date().toUTCString();
+  const db = getDb(c.env);
 
-    // Get activity threshold from environment, default to 3 days
-    const thresholdDays = getActivityThresholdDays(c.env);
-    const cutoffDate = getActivityCutoffDate(thresholdDays);
+  // Get activity threshold from environment, default to 3 days
+  const thresholdDays = getActivityThresholdDays(c.env);
+  const cutoffDate = getActivityCutoffDate(thresholdDays);
 
     // Total installations count
     const totalInstallationsResult = await Logger.measureOperation(
@@ -137,12 +135,4 @@ usageRoutes.get('/', async (c) => {
     });
 
     return c.json(responseData);
-  } catch (error) {
-    Logger.error('Usage analytics failed', {
-      operation: 'usage.analytics',
-      error: error as Error,
-      ...requestContext
-    });
-    return handleGenericError(c, error as Error);
-  }
 });

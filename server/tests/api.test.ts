@@ -4,6 +4,14 @@ import { getBase } from './utils';
 const ENDPOINT = '/api';
 
 describe(ENDPOINT, () => {
+  it('GET / should return root endpoint', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}/`);
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(text).toBe('Hello World!');
+  });
+
   it('GET should return health check', async () => {
     const base = getBase();
     const res = await fetch(`${base}${ENDPOINT}`);
@@ -47,7 +55,7 @@ describe(ENDPOINT, () => {
     expect(Array.isArray(body.issues)).toBe(true);
   });
 
-  it('Not found errors should have standardized format', async () => {
+  it('NOT found errors should have standardized format', async () => {
     const base = getBase();
     const res = await fetch(`${base}/api/heartbeat`, {
       method: 'POST',

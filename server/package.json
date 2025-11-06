@@ -14,7 +14,8 @@
     "test:integration": "bun test tests/integration/ --only-failures",
     "test:verbose": "bun test",
     "test:coverage": "bun test --coverage",
-    "test:coverage:html": "bun test --coverage --coverage-reporter=lcov && open coverage/lcov-report/index.html"
+    "test:coverage:html": "bun test --coverage --coverage-reporter=lcov && lcov --remove coverage/lcov.info 'tests/*' -o coverage/lcov-filtered.info && genhtml coverage/lcov-filtered.info -o coverage/html --ignore-errors source",
+    "test:coverage:open": "bun run test:coverage:html && python3 -m http.server --directory coverage/html"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.7",

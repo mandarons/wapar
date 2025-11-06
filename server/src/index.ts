@@ -34,8 +34,8 @@ app.use('*', async (c, next) => {
 app.onError((err, c) => {
   const requestContext = Logger.getRequestContext(c);
   
-  // Handle JSON parsing errors specifically
-  if (err instanceof SyntaxError && err.message.includes('JSON')) {
+  // Handle JSON parsing errors as 400 Bad Request
+  if (err instanceof SyntaxError) {
     Logger.error('Global JSON parsing error caught', {
       operation: 'app.json_parse_error',
       error: err,

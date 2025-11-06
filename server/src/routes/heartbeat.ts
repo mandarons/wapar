@@ -3,7 +3,7 @@ import type { D1Database } from '../types/database';
 import { HeartbeatSchema } from '../utils/validation';
 import { getDb } from '../db/client';
 import { installations, heartbeats, type NewHeartbeat } from '../db/schema';
-import { NotFoundError, handleValidationError, handleGenericError } from '../utils/errors';
+import { NotFoundError } from '../utils/errors';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
 
@@ -25,90 +25,54 @@ export const heartbeatRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 heartbeatRoutes.post('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
-  try {
-    // Get raw body text first for debugging
-    const rawBody = await c.req.text();
-    const contentType = c.req.header('content-type') || '';
+  // Get raw body text first for debugging
+  const rawBody = await c.req.text();
+  const contentType = c.req.header('content-type') || '';
+  
+  // Log raw body for debugging (truncated for security)
+  Logger.info('Heartbeat request received', {
+    operation: 'heartbeat.request',
+    metadata: { 
+      bodyLength: rawBody.length,
+      bodyPreview: rawBody.substring(0, 100),
+      contentType: contentType
+    },
+    ...requestContext
+  });
+
+  // Parse body based on content type
+  let parsedBody;
+  if (contentType.includes('application/x-www-form-urlencoded')) {
+    // Parse form-encoded data (legacy support for older icloud-docker clients)
+    // NOTE: data field must be a valid JSON string if provided
+    const formData = new URLSearchParams(rawBody);
+    const dataStr = formData.get('data');
     
-    // Log raw body for debugging (truncated for security)
-    Logger.info('Heartbeat request received', {
-      operation: 'heartbeat.request',
+    // Parse the data field if present
+    let parsedData = undefined;
+    if (dataStr) {
+      parsedData = JSON.parse(dataStr); // Will be caught by global error handler
+    }
+    
+    parsedBody = {
+      installationId: formData.get('installationId') || undefined,
+      data: parsedData
+    };
+    
+    Logger.info('Parsed form-encoded data', {
+      operation: 'heartbeat.form_parse',
       metadata: { 
-        bodyLength: rawBody.length,
-        bodyPreview: rawBody.substring(0, 100),
-        contentType: contentType
+        installationId: parsedBody.installationId,
+        hasData: !!parsedBody.data
       },
       ...requestContext
     });
+  } else {
+    // Default to JSON parsing (recommended for all new clients)
+    parsedBody = JSON.parse(rawBody); // Will be caught by global error handler
+  }
 
-    // Parse body based on content type
-    let parsedBody;
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-      // Parse form-encoded data (legacy support for older icloud-docker clients)
-      // NOTE: data field must be a valid JSON string if provided
-      const formData = new URLSearchParams(rawBody);
-      const dataStr = formData.get('data');
-      
-      // Parse the data field if present, with proper error handling
-      let parsedData = undefined;
-      if (dataStr) {
-        try {
-          parsedData = JSON.parse(dataStr);
-        } catch (parseError) {
-          Logger.error('Form-encoded data field JSON parsing failed', {
-            operation: 'heartbeat.form_data_parse',
-            error: parseError as Error,
-            metadata: { 
-              dataPreview: dataStr.substring(0, 100),
-              installationId: formData.get('installationId')
-            },
-            ...requestContext
-          });
-          return c.json({ 
-            message: 'Invalid JSON in form-encoded data field', 
-            statusCode: 400,
-            details: (parseError as Error).message
-          }, 400);
-        }
-      }
-      
-      parsedBody = {
-        installationId: formData.get('installationId') || undefined,
-        data: parsedData
-      };
-      
-      Logger.info('Parsed form-encoded data', {
-        operation: 'heartbeat.form_parse',
-        metadata: { 
-          installationId: parsedBody.installationId,
-          hasData: !!parsedBody.data
-        },
-        ...requestContext
-      });
-    } else {
-      // Default to JSON parsing (recommended for all new clients)
-      try {
-        parsedBody = JSON.parse(rawBody);
-      } catch (parseError) {
-        Logger.error('JSON parsing failed', {
-          operation: 'heartbeat.json_parse',
-          error: parseError as Error,
-          metadata: { 
-            bodyLength: rawBody.length,
-            bodyPreview: rawBody.substring(0, 200),
-            contentType: contentType
-          },
-          ...requestContext
-        });
-        return c.json({ 
-          message: 'Invalid JSON in request body', 
-          statusCode: 400,
-          details: (parseError as Error).message
-        }, 400);
-      }
-    }
-
-    const body = HeartbeatSchema.parse(parsedBody);
+  const body = HeartbeatSchema.parse(parsedBody);
 
     const db = getDb(c.env);
 
@@ -231,35 +195,4 @@ heartbeatRoutes.post('/', async (c) => {
     }
     
     return c.json({ id: body.installationId }, 201);
-  } catch (error) {
-    // Handle Zod validation errors
-    if ((error as any).name === 'ZodError') {
-      Logger.error('Heartbeat validation failed', {
-        operation: 'heartbeat.validation',
-        error: error as Error,
-        metadata: { validationErrors: (error as any).errors },
-        ...requestContext
-      });
-      return handleValidationError(c, error);
-    }
-    // Handle custom HTTP errors with statusCode
-    if (error instanceof NotFoundError) {
-      Logger.error('Heartbeat failed - installation not found', {
-        operation: 'heartbeat.not_found',
-        error: error as Error,
-        ...requestContext
-      });
-      return c.json({ 
-        message: error.message, 
-        statusCode: error.status 
-      }, error.status as any);
-    }
-    // Handle all other errors
-    Logger.error('Heartbeat creation failed', {
-      operation: 'heartbeat.create',
-      error: error as Error,
-      ...requestContext
-    });
-    return handleGenericError(c, error as Error);
-  }
 });

@@ -4,7 +4,6 @@ import { getDb } from '../db/client';
 import { installations } from '../db/schema';
 import { count, isNull, isNotNull, gte, desc, and } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
-import { handleGenericError } from '../utils/errors';
 
 export const newInstallationsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -16,18 +15,17 @@ function roundToOneDecimal(value: number): number {
 newInstallationsRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
-  try {
-    const db = getDb(c.env);
-    const period = c.req.query('period') || '30d';
-    const groupBy = c.req.query('groupBy') || 'day';
+  const db = getDb(c.env);
+  const period = c.req.query('period') || '30d';
+  const groupBy = c.req.query('groupBy') || 'day';
 
-    // Validate period and groupBy
-    const periodPattern = /^\d+d$/;
-    const allowedGroupBy = ['day', 'week', 'month'];
-    if (!periodPattern.test(period)) {
-      return c.json({ error: "Invalid 'period' parameter. Must match pattern '\\d+d' (e.g., '30d')." }, 400);
-    }
-    if (!allowedGroupBy.includes(groupBy)) {
+  // Validate period and groupBy
+  const periodPattern = /^\d+d$/;
+  const allowedGroupBy = ['day', 'week', 'month'];
+  if (!periodPattern.test(period)) {
+    return c.json({ error: "Invalid 'period' parameter. Must match pattern '\\d+d' (e.g., '30d')." }, 400);
+  }
+  if (!allowedGroupBy.includes(groupBy)) {
       return c.json({ error: "Invalid 'groupBy' parameter. Must be one of 'day', 'week', 'month'." }, 400);
     }
     
@@ -180,12 +178,4 @@ newInstallationsRoutes.get('/', async (c) => {
     });
     
     return c.json(responseData);
-  } catch (error) {
-    Logger.error('New installations analytics failed', {
-      operation: 'new-installations.analytics',
-      error: error as Error,
-      ...requestContext
-    });
-    return handleGenericError(c, error as Error);
-  }
 });
