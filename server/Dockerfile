@@ -62,16 +62,20 @@ RUN addgroup -g 1001 -S appuser && \
 RUN mkdir -p /data && \
     chown -R appuser:appuser /data
 
-# Copy production dependencies from deps stage
-COPY --from=deps --chown=appuser:appuser /app/node_modules ./node_modules
+# Copy ALL node_modules from build stage (includes drizzle-kit and its dependencies)
+# This is needed for database migrations on container start
+COPY --from=build --chown=appuser:appuser /app/node_modules ./node_modules
 
 # Copy application code from build stage
 COPY --from=build --chown=appuser:appuser /app/src ./src
 COPY --from=build --chown=appuser:appuser /app/drizzle ./drizzle
 COPY --from=build --chown=appuser:appuser /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=build --chown=appuser:appuser /app/schema.sql ./schema.sql
 COPY --from=build --chown=appuser:appuser /app/package.json ./package.json
 COPY --from=build --chown=appuser:appuser /app/tsconfig.json ./tsconfig.json
+
+# Copy entrypoint script
+COPY --chown=appuser:appuser docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 # Switch to non-root user
 USER appuser
@@ -82,6 +86,9 @@ EXPOSE 8787
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD bun run -e 'fetch("http://localhost:8787/api").then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))'
+
+# Entrypoint to initialize database
+ENTRYPOINT ["./docker-entrypoint.sh"]
 
 # Start the application
 CMD ["bun", "run", "src/local.ts"]

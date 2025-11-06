@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   wapar-server:
     build:
@@ -14,8 +12,8 @@ services:
     ports:
       - "8787:8787"
     volumes:
-      # Persist SQLite database
-      - wapar-data:/data
+      # Persist SQLite database (must be writable even with read_only: true)
+      - wapar-data:/data:rw
     environment:
       - NODE_ENV=production
       - PORT=8787
@@ -28,11 +26,11 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
-    # Security: Run as non-root, read-only root filesystem
+    # Security: Run as non-root user
     user: "1001:1001"
-    read_only: true
+    # Allow temporary files
     tmpfs:
-      - /tmp
+      - /tmp:rw,noexec,nosuid,size=64m
     # Resource limits (adjust based on your needs)
     deploy:
       resources:

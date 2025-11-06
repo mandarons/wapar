@@ -1,11 +1,21 @@
-import { serve } from '@hono/node-server';
 import { Database } from 'bun:sqlite';
 import app from './index';
 import { Logger } from './utils/logger';
 import type { D1Database } from './types/database';
 
+/**
+ * Local development and production server using Bun's native HTTP server.
+ * 
+ * Note: We use Bun.serve() instead of @hono/node-server to eliminate 
+ * the Node.js adapter dependency, reducing Docker image size and improving
+ * cold start performance. Bun's native server is faster and more memory-efficient.
+ */
+
+// Get database path from environment or use local default
+const dbPath = process.env.DB_PATH || './local.db';
+
 // Initialize SQLite database with production-ready settings
-const sqlite = new Database('./local.db', {
+const sqlite = new Database(dbPath, {
   create: true,
   readwrite: true,
 });
@@ -43,6 +53,7 @@ sqlite.exec('PRAGMA page_size = 4096;');
 Logger.info('SQLite database initialized with production settings', {
   operation: 'db.init',
   metadata: {
+    path: dbPath,
     journalMode: sqlite.query('PRAGMA journal_mode;').get(),
     synchronous: sqlite.query('PRAGMA synchronous;').get(),
     cacheSize: sqlite.query('PRAGMA cache_size;').get(),
@@ -148,7 +159,7 @@ const mockD1: D1Database = {
 const port = 8787;
 
 console.log(`Starting Hono server on http://localhost:${port}`);
-console.log(`Database: ./local.db`);
+console.log(`Database: ${dbPath}`);
 
 // Monkey-patch the fetch handler to inject DB binding
 const originalFetch = app.fetch.bind(app);
@@ -156,30 +167,31 @@ app.fetch = async (request: Request, env?: any, ctx?: any) => {
   return originalFetch(request, { ...env, DB: mockD1 }, ctx);
 };
 
-serve({
+// Use Bun's native server
+const server = Bun.serve({
   fetch: app.fetch,
   port,
-}, (info) => {
-  Logger.success('Server started successfully', {
-    operation: 'server.start',
-    metadata: {
-      port: info.port,
-      address: `http://localhost:${info.port}`,
-      database: './local.db',
-    },
-  });
-  console.log(`\n✓ Server running at http://localhost:${info.port}`);
-  console.log(`✓ Database: ./local.db`);
-  console.log(`✓ WAL mode enabled for better concurrency`);
-  console.log(`\nPress Ctrl+C to stop\n`);
 });
+
+Logger.success('Server started successfully', {
+  operation: 'server.start',
+  metadata: {
+    port: server.port,
+    address: `http://localhost:${server.port}`,
+    database: dbPath,
+  },
+});
+console.log(`\n✓ Server running at http://localhost:${server.port}`);
+console.log(`✓ Database: ${dbPath}`);
+console.log(`✓ WAL mode enabled for better concurrency`);
+console.log(`\nPress Ctrl+C to stop\n`);
 
 // WAL checkpoint monitoring and management
 // Periodically checkpoint the WAL file to prevent it from growing too large
 const walCheckpointInterval = setInterval(() => {
   try {
     const fs = require('fs');
-    const walPath = './local.db-wal';
+    const walPath = `${dbPath}-wal`;
     
     try {
       const stats = fs.statSync(walPath);

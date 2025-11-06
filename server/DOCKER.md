@@ -49,32 +49,41 @@ docker logs -f wapar-server
 The Dockerfile uses a 4-stage build process:
 
 1. **base**: Install Bun runtime and system dependencies
-2. **deps**: Install production dependencies only
+2. **deps**: Install production dependencies (used for layer caching)
 3. **build**: Install all dependencies and verify migrations
-4. **production**: Minimal runtime image with only necessary files
+4. **production**: Runtime image with all dependencies (needed for drizzle-kit)
 
 ### Image Optimization
 
 - **Base Image**: `oven/bun:1.1.38-alpine` (minimal Alpine Linux)
-- **Size**: ~100MB final image (vs ~1GB+ for full Node.js)
+- **Runtime**: Bun's native HTTP server (no Node.js adapters needed)
+- **Size**: ~120MB final image (includes drizzle-kit for migrations)
 - **Layers**: Optimized caching for faster rebuilds
 - **Security**: Runs as non-root user (UID 1001)
+
+**Note**: All node_modules (including devDependencies) are included to support automatic database migrations via drizzle-kit.
 
 ### File Structure
 
 ```
 /app/
-├── node_modules/     # Production dependencies only
-├── src/              # Application source
-├── drizzle/          # Database migrations
-├── drizzle.config.ts # Drizzle configuration
-├── schema.sql        # Database schema
-├── package.json      # Package manifest
-└── tsconfig.json     # TypeScript configuration
+├── node_modules/           # All dependencies (includes drizzle-kit)
+│   ├── drizzle-kit/       # Schema migration tool
+│   ├── @libsql/client/    # SQLite driver for drizzle-kit (pure JS)
+│   ├── esbuild/           # Required by drizzle-kit
+│   └── ...
+├── src/                    # Application source
+├── drizzle/                # Generated migration files
+├── drizzle.config.ts       # Drizzle configuration (uses DB_PATH env var)
+├── docker-entrypoint.sh    # Initialization script
+├── package.json            # Package manifest
+└── tsconfig.json           # TypeScript configuration
 
 /data/
-└── local.db          # SQLite database (persistent volume)
+└── local.db                # SQLite database (persistent volume)
 ```
+
+**Note**: All node_modules are included (not just production) to enable automatic schema synchronization. The runtime uses Bun's native SQLite (`bun:sqlite`) while drizzle-kit migrations use `@libsql/client` (pure JavaScript, no native compilation needed).
 
 ## Configuration
 
@@ -134,15 +143,16 @@ RUN addgroup -g 1001 -S appuser && \
 USER appuser
 ```
 
-### Read-Only Filesystem
+### Filesystem Security
 
-Docker Compose configuration uses read-only root filesystem:
+The container uses several security measures:
 
-```yaml
-read_only: true
-tmpfs:
-  - /tmp  # Only /tmp is writable
-```
+- **Non-root user**: All processes run as UID 1001
+- **Writable volumes**: Only `/data` (database) and `/tmp` (temporary files) are writable
+- **Minimal permissions**: Application files are owned by appuser
+- **No shell access**: Alpine minimal base with no unnecessary tools
+
+**Note**: We don't use `read_only: true` for the root filesystem because SQLite requires write access to the database directory for WAL (Write-Ahead Logging) files. Instead, we restrict write access to only necessary directories.
 
 ### Minimal Dependencies
 
@@ -172,9 +182,47 @@ docker run --rm -v wapar-data:/data -v $(pwd):/backup alpine \
   tar xzf /backup/wapar-db-backup-20241106.tar.gz -C /data
 ```
 
-### Migrations
+### Database Initialization
 
-Database migrations are applied automatically on container start via Drizzle:
+The database is automatically initialized on first container start using **Drizzle migrations**:
+
+1. **Check for existing database**: If `/data/local.db` exists, apply any pending schema changes
+2. **Apply migrations**: Run `bun run db:push` to sync schema from `src/db/schema.ts`
+3. **Start server**: Once schema is up to date, the server starts normally
+
+**First Run:**
+```bash
+docker-compose up -d
+# Output: 📊 Database not found, initializing...
+#         🔄 Applying Drizzle migrations...
+#         ✅ Database initialized successfully
+#         🚀 Starting WAPAR server...
+```
+
+**Subsequent Runs:**
+```bash
+docker-compose restart
+# Output: ✅ Database already exists
+#         � Ensuring schema is up to date...
+#         �🚀 Starting WAPAR server...
+```
+
+### Schema Management
+
+Database schema is defined in `src/db/schema.ts` and managed via Drizzle ORM:
+
+- **Automatic sync**: Schema changes are applied automatically on container start
+- **Zero downtime**: Drizzle's push command handles migrations safely
+- **Type-safe**: Schema changes are validated at compile time
+
+**Manual migration:**
+```bash
+# Apply schema changes manually
+docker exec -it wapar-server bun run db:push
+
+# Generate migration files (development)
+docker exec -it wapar-server bun run db:generate
+```
 
 ```bash
 # Verify migrations
