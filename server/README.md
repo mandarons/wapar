@@ -22,6 +22,15 @@ bun run dev
 
 The server will start on `http://localhost:8787`.
 
+## Documentation
+
+For detailed documentation, see the [docs/](./docs/) directory:
+
+- **[Local Development](./docs/LOCAL_DEVELOPMENT.md)** - Complete local setup guide with SQLite
+- **[Test Coverage](./docs/TEST_COVERAGE_REPORT.md)** - Test coverage metrics and testing guide
+- **[Active Installations](./docs/ACTIVE_INSTALLATIONS.md)** - Installation activity tracking
+- **[Form Encoding](./docs/FORM_ENCODING_SUPPORT.md)** - API request format documentation
+
 ## Development
 
 ### Server Commands

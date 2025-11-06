@@ -1,19 +1,12 @@
 import { Hono } from 'hono';
 import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
-import type { D1Database } from '../types/database';
 import { installations } from '../db/schema';
-import type { D1Database } from '../types/database';
 import { count, desc, gte } from 'drizzle-orm';
-import type { D1Database } from '../types/database';
 import { handleGenericError } from '../utils/errors';
-import type { D1Database } from '../types/database';
 import { Logger } from '../utils/logger';
-import type { D1Database } from '../types/database';
 import { findLatestVersion, compareVersions } from '../utils/version';
-import type { D1Database } from '../types/database';
 import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
-import type { D1Database } from '../types/database';
 
 export const versionAnalyticsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 

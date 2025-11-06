@@ -1,17 +1,11 @@
 import { Hono } from 'hono';
 import type { D1Database } from '../types/database';
 import { HeartbeatSchema } from '../utils/validation';
-import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
-import type { D1Database } from '../types/database';
 import { installations, heartbeats, type NewHeartbeat } from '../db/schema';
-import type { D1Database } from '../types/database';
 import { NotFoundError, handleValidationError, handleGenericError } from '../utils/errors';
-import type { D1Database } from '../types/database';
 import { eq, and, gte, lte } from 'drizzle-orm';
-import type { D1Database } from '../types/database';
 import { Logger } from '../utils/logger';
-import type { D1Database } from '../types/database';
 
 export const heartbeatRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
