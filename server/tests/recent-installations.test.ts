@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { getBase, d1Exec } from './utils';
 
 const ENDPOINT = '/api/recent-installations';

@@ -2,7 +2,7 @@
  * Integration tests for deployed WAPAR API.
  * These tests run against the actual staging deployment.
  */
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect } from 'bun:test';
 
 // Get staging API URL from environment
 const API_BASE_URL = process.env.STAGING_API_URL || 'http://localhost:8787';

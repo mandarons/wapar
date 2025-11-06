@@ -8,7 +8,9 @@ export default defineConfig({
     globals: true,
     hookTimeout: 60000,
     testTimeout: 60000,
-    // Make tests run serially to avoid D1 SQLITE_BUSY during local dev
+    // Setup files to run before tests
+    setupFiles: ['./tests/setup.ts'],
+    // Make tests run serially to avoid SQLITE_BUSY
     pool: 'threads',
     fileParallelism: false,
     isolate: true,

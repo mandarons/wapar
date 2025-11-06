@@ -1,115 +1,185 @@
-import { beforeAll, afterAll } from 'vitest';
-import { unstable_dev, type Unstable_DevWorker } from 'wrangler';
-
-export let worker: Unstable_DevWorker;
+import { Database } from 'bun:sqlite';
 
 function getRunnerUA(): string {
   return process.env.npm_config_user_agent || '';
 }
 
+// Access global test environment variables
+function getTestPort(): number {
+  return (globalThis as any).__testPort;
+}
+
+function getTestSqlite(): Database {
+  return (globalThis as any).__testSqlite;
+}
+
+function getTestMockD1(): any {
+  return (globalThis as any).__testMockD1;
+}
+
 export function getBase(): string {
-  const anyWorker = worker as any;
-  // Prefer the port when available; construct a proper http URL
-  if (typeof anyWorker?.port === 'number' && anyWorker.port > 0) {
-    return `http://127.0.0.1:${anyWorker.port}`;
+  const testPort = getTestPort();
+  if (!testPort) {
+    throw new Error('Test server not started');
   }
-  // Fallback to address if it exists and already includes a scheme
-  const addr = anyWorker?.address as string | undefined;
-  if (addr) {
-    if (/^https?:\/\//i.test(addr)) return addr;
-    // If it's host:port, prefix http://
-    if (/^[^\/]+:\d+$/.test(addr)) return `http://${addr}`;
-  }
-  throw new Error('Worker is not ready (no address/port)');
+  return `http://127.0.0.1:${testPort}`;
+}
+
+// Create mock D1 database for tests
+function createMockD1(db: Database): any {
+  return {
+    prepare: (query: string) => {
+      const stmt = db.query(query);
+      
+      return {
+        bind: (...params: any[]) => {
+          return {
+            run: async () => {
+              const result = stmt.run(...params);
+              return {
+                success: true,
+                meta: {
+                  duration: 0,
+                  rows_read: 0,
+                  rows_written: result.changes,
+                },
+                results: [],
+              };
+            },
+            all: async () => {
+              const results = stmt.all(...params);
+              return {
+                success: true,
+                meta: {
+                  duration: 0,
+                },
+                results,
+              };
+            },
+            first: async (colName?: string) => {
+              const result = stmt.get(...params);
+              if (!result) return null;
+              if (colName) return (result as any)[colName];
+              return result;
+            },
+            raw: async () => {
+              const results = stmt.values(...params);
+              return results;
+            },
+          };
+        },
+        run: async () => {
+          const result = stmt.run();
+          return {
+            success: true,
+            meta: {
+              duration: 0,
+              rows_read: 0,
+              rows_written: result.changes,
+            },
+            results: [],
+          };
+        },
+        all: async () => {
+          const results = stmt.all();
+          return {
+            success: true,
+            meta: {
+              duration: 0,
+            },
+            results,
+          };
+        },
+        first: async (colName?: string) => {
+          const result = stmt.get();
+          if (!result) return null;
+          if (colName) return (result as any)[colName];
+          return result;
+        },
+        raw: async () => {
+          const results = stmt.values();
+          return results;
+        },
+      };
+    },
+    dump: async () => new ArrayBuffer(0),
+    batch: async (statements: any[]) => {
+      const results = [];
+      for (const stmt of statements) {
+        results.push(await stmt.all());
+      }
+      return results;
+    },
+    exec: async (query: string) => {
+      db.exec(query);
+      return {
+        count: 0,
+        duration: 0,
+      };
+    },
+  } as any;
 }
 
 async function initializeTestDatabase() {
-  // Initialize database schema by calling a simple endpoint that creates tables
-  // This is only available during test runs via localhost
-  const base = getBase();
-  const res = await fetch(`${base}/api`, {
-    method: 'GET',
-  });
-  if (!res.ok) {
-    throw new Error(`Test worker not ready: ${res.status}`);
+  // Apply migrations using drizzle schema
+  const { execSync } = require('child_process');
+  try {
+    execSync('bun x drizzle-kit push --config=drizzle.config.local.ts', {
+      cwd: process.cwd(),
+      stdio: 'pipe',
+    });
+  } catch (error) {
+    console.error('Failed to apply migrations:', error);
+    throw error;
   }
-  
-  // Create tables directly using SQL - this is safe since it's localhost only
-  await d1Exec(`CREATE TABLE IF NOT EXISTS Installation (
-    id TEXT PRIMARY KEY,
-    app_name TEXT NOT NULL,
-    app_version TEXT NOT NULL,
-    ip_address TEXT NOT NULL,
-    previous_id TEXT,
-    data TEXT,
-    country_code TEXT,
-    region TEXT,
-    last_heartbeat_at TEXT,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now'))
-  )`);
-  
-  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_app_name ON Installation(app_name)`);
-  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_app_version ON Installation(app_version)`);
-  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_country_code ON Installation(country_code)`);
-  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_updated_at ON Installation(updated_at)`);
-  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_installation_last_heartbeat_at ON Installation(last_heartbeat_at)`);
-  
-  await d1Exec(`CREATE TABLE IF NOT EXISTS Heartbeat (
-    id TEXT PRIMARY KEY,
-    installation_id TEXT NOT NULL,
-    data TEXT,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now')),
-    FOREIGN KEY (installation_id) REFERENCES Installation(id)
-  )`);
-  
-  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_heartbeat_installation_id ON Heartbeat(installation_id)`);
-  await d1Exec(`CREATE INDEX IF NOT EXISTS idx_heartbeat_created_at ON Heartbeat(created_at)`);
 }
 
 export async function resetDb() {
-  // Skip database reset entirely - let tests handle their own data isolation
-  // This avoids any potential D1 locking or worker communication issues
-  return Promise.resolve();
+  // Reset database by deleting all data
+  const sqlite = getTestSqlite();
+  if (!sqlite) return;
+  
+  try {
+    sqlite.exec('DELETE FROM Heartbeat');
+    sqlite.exec('DELETE FROM Installation');
+  } catch (error) {
+    console.error('Failed to reset database:', error);
+  }
 }
 
 export async function d1Exec(sql: string, params: unknown[] = []): Promise<void> {
-  // Execute SQL directly against the test worker's D1 instance
-  // This is safe because it's only accessible during localhost test runs
-  const base = getBase();
-  const response = await fetch(`${base}/api`, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'X-Test-SQL': 'exec'
-    },
-    body: JSON.stringify({ sql, params }),
-  });
+  const sqlite = getTestSqlite();
+  if (!sqlite) {
+    throw new Error('Database not initialized');
+  }
   
-  if (!response.ok) {
-    throw new Error(`d1Exec failed: ${response.status}`);
+  try {
+    if (params.length > 0) {
+      const stmt = sqlite.query(sql);
+      stmt.run(...params);
+    } else {
+      sqlite.exec(sql);
+    }
+  } catch (error) {
+    console.error('d1Exec failed:', error);
+    throw error;
   }
 }
 
 export async function d1QueryOne<T = any>(sql: string, params: unknown[] = []): Promise<T | null> {
-  // Query SQL directly against the test worker's D1 instance
-  const base = getBase();
-  const response = await fetch(`${base}/api`, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'X-Test-SQL': 'query'
-    },
-    body: JSON.stringify({ sql, params }),
-  });
-  
-  if (!response.ok) {
-    throw new Error(`d1QueryOne failed: ${response.status}`);
+  const sqlite = getTestSqlite();
+  if (!sqlite) {
+    throw new Error('Database not initialized');
   }
   
-  const result = await response.json();
-  return result as T | null;
+  try {
+    const stmt = sqlite.query(sql);
+    const result = params.length > 0 ? stmt.get(...params) : stmt.get();
+    return result as T | null;
+  } catch (error) {
+    console.error('d1QueryOne failed:', error);
+    throw error;
+  }
 }
 
 // Alias for compatibility with installation tests
@@ -148,21 +218,4 @@ export async function waitForCount(sqlCountQuery: string, paramsOrExpected: unkn
   throw new Error(`Timeout waiting for count=${expected} for query: ${sqlCountQuery}`);
 }
 
-beforeAll(async () => {
-  worker = await unstable_dev('src/index.ts', {
-    config: 'wrangler.toml',
-    ip: '127.0.0.1',
-    port: 0, // random available port
-    experimental: { disableExperimentalWarning: true }
-  });
-  // Ensure the dev server is fully ready before tests run
-  // @ts-ignore - ready is available on UnstableDevWorker in wrangler v4
-  await (worker as any).ready;
-  
-  // Initialize database schema for all tests
-  await initializeTestDatabase();
-}, 60000); // Increase timeout for worker startup
 
-afterAll(async () => {
-  await worker?.stop();
-});

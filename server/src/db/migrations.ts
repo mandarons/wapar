@@ -1,25 +1,24 @@
 import { Logger } from '../utils/logger';
+import type { D1Database } from '../types/database';
 
 /**
- * Database migrations for Cloudflare Workers with D1
+ * Database migrations for local SQLite
  * 
- * IMPORTANT: Migrations are NOT run at runtime in Cloudflare Workers.
- * Instead, they must be applied during deployment using:
+ * Migrations are applied using drizzle-kit:
+ *   bun run db:push     # Apply schema changes to database
+ *   bun run db:generate # Generate migration files
+ *   bun run db:migrate  # Apply migrations
  * 
- *   wrangler d1 migrations apply wapar-db
- * 
- * This function is kept for backward compatibility but does nothing.
- * Migrations are managed through the drizzle/meta folder and applied
- * via the Wrangler CLI tool before deployment.
+ * This function logs migration info but doesn't run them at runtime.
  */
 export async function ensureMigrations(db: D1Database): Promise<void> {
-  Logger.info('Migrations are managed via wrangler d1 migrations apply', {
+  Logger.info('Migrations are managed via drizzle-kit', {
     operation: 'migrations.info',
     metadata: {
-      note: 'Runtime migrations are disabled. Use: wrangler d1 migrations apply wapar-db'
+      note: 'Runtime migrations are disabled. Use: bun run db:push or bun run db:migrate'
     }
   });
-  // No-op: migrations are applied during deployment, not at runtime
+  // No-op: migrations are applied via drizzle-kit, not at runtime
   return Promise.resolve();
 }
 

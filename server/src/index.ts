@@ -10,6 +10,7 @@ import { installationStatsRoutes } from './routes/installation-stats';
 import { handleValidationError, handleGenericError } from './utils/errors';
 import { Logger } from './utils/logger';
 import { ensureMigrations } from './db/migrations';
+import type { D1Database } from './types/database';
 
 type Bindings = { DB: D1Database };
 

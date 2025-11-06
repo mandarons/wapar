@@ -1,49 +1,71 @@
-# Workers App for Wapar API
+# WAPAR API Server
 
-Quick start:
+A local SQLite-based analytics API server built with Hono and Bun.
 
-1. Install deps
+## Quick Start
+
+1. Install dependencies
 ```bash
 cd server
 bun install
 ```
 
-2. Apply database migrations
+2. Initialize database
 ```bash
-bunx wrangler d1 migrations apply wapar-db --local
+bun run db:push
 ```
 
 3. Run locally
 ```bash
-bunx wrangler dev
+bun run dev
 ```
 
-4. Deploy
-```bash
-npm run deploy
-```
+The server will start on `http://localhost:8787`.
 
-Routes:
-- GET /api
-- POST /api/installation
-- POST /api/heartbeat
-- GET /api/usage
-- GET /api/version-analytics
-- GET /api/installation-stats
-- GET /api/heartbeat-analytics
-- GET /api/recent-installations
+## Development
 
-**Active/Stale Installation Tracking:**
-WAPAR tracks the activity status of installations using heartbeat timestamps. See [ACTIVE_INSTALLATIONS.md](./ACTIVE_INSTALLATIONS.md) for comprehensive documentation.
+### Server Commands
+- `bun run dev` - Start development server
+- `bun run start` - Start production server
+
+### Database Commands
+- `bun run db:push` - Apply schema changes to database
+- `bun run db:generate` - Generate migration files
+- `bun run db:migrate` - Apply migrations
+
+### Testing Commands
+- `bun test` - Run all tests (minimal output, failures only)
+- `bun test:verbose` - Run all tests with full output
+- `bun test:unit` - Run unit tests only (excludes integration tests)
+- `bun test:integration` - Run integration tests only
+- `bun test:coverage` - Generate code coverage report (text)
+- `bun test:coverage:html` - Generate HTML coverage report and open in browser
+
+## API Routes
+
+- `GET /api` - Health check
+- `POST /api/installation` - Register new installation
+- `POST /api/heartbeat` - Record installation heartbeat
+- `GET /api/usage` - Get usage analytics
+- `GET /api/version-analytics` - Get version distribution analytics
+- `GET /api/installation-stats` - Get installation statistics
+- `GET /api/heartbeat-analytics` - Get heartbeat analytics
+- `GET /api/recent-installations` - Get recent installations
+- `GET /api/new-installations` - Get new installations analytics
+
+## Active/Stale Installation Tracking
+
+WAPAR tracks the activity status of installations using heartbeat timestamps. See [ACTIVE_INSTALLATIONS.md](./docs/ACTIVE_INSTALLATIONS.md) for comprehensive documentation.
 
 **Quick Overview:**
 - **Active**: Installations with heartbeat within threshold (default: 3 days)
 - **Stale**: Installations without recent heartbeat or no heartbeat at all
 - **Total**: All installations (active + stale)
-- **Configuration**: Set `ACTIVITY_THRESHOLD_DAYS` in `wrangler.toml`
+- **Configuration**: Configure via environment variable or code
 
-**Request Format Support:**
-Both `/api/installation` and `/api/heartbeat` endpoints support JSON and form-encoded requests for backward compatibility. See [FORM_ENCODING_SUPPORT.md](./FORM_ENCODING_SUPPORT.md) for detailed documentation.
+## Request Format Support
+
+Both `/api/installation` and `/api/heartbeat` endpoints support JSON and form-encoded requests for backward compatibility. See [FORM_ENCODING_SUPPORT.md](./docs/FORM_ENCODING_SUPPORT.md) for detailed documentation.
 
 ## API Endpoints
 
@@ -295,33 +317,93 @@ ENABLE_TEST_ROUTES = "1"  # Enable /__test/* endpoints for testing
 
 ## Testing
 
-Tests are written with Vitest and run against a real Worker started in-process via Wrangler's `unstable_dev`.
+Tests use **Bun's native test runner** with an in-memory SQLite database. The test environment is automatically configured via global setup in `tests/setup.ts`.
 
-- Run the suite:
-  ```bash
-  bun run test
-  ```
+### Running Tests
 
-- Key pieces:
-  - `tests/utils.ts`
-    - Boots the Worker via `unstable_dev`.
-    - Provides `getBase`, `resetDb`, `d1Exec`, `d1QueryOne`, `waitForCount`.
-    - Uses in-Worker test endpoints (under `__test`) to operate on the same D1 binding for stability.
-  - Test-only routes in `src/routes/test.ts`:
-    - `POST /__test/reset` – clears tables with retry and returns `{ ok: true }`.
-    - `POST /__test/exec` – executes a SQL statement.
-    - `POST /__test/queryOne` – returns a single row as `{ ok, data }`.
-  - Routes are guarded in `src/index.ts` and enabled in dev only.
-    - Guard flag: `ENABLE_TEST_ROUTES`.
-    - `wrangler.toml` sets `ENABLE_TEST_ROUTES = "1"` under `[dev].vars` and disables by default for production.
-  - Vitest runs serially (see `vitest.config.ts`) to avoid local D1 locking.
+```bash
+# Run all tests (minimal output, shows only failures)
+bun test
 
-- Covered endpoints:
-  - `GET /api` – health.
-  - `POST /api/installation` – create installation with automatic geo enrichment (valid/invalid payloads, client-provided geo data).
-  - `POST /api/heartbeat` – one-per-day behavior; invalid/non-existent installation.
-  - `GET /api/usage` – empty and non-empty aggregates.
-  - `GET /api/version-analytics` – version distribution and upgrade metrics.
+# Run with verbose output (shows all tests)
+bun test:verbose
+
+# Run unit tests only (excludes integration tests)
+bun test:unit
+
+# Run integration tests only
+bun test:integration
+
+# Generate code coverage report (text format)
+bun test:coverage
+
+# Generate HTML coverage report and open in browser
+bun test:coverage:html
+```
+
+### Test Architecture
+
+- **Global Setup** (`tests/setup.ts`):
+  - Creates in-memory SQLite database (`:memory:`)
+  - Initializes schema from `schema.sql`
+  - Starts HTTP server on random available port
+  - Provides global variables: `server`, `sqlite`, `mockD1`, `testPort`
+
+- **Test Utilities** (`tests/utils.ts`):
+  - `getBase()` - Get test server base URL
+  - `resetDb()` - Clear all tables between tests
+  - `d1Exec()` - Execute SQL statements
+  - `d1QueryOne()` - Query single row
+  - `waitForCount()` - Poll database for expected row count
+
+- **Test Configuration** (`bunfig.toml`):
+  - Preloads `tests/setup.ts` before running tests
+  - Ensures consistent environment across all test files
+  - Automatically sets `NODE_ENV=test` to suppress logs
+
+### Test Coverage
+
+Current coverage (as of latest run):
+- **Overall**: ~82% line coverage
+- **Routes**: 86-95% coverage on all API endpoints
+- **Utilities**: 100% coverage on critical validation and version utils
+
+Uncovered areas:
+- `src/index.ts`: Main app setup and error handlers (33% - tested indirectly via E2E)
+- `src/utils/logger.ts`: Logger formatting (52% - suppressed in tests)
+- `src/utils/errors.ts`: Error constructors (57% - some error types rarely used)
+
+### Test Categories
+
+1. **Unit Tests** (`tests/*.test.ts`):
+   - API endpoint behavior
+   - Request validation
+   - Data transformations
+   - Error handling
+
+2. **Integration Tests** (`tests/integration/`):
+   - Full request/response cycles
+   - Database state verification
+   - Cross-endpoint interactions
+
+### Covered Functionality
+
+- `GET /api` – Health check
+- `POST /api/installation` – Installation creation with:
+  - JSON and form-encoded requests
+  - Client-provided geo data
+  - Field name normalization (camelCase/snake_case)
+  - Validation errors
+- `POST /api/heartbeat` – Heartbeat recording with:
+  - One-per-day deduplication
+  - JSON data field support
+  - Invalid installation detection
+- `GET /api/usage` – Usage analytics aggregation
+- `GET /api/version-analytics` – Version distribution and upgrade tracking
+- `GET /api/installation-stats` – Active/stale installation metrics
+- `GET /api/heartbeat-analytics` – User engagement metrics
+- `GET /api/recent-installations` – Recent installation listing with filtering
+- `GET /api/new-installations` – New user analytics and trends
 
 ## CI
 

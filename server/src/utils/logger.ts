@@ -16,6 +16,10 @@ export interface LogContext {
 }
 
 export class Logger {
+  private static isTestEnvironment(): boolean {
+    return process.env.NODE_ENV === 'test' || process.env.BUN_ENV === 'test';
+  }
+
   private static formatTimestamp(): string {
     return new Date().toISOString();
   }
@@ -49,6 +53,8 @@ export class Logger {
   }
 
   static success(message: string, context?: LogContext): void {
+    if (this.isTestEnvironment()) return;
+    
     // Minimal logging for success cases
     if (context?.operation) {
       const duration = context.duration ? ` (${context.duration}ms)` : '';
@@ -59,18 +65,24 @@ export class Logger {
   }
 
   static warning(message: string, context?: LogContext): void {
+    if (this.isTestEnvironment()) return;
+    
     // More detailed logging for warnings
     const formattedMessage = this.formatMessage(LogLevel.WARNING, message, context);
     console.warn(`⚠️  ${formattedMessage}`);
   }
 
   static error(message: string, context?: LogContext): void {
+    if (this.isTestEnvironment()) return;
+    
     // Comprehensive logging for errors
     const formattedMessage = this.formatMessage(LogLevel.ERROR, message, context);
     console.error(`❌ ${formattedMessage}`);
   }
 
   static info(message: string, context?: LogContext): void {
+    if (this.isTestEnvironment()) return;
+    
     // Standard info logging
     const formattedMessage = this.formatMessage(LogLevel.INFO, message, context);
     console.log(`ℹ️  ${formattedMessage}`);

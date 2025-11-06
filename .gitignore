@@ -109,3 +109,7 @@ cache/
 allure-report/
 .history/
 .wrangler/
+# Local SQLite database for development
+server/local.db
+server/local.db-shm
+server/local.db-wal

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { d1QueryOne, getBase, waitForCount } from './utils';
 
 const ENDPOINT = '/api/heartbeat';
