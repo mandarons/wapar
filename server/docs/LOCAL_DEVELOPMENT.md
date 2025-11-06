@@ -4,6 +4,12 @@ Complete guide for running the WAPAR server locally with SQLite.
 
 ## Quick Start
 
+### Using Docker (Recommended for Production)
+
+See [../DOCKER.md](../DOCKER.md) for production Docker deployment.
+
+### Using Bun Locally
+
 From the `server/` directory:
 
 ```bash
