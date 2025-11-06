@@ -11,32 +11,60 @@ Production-ready Docker deployment for the WAPAR server using Alpine Linux, mult
 
 ## Quick Start
 
-### Using Docker Compose (Recommended)
+### Using Pre-built Images from GitHub Container Registry
+
+The easiest way to deploy is using pre-built images from GitHub Container Registry:
 
 ```bash
-# Build and start the server
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop the server
-docker-compose down
-```
-
-### Using Docker CLI
-
-```bash
-# Build the image
-docker build -t wapar-server:latest .
+# Pull the latest production image
+docker pull ghcr.io/mandarons/wapar-server:latest
 
 # Run the container
 docker run -d \
   --name wapar-server \
   -p 8787:8787 \
   -v wapar-data:/data \
+  -e DB_PATH=/data/local.db \
   --restart unless-stopped \
-  wapar-server:latest
+  ghcr.io/mandarons/wapar-server:latest
+
+# View logs
+docker logs -f wapar-server
+```
+
+**Available image tags:**
+- `latest` - Latest production release from main branch
+- `main-<sha>` - Specific commit from main branch
+- `pr-<number>` - PR-specific staging builds (for testing)
+
+### Using Docker Compose (Recommended)
+
+Update `docker-compose.yml` to use the pre-built image:
+
+```yaml
+services:
+  wapar-server:
+    image: ghcr.io/mandarons/wapar-server:latest
+    # ... rest of config
+```
+
+Then run:
+
+```bash
+docker-compose up -d
+```
+
+### Building Locally
+
+If you prefer to build the image yourself:
+
+```bash
+# Build the image
+docker build -t wapar-server:latest ./server
+
+# Or use docker-compose to build
+docker-compose up -d --build
+```
 
 # View logs
 docker logs -f wapar-server
@@ -420,7 +448,46 @@ docker run --rm wapar-server:test bun test --coverage
 
 ## CI/CD Integration
 
-### GitHub Actions Example
+### Automated Builds with GitHub Actions
+
+The WAPAR server is automatically built and pushed to GitHub Container Registry (ghcr.io) via GitHub Actions:
+
+**Production Builds** (`.github/workflows/production.yml`):
+- Triggered on: Push to `main` branch
+- Image tags:
+  - `latest` - Always points to the latest production release
+  - `main-<sha>` - Specific commit SHA for rollback
+  - `main` - Branch-based tag
+
+**Staging Builds** (`.github/workflows/staging.yml`):
+- Triggered on: Pull request creation/update
+- Image tags:
+  - `pr-<number>` - Latest build for a specific PR
+  - `pr-<number>-<sha>` - Specific commit within a PR
+
+**Build Features:**
+- ✅ Multi-stage builds with layer caching (GitHub Actions cache)
+- ✅ Automatic tagging based on git events
+- ✅ Metadata labels (source, revision, creation time)
+- ✅ Runs all tests before building images
+- ✅ 100% test coverage enforcement
+
+### Using CI-Built Images
+
+```bash
+# Production - latest release
+docker pull ghcr.io/mandarons/wapar-server:latest
+
+# Production - specific commit
+docker pull ghcr.io/mandarons/wapar-server:main-abc123
+
+# Staging - test a PR
+docker pull ghcr.io/mandarons/wapar-server:pr-42
+```
+
+### Manual CI/CD Integration
+
+If you want to set up your own CI/CD pipeline, here's an example:
 
 ```yaml
 name: Build and Push Docker Image
@@ -432,6 +499,9 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       
