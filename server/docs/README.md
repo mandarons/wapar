@@ -1,27 +1,27 @@
 # Server Documentation
 
-Backend API documentation for the WAPAR Cloudflare Workers application.
+Backend API documentation for the WAPAR server application.
 
 ## Documents
 
-### [DEPLOYMENT.md](./DEPLOYMENT.md)
-Complete deployment guide for Workers API:
-- Database setup and migrations
-- Deployment to Cloudflare Workers
-- Drizzle ORM configuration
-- Troubleshooting deployment issues
+### [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md)
+Complete local development guide:
+- Quick start with `./run.sh`
+- Manual setup instructions
+- Production-ready SQLite configuration
+- Database management and tooling
+- Testing infrastructure
+- Troubleshooting common issues
 
-### [ENVIRONMENTS.md](./ENVIRONMENTS.md)
-Environment configuration guide:
-- Staging and production setup
-- Frontend-backend integration
-- Local development workflow
-- Database migrations across environments
-- Deployment workflows and diagrams
-- Monitoring and debugging
+### [TEST_COVERAGE_REPORT.md](./TEST_COVERAGE_REPORT.md)
+Test coverage metrics and documentation:
+- Coverage improvements and achievements
+- Unit, integration, and E2E test details
+- Test infrastructure overview
+- Running tests and generating coverage reports
 
 ### [ACTIVE_INSTALLATIONS.md](./ACTIVE_INSTALLATIONS.md)
-Active installations tracking feature documentation:
+Active installations tracking feature:
 - `lastHeartbeatAt` field implementation
 - Activity threshold configuration
 - API endpoints for installation statistics
@@ -42,9 +42,9 @@ API request format documentation:
 
 ## Getting Started
 
-1. Read [DEPLOYMENT.md](./DEPLOYMENT.md) for initial setup
-2. Read [ENVIRONMENTS.md](./ENVIRONMENTS.md) for environment configuration
-3. See [../README.md](../README.md) for quick start commands
+1. Read [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) for local setup
+2. See [../README.md](../README.md) for quick start commands
+3. Check [TEST_COVERAGE_REPORT.md](./TEST_COVERAGE_REPORT.md) for testing info
 
 ## For Contributors
 

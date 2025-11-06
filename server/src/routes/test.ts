@@ -1,9 +1,7 @@
 import { Hono } from 'hono';
 import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
-import type { D1Database } from '../types/database';
 import { installations, heartbeats } from '../db/schema';
-import type { D1Database } from '../types/database';
 
 export const testRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
