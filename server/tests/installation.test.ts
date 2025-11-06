@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'bun:test';
 import { getBase, d1QueryOne } from './utils';
 
 const ENDPOINT = '/api/installation';

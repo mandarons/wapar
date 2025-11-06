@@ -5,6 +5,7 @@ import { count, countDistinct, eq, isNotNull, gte, desc, and } from 'drizzle-orm
 import { handleGenericError } from '../utils/errors';
 import { Logger } from '../utils/logger';
 import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
+import type { D1Database } from '../types/database';
 
 export const usageRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 

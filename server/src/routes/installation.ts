@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import type { IncomingRequestCfProperties } from '@cloudflare/workers-types';
+import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
 import { installations, type NewInstallation } from '../db/schema';
 import { handleValidationError, handleGenericError } from '../utils/errors';
@@ -117,13 +117,11 @@ installationRoutes.post('/', async (c) => {
     const db = getDb(c.env);
     const installationId = crypto.randomUUID();
     const now = new Date().toISOString();
-    const ipAddress = validatedData.ipAddress || c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || '0.0.0.0';
+    const ipAddress = validatedData.ipAddress || c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || '0.0.0.0';
     
-    // Extract geo data from Cloudflare's request.cf object (just-in-time enrichment)
-    // Cloudflare automatically provides this data on all requests at no cost
-    const cfData = c.req.raw.cf as IncomingRequestCfProperties | undefined;
-    const countryCode = validatedData.countryCode || (cfData?.country as string) || null;
-    const region = validatedData.region || (cfData?.region as string) || null;
+    // Extract geo data from client-provided fields (if available)
+    const countryCode = validatedData.countryCode || null;
+    const region = validatedData.region || null;
     
     // Log warning if IP address fallback is used
     if (!validatedData.ipAddress && ipAddress === '0.0.0.0') {
@@ -132,8 +130,8 @@ installationRoutes.post('/', async (c) => {
         metadata: { 
           appName: validatedData.appName, 
           appVersion: validatedData.appVersion,
-          hasCloudflareIP: !!c.req.header('CF-Connecting-IP'),
-          hasForwardedIP: !!c.req.header('x-forwarded-for')
+          hasForwardedIP: !!c.req.header('x-forwarded-for'),
+          hasRealIP: !!c.req.header('x-real-ip')
         },
         ...requestContext
       });

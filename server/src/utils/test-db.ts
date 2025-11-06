@@ -1,5 +1,6 @@
 import { getDb } from '../db/client';
 import { installations, heartbeats } from '../db/schema';
+import type { D1Database } from '../types/database';
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 500): Promise<T> {
   let lastErr: any;

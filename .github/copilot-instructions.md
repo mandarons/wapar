@@ -2,51 +2,49 @@
 
 ## Architecture Overview
 
-This is a **serverless application analytics platform** migrated from Node.js/PostgreSQL to Cloudflare Workers/D1. Three main components:
+This is a **local application analytics platform** with three main components:
 
-- **`server/`**: Hono-based Cloudflare Workers API backend with D1 database
+- **`server/`**: Hono-based API backend with local SQLite database
 - **`app/`**: SvelteKit frontend with geographic visualization  
-- **`scripts/`**: PostgreSQL→D1 migration utilities
+- **`scripts/`**: Migration and utility scripts
 
 ## Key Development Workflows
 
-### Workers Backend (`server/`)
+### Server Backend (`server/`)
 ```bash
-# Initial D1 database setup (required before first run)
-bunx wrangler d1 migrations apply wapar-db --local
-
 # Development
-bun run dev  # wrangler dev on localhost:8787
+bun run dev  # Start server on localhost:8787
 
 # Database operations
-bun run db:generate      # Generate Drizzle migrations
-bun run db:deploy        # Apply migrations to local D1
-bun run db:deploy:remote # Apply migrations to production D1
+bun run db:generate  # Generate Drizzle migrations
+bun run db:migrate   # Apply migrations
+bun run db:push      # Push schema changes to database
 
-# Deploy
-bun run deploy  # Applies migrations + wrangler deploy
+# Testing
+bun test             # Run all tests
+bun test:unit        # Run unit tests only
 ```
 
 ### Frontend (`app/`)
 Uses **bun** (not npm/yarn/pnpm):
 ```bash
 bun dev     # SvelteKit dev server
-bun build   # Build for Cloudflare Pages
+bun build   # Build for production
 ```
 
-## Testing Patterns (Non-Standard)
+## Testing Patterns
 
-Workers tests use **in-process testing** via `wrangler`'s `unstable_dev`:
+Server tests use **Bun's test runner** with in-memory SQLite:
 
-- Tests import `worker` from `tests/utils.ts` 
-- Database operations go through **test-only routes** (`/__test/*`) for stability
+- Tests use global setup via `tests/setup.ts` (preloaded in `bunfig.toml`)
+- Database operations use mock D1Database wrapper over Bun's native SQLite
 - Use helpers: `resetDb()`, `d1Exec()`, `waitForCount()`, `getBase()`
-- **No mocking** - tests hit actual D1 binding through running worker
+- Tests run against actual in-memory database for realistic testing
 
 ```typescript
 // Example test pattern from tests/utils.ts
 const base = getBase();
-await resetDb(); // Clears tables via /__test/reset endpoint
+await resetDb(); // Clears tables in test database
 const result = await fetch(`${base}/api/installation`, {...});
 ```
 
@@ -79,15 +77,15 @@ Uses `svgmap` library in `+page.svelte` for installation mapping.
 - `server/tests/utils.ts` - In-process testing utilities  
 - `server/src/db/schema.ts` - Drizzle schema with separate indexes
 - `app/src/routes/+page.server.ts` - Multi-source data fetching
-- `scripts/migrate-to-d1.ts` - PostgreSQL migration patterns
+- `scripts/migrate-to-d1.ts` - Database migration patterns
 
 ## Documentation Structure
 
 ### Server Documentation (`server/docs/`)
-- **DEPLOYMENT.md** - Workers deployment and D1 setup
-- **ENVIRONMENTS.md** - Staging/production environments, CI/CD workflows
+- **LOCAL_SQLITE_SETUP.md** - Local SQLite database setup and configuration
 - **ACTIVE_INSTALLATIONS.md** - Active installation tracking feature
 - **FORM_ENCODING_SUPPORT.md** - API request format documentation
+- **README.md** - Server documentation overview
 
 ### Frontend Documentation (`app/docs/`)
 - **UX_GUIDELINES.md** - Design system, components, accessibility standards
@@ -96,4 +94,7 @@ Uses `svgmap` library in `+page.svelte` for installation mapping.
 
 ## Migration Context
 
-Legacy references to `server/` folder in Dockerfile indicate this was migrated from traditional Node.js setup. Current architecture is fully serverless on Cloudflare platform. Schema management uses **Drizzle migrations only** - no schema.sql file.
+This application runs locally with SQLite. Legacy Cloudflare references have been removed. Schema management uses **Drizzle migrations** with the drizzle.config.ts file pointing to local.db.
+
+Use context7 tool for documentation, when available.
+```

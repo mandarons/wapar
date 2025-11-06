@@ -1,9 +1,15 @@
 import { Hono } from 'hono';
+import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
+import type { D1Database } from '../types/database';
 import { installations } from '../db/schema';
+import type { D1Database } from '../types/database';
 import { desc, eq, and, gte, count } from 'drizzle-orm';
+import type { D1Database } from '../types/database';
 import { Logger } from '../utils/logger';
+import type { D1Database } from '../types/database';
 import { handleGenericError } from '../utils/errors';
+import type { D1Database } from '../types/database';
 
 export const recentInstallationsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
