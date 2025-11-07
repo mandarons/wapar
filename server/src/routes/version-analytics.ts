@@ -19,7 +19,7 @@ versionAnalyticsRoutes.get('/', async (c) => {
   const cutoffDate = getActivityCutoffDate(thresholdDays);
 
     // Get version distribution for active installations only
-    // Exclude 'unknown' versions (from auto-created installations due to data loss/corruption)
+    // Exclude 'unknown' versions (from auto-created installations, which can result from data loss/corruption or legitimate out-of-order requests such as clients sending heartbeats before installation records exist)
     const versionDistributionResult = await Logger.measureOperation(
       'version_analytics.distribution',
       () => db.select({
