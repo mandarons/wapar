@@ -132,7 +132,11 @@ heartbeatRoutes.post('/', async (c) => {
       } catch (error) {
         // Handle race condition: if another concurrent request already created the installation,
         // ignore the unique constraint violation and continue processing the heartbeat
-        if (error instanceof Error && error.message.includes('UNIQUE constraint failed')) {
+        if (
+          error instanceof Error &&
+          ('code' in error && (error as any).code === 'SQLITE_CONSTRAINT_PRIMARYKEY' ||
+           error.message.includes('UNIQUE constraint failed'))
+        ) {
           Logger.info('Installation already created by concurrent request', {
             operation: 'heartbeat.create_installation',
             metadata: { installationId: body.installationId },
