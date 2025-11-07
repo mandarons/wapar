@@ -68,7 +68,8 @@ describe(ENDPOINT, () => {
     // Create heartbeats at different times
     const now = new Date();
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    // Use 6 days ago instead of 7 to ensure it's clearly within the 7-day window
+    const sixDaysAgo = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString();
     
     // install1: active today (should be in DAU, WAU, MAU)
     await createHeartbeat(install1, now.toISOString());
@@ -76,8 +77,8 @@ describe(ENDPOINT, () => {
     // install2: active exactly 24 hours ago (may or may not be in DAU depending on whether DAU includes the boundary; clarify DAU logic if needed)
     await createHeartbeat(install2, yesterday);
     
-    // install3: active week ago (should be in WAU, MAU but not DAU)
-    await createHeartbeat(install3, weekAgo);
+    // install3: active 6 days ago (should be in WAU, MAU but not DAU)
+    await createHeartbeat(install3, sixDaysAgo);
     
     // Wait for heartbeats to be created
     await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (?, ?, ?)`, [install1, install2, install3], 3);
@@ -88,7 +89,7 @@ describe(ENDPOINT, () => {
     expect(response.status).toBe(200);
     // DAU should include install1 and install2 (active in last 24h)
     expect(data.activeUsers.daily).toBeGreaterThanOrEqual(1); // At least install1 which is definitely today
-    // WAU should include all three
+    // WAU should include all three (install1, install2, install3)
     expect(data.activeUsers.weekly).toBeGreaterThanOrEqual(3);
     // MAU should include all three
     expect(data.activeUsers.monthly).toBeGreaterThanOrEqual(3);

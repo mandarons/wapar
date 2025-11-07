@@ -165,14 +165,104 @@ describe(ENDPOINT, () => {
     expect(Number(countRow?.count ?? 0)).toBe(1);
   });
 
-  it('POST should fail for non-existent installation', async () => {
+  it('POST should auto-create installation for non-existent installation', async () => {
     const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    
+    // First verify installation doesn't exist
+    const beforeCount = await d1QueryOne<{ count: number }>(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`);
+    expect(Number(beforeCount?.count ?? 0)).toBe(0);
+    
+    // Send heartbeat for non-existent installation
     const res = await fetch(`${base}${ENDPOINT}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ installationId: crypto.randomUUID() })
+      body: JSON.stringify({ installationId: nonExistentId })
     });
-    expect(res.status).toBe(404);
+    
+    // Should succeed and auto-create
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBe(nonExistentId);
+    
+    // Verify installation was auto-created with default values
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    const installation = await d1QueryOne<{ 
+      id: string; 
+      app_name: string; 
+      app_version: string; 
+      ip_address: string;
+    }>(`SELECT id, app_name, app_version, ip_address FROM Installation WHERE id = '${nonExistentId}'`);
+    
+    expect(installation?.id).toBe(nonExistentId);
+    expect(installation?.app_name).toBe('unknown');
+    expect(installation?.app_version).toBe('unknown');
+    expect(installation?.ip_address).toBeDefined();
+    
+    // Verify heartbeat was also created
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${nonExistentId}'`, 1);
+    const heartbeatCount = await d1QueryOne<{ count: number }>(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${nonExistentId}'`);
+    expect(Number(heartbeatCount?.count ?? 0)).toBe(1);
+  });
+
+  it('POST with data should auto-create installation and store heartbeat data', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    const testData = { session: 'test-123', metric: 42 };
+    
+    // Send heartbeat with data for non-existent installation
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-forwarded-for': '192.168.1.100'
+      },
+      body: JSON.stringify({ 
+        installationId: nonExistentId,
+        data: testData
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    
+    // Verify installation was created with IP from header
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    const installation = await d1QueryOne<{ ip_address: string }>(`SELECT ip_address FROM Installation WHERE id = '${nonExistentId}'`);
+    expect(installation?.ip_address).toBe('192.168.1.100');
+    
+    // Verify heartbeat data was stored
+    const heartbeat = await d1QueryOne<{ data: string }>(`SELECT data FROM Heartbeat WHERE installation_id = '${nonExistentId}'`);
+    expect(heartbeat?.data).toBeDefined();
+    const parsedData = JSON.parse(heartbeat?.data ?? '{}');
+    expect(parsedData).toEqual(testData);
+  });
+
+  it('POST should work normally after auto-creating installation', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    
+    // First heartbeat - auto-creates installation
+    const res1 = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ installationId: nonExistentId })
+    });
+    expect(res1.status).toBe(201);
+    
+    // Wait for auto-creation
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    
+    // Second heartbeat same day - should be duplicate
+    const res2 = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ installationId: nonExistentId })
+    });
+    expect(res2.status).toBe(201);
+    
+    // Should still only have one heartbeat (duplicate on same day)
+    const heartbeatCount = await d1QueryOne<{ count: number }>(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${nonExistentId}'`);
+    expect(Number(heartbeatCount?.count ?? 0)).toBe(1);
   });
 
   it('POST should fail for invalid data', async () => {
@@ -294,10 +384,11 @@ describe(ENDPOINT, () => {
     expect(body.message).toBe('Invalid JSON in request body');
   });
 
-  it('POST with form-encoded data should fail for non-existent installation', async () => {
+  it('POST with form-encoded data should auto-create installation for non-existent installation', async () => {
     const base = getBase();
+    const nonExistentId = crypto.randomUUID();
     const formData = new URLSearchParams({
-      installationId: crypto.randomUUID()
+      installationId: nonExistentId
     });
     
     const res = await fetch(`${base}${ENDPOINT}`, {
@@ -306,7 +397,16 @@ describe(ENDPOINT, () => {
       body: formData.toString()
     });
     
-    expect(res.status).toBe(404);
+    // Should succeed and auto-create installation
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBe(nonExistentId);
+    
+    // Verify installation was auto-created
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    const installation = await d1QueryOne<{ app_name: string; app_version: string }>(`SELECT app_name, app_version FROM Installation WHERE id = '${nonExistentId}'`);
+    expect(installation?.app_name).toBe('unknown');
+    expect(installation?.app_version).toBe('unknown');
   });
 
   it('POST with form-encoded data should fail for invalid installationId format', async () => {
