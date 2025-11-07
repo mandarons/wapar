@@ -1,0 +1,36 @@
+services:
+  wapar-server:
+    image: ghcr.io/mandarons/wapar-server:latest
+    container_name: wapar-server
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    volumes:
+      # Persist SQLite database (must be writable even with read_only: true)
+      - ${PWD}/data:/data:rw
+    environment:
+      - NODE_ENV=production
+      - PORT=8787
+      - DB_PATH=/data/local.db
+      # Configure activity threshold (optional)
+      - ACTIVITY_THRESHOLD_DAYS=30
+    healthcheck:
+      test: ["CMD", "bun", "run", "-e", "fetch('http://localhost:8787/api').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    # Security: Run as non-root user
+    user: "1001:1001"
+    # Allow temporary files
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
