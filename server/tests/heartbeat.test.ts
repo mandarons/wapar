@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { d1QueryOne, getBase, waitForCount } from './utils';
+import { d1QueryOne, getBase, waitForCount, d1Exec } from './utils';
 
 const ENDPOINT = '/api/heartbeat';
 const INSTALL_ENDPOINT = '/api/installation';
@@ -261,6 +261,103 @@ describe(ENDPOINT, () => {
     expect(res2.status).toBe(201);
     
     // Should still only have one heartbeat (duplicate on same day)
+    const heartbeatCount = await d1QueryOne<{ count: number }>(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${nonExistentId}'`);
+    expect(Number(heartbeatCount?.count ?? 0)).toBe(1);
+  });
+
+  it('POST should handle race condition constraint error gracefully', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    
+    // Manually create the installation to satisfy the foreign key constraint
+    // This simulates the race condition where:
+    // 1. Request A checks: installation doesn't exist  
+    // 2. Request B creates the installation (we simulate this with manual insert)
+    // 3. Request A tries to create it and gets constraint error (simulated by test header)
+    const now = new Date().toISOString();
+    await d1Exec(
+      `INSERT INTO Installation (id, app_name, app_version, ip_address, created_at, updated_at, last_heartbeat_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [nonExistentId, 'test-app', '1.0.0', '10.10.10.10', now, now, now]
+    );
+    
+    // Use test header to simulate the race condition constraint error
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Test-Race-Condition': 'true',
+        'x-forwarded-for': '10.10.10.10'
+      },
+      body: JSON.stringify({ installationId: nonExistentId })
+    });
+    
+    // Should still succeed - the error is caught and ignored
+    expect(res.status).toBe(201);
+    
+    // Verify heartbeat was created successfully despite constraint error
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${nonExistentId}'`, 1);
+    const heartbeatCount = await d1QueryOne<{ count: number }>(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${nonExistentId}'`);
+    expect(Number(heartbeatCount?.count ?? 0)).toBe(1);
+  });
+
+  it('POST should re-throw unexpected errors during installation creation', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    
+    // Use test header to simulate an unexpected error (not a constraint error)
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Test-Unexpected-Error': 'true',
+        'x-forwarded-for': '10.10.10.10'
+      },
+      body: JSON.stringify({ installationId: nonExistentId })
+    });
+    
+    // Should fail with 500 because unexpected errors are re-thrown
+    expect(res.status).toBe(500);
+  });
+
+  it('POST should handle race condition when concurrent requests try to create same installation', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    
+    // Send two heartbeats concurrently for the same non-existent installation
+    // This simulates a race condition where both try to auto-create the installation
+    const [res1, res2] = await Promise.all([
+      fetch(`${base}${ENDPOINT}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '10.0.0.1'
+        },
+        body: JSON.stringify({ installationId: nonExistentId })
+      }),
+      fetch(`${base}${ENDPOINT}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-forwarded-for': '10.0.0.2'
+        },
+        body: JSON.stringify({ installationId: nonExistentId })
+      })
+    ]);
+    
+    // Both requests should succeed (one creates, one handles the constraint error gracefully)
+    expect(res1.status).toBe(201);
+    expect(res2.status).toBe(201);
+    
+    // Wait for operations to complete
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    
+    // Verify only one installation was created
+    const installationCount = await d1QueryOne<{ count: number }>(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`);
+    expect(Number(installationCount?.count ?? 0)).toBe(1);
+    
+    // Verify heartbeat(s) were created - should be 1 (same day, so duplicate)
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${nonExistentId}'`, 1);
     const heartbeatCount = await d1QueryOne<{ count: number }>(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${nonExistentId}'`);
     expect(Number(heartbeatCount?.count ?? 0)).toBe(1);
   });

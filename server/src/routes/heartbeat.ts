@@ -76,7 +76,9 @@ heartbeatRoutes.post('/', async (c) => {
     const db = getDb(c.env);
 
     // Verify installation exists, create if missing
-    const installation = await Logger.measureOperation(
+    // Test mode: bypass existence check to simulate race condition
+    const skipCheck = c.req.header('X-Test-Race-Condition') === 'true';
+    const installation = skipCheck ? [] : await Logger.measureOperation(
       'heartbeat.verify_installation',
       () => db.select({ id: installations.id })
         .from(installations)
@@ -118,6 +120,18 @@ heartbeatRoutes.post('/', async (c) => {
       };
 
       try {
+        // Test mode: simulate race condition constraint error
+        if (c.req.header('X-Test-Race-Condition') === 'true') {
+          const error: any = new Error('UNIQUE constraint failed: Installation.id');
+          error.code = 'SQLITE_CONSTRAINT_PRIMARYKEY';
+          throw error;
+        }
+        
+        // Test mode: simulate unexpected error
+        if (c.req.header('X-Test-Unexpected-Error') === 'true') {
+          throw new Error('Unexpected database error');
+        }
+        
         await Logger.measureOperation(
           'heartbeat.create_installation',
           () => db.insert(installations).values(newInstallation),
