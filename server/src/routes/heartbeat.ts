@@ -5,6 +5,7 @@ import { getDb } from '../db/client';
 import { installations, heartbeats, type NewHeartbeat, type NewInstallation } from '../db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
+import { extractClientIp } from '../utils/network';
 
 export const heartbeatRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -100,10 +101,10 @@ heartbeatRoutes.post('/', async (c) => {
       // Auto-create installation with default values to recover from data loss/corruption
       // or to handle legitimate cases where a heartbeat arrives before the installation record (out-of-order requests)
       const now = new Date().toISOString();
-      const ipAddress =
-        c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
-        c.req.header('x-real-ip') ||
-        '0.0.0.0';
+      const ipAddress = extractClientIp(
+        c.req.header('x-forwarded-for'),
+        c.req.header('x-real-ip')
+      );
       
       const newInstallation: NewInstallation = {
         id: body.installationId,
@@ -148,8 +149,10 @@ heartbeatRoutes.post('/', async (c) => {
         // ignore the unique constraint violation and continue processing the heartbeat
         if (
           error instanceof Error &&
-          ('code' in error && (error as any).code === 'SQLITE_CONSTRAINT_PRIMARYKEY' ||
-           error.message.includes('UNIQUE constraint failed'))
+          (
+            ('code' in error && (error as any).code === 'SQLITE_CONSTRAINT_PRIMARYKEY') ||
+            error.message.includes('UNIQUE constraint failed')
+          )
         ) {
           Logger.info('Installation already created by concurrent request', {
             operation: 'heartbeat.create_installation',
