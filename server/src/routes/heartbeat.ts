@@ -96,8 +96,12 @@ heartbeatRoutes.post('/', async (c) => {
       });
       
       // Auto-create installation with default values to recover from data loss/corruption
+      // or to handle legitimate cases where a heartbeat arrives before the installation record (out-of-order requests)
       const now = new Date().toISOString();
-      const ipAddress = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || '0.0.0.0';
+      const ipAddress =
+        c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
+        c.req.header('x-real-ip') ||
+        '0.0.0.0';
       
       const newInstallation: NewInstallation = {
         id: body.installationId,
@@ -113,17 +117,32 @@ heartbeatRoutes.post('/', async (c) => {
         updatedAt: now,
       };
 
-      await Logger.measureOperation(
-        'heartbeat.create_installation',
-        () => db.insert(installations).values(newInstallation),
-        {
-          metadata: { 
-            installationId: body.installationId,
-            reason: 'auto-created from heartbeat'
-          },
-          ...requestContext
+      try {
+        await Logger.measureOperation(
+          'heartbeat.create_installation',
+          () => db.insert(installations).values(newInstallation),
+          {
+            metadata: { 
+              installationId: body.installationId,
+              reason: 'auto-created from heartbeat'
+            },
+            ...requestContext
+          }
+        );
+      } catch (error) {
+        // Handle race condition: if another concurrent request already created the installation,
+        // ignore the unique constraint violation and continue processing the heartbeat
+        if (error instanceof Error && error.message.includes('UNIQUE constraint failed')) {
+          Logger.info('Installation already created by concurrent request', {
+            operation: 'heartbeat.create_installation',
+            metadata: { installationId: body.installationId },
+            ...requestContext
+          });
+        } else {
+          // Re-throw unexpected errors
+          throw error;
         }
-      );
+      }
 
       Logger.success('Auto-created installation from heartbeat', {
         operation: 'heartbeat.create_installation',

@@ -86,7 +86,7 @@ curl -X POST https://wapar-api.mandarons.com/api/heartbeat \
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `installationId` | string (UUID) | Yes | Installation ID from the installation endpoint |
+| `installationId` | string (UUID) | Yes | Installation ID. If the installation doesn't exist, it will be auto-created with default values ('unknown' app name/version) to handle data recovery or out-of-order requests. |
 | `data` | object/string | No | Additional telemetry data. For form-encoded requests, must be a JSON string that will be parsed. For JSON requests, can be a nested object. |
 
 ## Important Notes
