@@ -156,6 +156,19 @@ describe('Error Handlers', () => {
   });
 
   describe('Generic Error Handler', () => {
+    it('should handle generic runtime errors with 500 status', async () => {
+      const response = await fetch(`${base}/api/usage`, {
+        headers: {
+          'X-Test-Generic-Error': 'true'
+        }
+      });
+
+      expect(response.status).toBe(500);
+      const data = await response.json() as any;
+      expect(data.message).toBe('Internal Server Error');
+      expect(data.statusCode).toBe(500);
+    });
+
     it('should handle 404 for unknown routes', async () => {
       const response = await fetch(`${base}/api/unknown-endpoint`);
 
