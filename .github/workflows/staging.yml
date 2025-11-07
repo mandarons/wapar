@@ -216,7 +216,7 @@ jobs:
         run: cd server && bun install --frozen-lockfile
 
       - name: Verify database migrations are ready
-        run: cd server && bun run db:generate --check
+        run: cd server && bunx drizzle-kit check
 
       - name: Build verification
         run: |
