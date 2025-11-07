@@ -11,6 +11,11 @@ export const usageRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 usageRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
+  // Test mode: allow simulating generic errors
+  if (c.req.header('X-Test-Generic-Error') === 'true') {
+    throw new Error('Simulated generic error for testing');
+  }
+  
   const now = new Date().toUTCString();
   const db = getDb(c.env);
 
