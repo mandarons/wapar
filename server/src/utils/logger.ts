@@ -1,3 +1,5 @@
+import { extractClientIp } from './network';
+
 export enum LogLevel {
   SUCCESS = 'SUCCESS',
   WARNING = 'WARNING',
@@ -124,7 +126,11 @@ export class Logger {
   static getRequestContext(c: any): Partial<LogContext> {
     return {
       requestId: crypto.randomUUID(),
-      ipAddress: c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || 'unknown',
+      ipAddress: c.req.header('CF-Connecting-IP') || extractClientIp(
+        c.req.header('x-forwarded-for'),
+        c.req.header('x-real-ip'),
+        'unknown'
+      ),
       userAgent: c.req.header('User-Agent') || 'unknown'
     };
   }

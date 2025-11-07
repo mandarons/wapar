@@ -4,6 +4,7 @@ import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
 import { installations, type NewInstallation } from '../db/schema';
 import { Logger } from '../utils/logger';
+import { extractClientIp } from '../utils/network';
 
 const installationSchema = z.object({
   appName: z.string().min(1),
@@ -97,7 +98,10 @@ installationRoutes.post('/', async (c) => {
     const db = getDb(c.env);
     const installationId = crypto.randomUUID();
     const now = new Date().toISOString();
-    const ipAddress = validatedData.ipAddress || c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || '0.0.0.0';
+    const ipAddress = validatedData.ipAddress || extractClientIp(
+      c.req.header('x-forwarded-for'),
+      c.req.header('x-real-ip')
+    );
     
     // Extract geo data from client-provided fields (if available)
     const countryCode = validatedData.countryCode || null;
