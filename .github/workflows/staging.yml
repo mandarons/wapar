@@ -80,10 +80,11 @@ jobs:
           path: server/coverage/html/
           retention-days: 30
 
-      - name: Check coverage threshold
+      - name: Check coverage threshold (must be 100%)
         run: |
           cd server
-          COVERAGE=$(bun test --coverage 2>&1 | grep "All files" | awk '{print $4}' | sed 's/%//')
+          # Extract coverage from the filtered lcov file (excludes test files)
+          COVERAGE=$(lcov --summary coverage/lcov-filtered.info 2>&1 | grep "lines......" | awk '{print $2}' | sed 's/%//')
           echo "Coverage: ${COVERAGE}%"
           if (( $(echo "$COVERAGE < 100" | bc -l) )); then
             echo "❌ Coverage is below 100% (current: ${COVERAGE}%)"
