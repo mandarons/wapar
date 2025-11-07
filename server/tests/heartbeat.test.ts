@@ -537,4 +537,137 @@ describe(ENDPOINT, () => {
     
     expect(res.status).toBe(400);
   });
+
+  // Tests to verify heartbeats do NOT create duplicate installation records
+  it('POST should NOT create duplicate installation records', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    
+    // Get initial installation count
+    const initialCount = await d1QueryOne<{ count: number }>(
+      `SELECT COUNT(1) as count FROM Installation WHERE id = '${installationId}'`
+    );
+    expect(Number(initialCount?.count ?? 0)).toBe(1);
+    
+    // Send first heartbeat
+    await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ installationId })
+    });
+    
+    // Send second heartbeat (same day)
+    await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ installationId })
+    });
+    
+    // Verify only one installation exists (no duplicates created)
+    const finalCount = await d1QueryOne<{ count: number }>(
+      `SELECT COUNT(1) as count FROM Installation WHERE id = '${installationId}'`
+    );
+    expect(Number(finalCount?.count ?? 0)).toBe(1);
+    
+    // Verify heartbeats were recorded (but only one per day)
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${installationId}'`, 1);
+  });
+
+  it('POST multiple times across different requests should not create duplicate installations', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    
+    // Send multiple heartbeats
+    for (let i = 0; i < 5; i++) {
+      await fetch(`${base}${ENDPOINT}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          installationId,
+          data: { iteration: i }
+        })
+      });
+    }
+    
+    // Verify only one installation exists
+    const installationCount = await d1QueryOne<{ count: number }>(
+      `SELECT COUNT(1) as count FROM Installation WHERE id = '${installationId}'`
+    );
+    expect(Number(installationCount?.count ?? 0)).toBe(1);
+  });
+
+  it('POST with form-encoded data should not create duplicate installations', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    
+    // Send heartbeat with form-encoded data
+    const formData1 = new URLSearchParams({ installationId });
+    await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData1.toString()
+    });
+    
+    // Send another with JSON data
+    const formData2 = new URLSearchParams({
+      installationId,
+      data: JSON.stringify({ test: true })
+    });
+    await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData2.toString()
+    });
+    
+    // Verify only one installation exists
+    const installationCount = await d1QueryOne<{ count: number }>(
+      `SELECT COUNT(1) as count FROM Installation WHERE id = '${installationId}'`
+    );
+    expect(Number(installationCount?.count ?? 0)).toBe(1);
+  });
+
+  it('POST should update lastHeartbeatAt on duplicate heartbeat without creating new installation', async () => {
+    const base = getBase();
+    const installationId = await createInstallation();
+    
+    // Send first heartbeat
+    await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ installationId })
+    });
+    
+    // Get first lastHeartbeatAt
+    const first = await d1QueryOne<{ lastHeartbeatAt: string }>(
+      `SELECT last_heartbeat_at as lastHeartbeatAt FROM Installation WHERE id = '${installationId}'`
+    );
+    const firstTime = first?.lastHeartbeatAt;
+    expect(firstTime).toBeDefined();
+    
+    // Wait a moment to ensure different timestamp
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    // Send second heartbeat (same day)
+    await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ installationId })
+    });
+    
+    // Get updated lastHeartbeatAt
+    const second = await d1QueryOne<{ lastHeartbeatAt: string }>(
+      `SELECT last_heartbeat_at as lastHeartbeatAt FROM Installation WHERE id = '${installationId}'`
+    );
+    const secondTime = second?.lastHeartbeatAt;
+    expect(secondTime).toBeDefined();
+    
+    // Verify lastHeartbeatAt was updated (second time should be later)
+    expect(new Date(secondTime!).getTime()).toBeGreaterThan(new Date(firstTime!).getTime());
+    
+    // Verify still only one installation exists
+    const installationCount = await d1QueryOne<{ count: number }>(
+      `SELECT COUNT(1) as count FROM Installation WHERE id = '${installationId}'`
+    );
+    expect(Number(installationCount?.count ?? 0)).toBe(1);
+  });
 });
