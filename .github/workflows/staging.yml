@@ -91,8 +91,6 @@ jobs:
           fi
           echo "✅ Coverage is at 100%"
 
-  deploy-backend:
-
   test-frontend:
     name: Test Frontend - ${{ matrix.test-type }}
     runs-on: ubuntu-latest
