@@ -154,7 +154,7 @@ describe('Deployed API Integration Tests', () => {
     expect(response.ok).toBe(true);
   });
 
-  test('handles invalid installation ID gracefully', async () => {
+  test('handles heartbeat for non-existent installation by auto-creating it', async () => {
     const heartbeatData = {
       installationId: '00000000-0000-0000-0000-000000000000',
       data: {},
@@ -166,9 +166,10 @@ describe('Deployed API Integration Tests', () => {
       body: JSON.stringify(heartbeatData),
     });
     
-    // Should return error status (400 or 404)
-    expect(response.ok).toBe(false);
-    expect([400, 404]).toContain(response.status);
+    // Should auto-create the installation and succeed
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.id).toBe('00000000-0000-0000-0000-000000000000');
   });
 
   test('validates required fields on installation creation', async () => {

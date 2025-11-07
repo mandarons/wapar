@@ -296,18 +296,20 @@ describe('E2E: Complete Application Workflow', () => {
       expect(data.message).toBeDefined();
     });
 
-    it('should reject heartbeat for non-existent installation', async () => {
+    it('should auto-create installation on heartbeat for non-existent installation', async () => {
+      const testId = '00000000-0000-0000-0000-000000000000';
       const response = await fetch(`${base}/api/heartbeat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          installationId: '00000000-0000-0000-0000-000000000000'
+          installationId: testId
         })
       });
 
-      expect(response.status).toBe(404);
+      // Should succeed and auto-create the installation
+      expect(response.status).toBe(201);
       const data = await response.json() as any;
-      expect(data.message).toContain('not found');
+      expect(data.id).toBe(testId);
     });
   });
 });

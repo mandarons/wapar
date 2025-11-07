@@ -2,8 +2,7 @@ import { Hono } from 'hono';
 import type { D1Database } from '../types/database';
 import { HeartbeatSchema } from '../utils/validation';
 import { getDb } from '../db/client';
-import { installations, heartbeats, type NewHeartbeat } from '../db/schema';
-import { NotFoundError } from '../utils/errors';
+import { installations, heartbeats, type NewHeartbeat, type NewInstallation } from '../db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
 
@@ -76,7 +75,7 @@ heartbeatRoutes.post('/', async (c) => {
 
     const db = getDb(c.env);
 
-    // Verify installation exists
+    // Verify installation exists, create if missing
     const installation = await Logger.measureOperation(
       'heartbeat.verify_installation',
       () => db.select({ id: installations.id })
@@ -90,12 +89,49 @@ heartbeatRoutes.post('/', async (c) => {
     );
 
     if (!installation.length) {
-      Logger.warning('Heartbeat attempted for non-existent installation', {
+      Logger.warning('Heartbeat attempted for non-existent installation, auto-creating', {
         operation: 'heartbeat.verify_installation',
         metadata: { installationId: body.installationId },
         ...requestContext
       });
-      throw new NotFoundError('Installation not found.');
+      
+      // Auto-create installation with default values to recover from data loss/corruption
+      const now = new Date().toISOString();
+      const ipAddress = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || '0.0.0.0';
+      
+      const newInstallation: NewInstallation = {
+        id: body.installationId,
+        appName: 'unknown',
+        appVersion: 'unknown',
+        ipAddress,
+        data: null,
+        previousId: null,
+        countryCode: null,
+        region: null,
+        lastHeartbeatAt: now,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      await Logger.measureOperation(
+        'heartbeat.create_installation',
+        () => db.insert(installations).values(newInstallation),
+        {
+          metadata: { 
+            installationId: body.installationId,
+            reason: 'auto-created from heartbeat'
+          },
+          ...requestContext
+        }
+      );
+
+      Logger.success('Auto-created installation from heartbeat', {
+        operation: 'heartbeat.create_installation',
+        metadata: { 
+          installationId: body.installationId,
+          ipAddress
+        }
+      });
     }
 
     // Check if a heartbeat exists for today (UTC)
