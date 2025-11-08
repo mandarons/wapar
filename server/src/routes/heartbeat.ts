@@ -5,7 +5,7 @@ import { getDb } from '../db/client';
 import { installations, heartbeats, type NewHeartbeat, type NewInstallation } from '../db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
-import { extractClientIp } from '../utils/network';
+import { extractClientIp, extractCountryCode } from '../utils/network';
 
 export const heartbeatRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -106,6 +106,9 @@ heartbeatRoutes.post('/', async (c) => {
         c.req.header('x-real-ip')
       );
       
+      // Extract country code from Cloudflare header
+      const countryCode = extractCountryCode(c.req.header('cf-ipcountry'));
+      
       const newInstallation: NewInstallation = {
         id: body.installationId,
         appName: 'unknown',
@@ -113,7 +116,7 @@ heartbeatRoutes.post('/', async (c) => {
         ipAddress,
         data: null,
         previousId: null,
-        countryCode: null,
+        countryCode,
         region: null,
         lastHeartbeatAt: now,
         createdAt: now,
@@ -169,7 +172,9 @@ heartbeatRoutes.post('/', async (c) => {
         operation: 'heartbeat.create_installation',
         metadata: { 
           installationId: body.installationId,
-          ipAddress
+          ipAddress,
+          countryCode: countryCode || 'unknown',
+          source: 'cloudflare-header'
         }
       });
     }

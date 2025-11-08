@@ -4,7 +4,7 @@ import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
 import { installations, type NewInstallation } from '../db/schema';
 import { Logger } from '../utils/logger';
-import { extractClientIp } from '../utils/network';
+import { extractClientIp, extractCountryCode } from '../utils/network';
 
 const installationSchema = z.object({
   appName: z.string().min(1),
@@ -103,8 +103,12 @@ installationRoutes.post('/', async (c) => {
       c.req.header('x-real-ip')
     );
     
-    // Extract geo data from client-provided fields (if available)
-    const countryCode = validatedData.countryCode || null;
+    // Extract country code from Cloudflare header
+    const cfCountryCode = extractCountryCode(c.req.header('cf-ipcountry'));
+    
+    // Extract geo data with fallback to Cloudflare header
+    // Client-provided values take precedence for backward compatibility
+    const countryCode = validatedData.countryCode || cfCountryCode || null;
     const region = validatedData.region || null;
     
     // Log warning if IP address fallback is used
@@ -123,12 +127,12 @@ installationRoutes.post('/', async (c) => {
     
     // Log geo enrichment status
     if (countryCode) {
-      Logger.info('Installation enriched with Cloudflare geo data', {
+      Logger.info('Installation enriched with geo data', {
         operation: 'installation.geo_enrichment',
         metadata: {
           countryCode,
           region: region || 'unknown',
-          source: validatedData.countryCode ? 'client' : 'cloudflare'
+          source: validatedData.countryCode ? 'client' : 'cloudflare-header'
         },
         ...requestContext
       });
@@ -155,8 +159,8 @@ installationRoutes.post('/', async (c) => {
           appName: validatedData.appName, 
           appVersion: validatedData.appVersion,
           hasPreviousId: !!validatedData.previousId,
-          hasGeoData: !!(countryCode && region),
-          geoSource: validatedData.countryCode ? 'client' : (countryCode ? 'cloudflare' : 'none')
+          hasGeoData: !!countryCode,
+          geoSource: validatedData.countryCode ? 'client' : (countryCode ? 'cloudflare-header' : 'none')
         },
         ...requestContext
       }

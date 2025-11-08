@@ -31,3 +31,32 @@ export function extractClientIp(
   // Fall back to x-real-ip or default
   return xRealIp || fallback;
 }
+
+/**
+ * Extract country code from Cloudflare headers
+ * 
+ * Cloudflare automatically adds the CF-IPCountry header to all requests
+ * passing through their network (including Cloudflare Tunnels).
+ * 
+ * @param cfIpCountry - Value from CF-IPCountry header
+ * @returns ISO 3166-1 Alpha-2 country code (e.g., 'US', 'GB', 'JP') or null
+ */
+export function extractCountryCode(
+  cfIpCountry: string | undefined
+): string | null {
+  if (!cfIpCountry) {
+    return null;
+  }
+  
+  // Convert to uppercase for comparison
+  const upperCountry = cfIpCountry.toUpperCase();
+  
+  // Cloudflare returns 'XX' for unknown/private IPs
+  // T1 is returned for Tor exit nodes
+  if (upperCountry === 'XX' || upperCountry === 'T1') {
+    return null;
+  }
+  
+  // Return uppercase ISO country code
+  return upperCountry;
+}
