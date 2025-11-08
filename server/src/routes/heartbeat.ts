@@ -173,7 +173,7 @@ heartbeatRoutes.post('/', async (c) => {
         metadata: { 
           installationId: body.installationId,
           ipAddress,
-          countryCode: countryCode || 'unknown',
+          countryCode: countryCode ?? null,
           source: 'cloudflare-header'
         }
       });
