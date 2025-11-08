@@ -339,4 +339,157 @@ describe(ENDPOINT, () => {
     expect(installation?.country_code).toBe('CA');
     expect(installation?.region).toBe('Ontario');
   });
+
+  it('POST should use CF-IPCountry header when client does not provide countryCode', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'CF-IPCountry': 'DE'
+      },
+      body: JSON.stringify({ 
+        appName: randomAppName(), 
+        appVersion: randomVersion() 
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    
+    // Verify country code was saved from header
+    const installation = await d1QueryOne<{ country_code: string }>(
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [body.id]
+    );
+    expect(installation?.country_code).toBe('DE');
+  });
+
+  it('POST should prioritize client-provided countryCode over CF-IPCountry', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'CF-IPCountry': 'FR'
+      },
+      body: JSON.stringify({ 
+        appName: randomAppName(), 
+        appVersion: randomVersion(),
+        countryCode: 'US'
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    
+    // Verify client-provided value takes precedence
+    const installation = await d1QueryOne<{ country_code: string }>(
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [body.id]
+    );
+    expect(installation?.country_code).toBe('US');
+  });
+
+  it('POST should store null when CF-IPCountry is XX (unknown)', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'CF-IPCountry': 'XX'
+      },
+      body: JSON.stringify({ 
+        appName: randomAppName(), 
+        appVersion: randomVersion() 
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    
+    // Verify null was stored for unknown country
+    const installation = await d1QueryOne<{ country_code: string | null }>(
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [body.id]
+    );
+    expect(installation?.country_code).toBe(null);
+  });
+
+  it('POST should store null when CF-IPCountry is T1 (Tor)', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'CF-IPCountry': 'T1'
+      },
+      body: JSON.stringify({ 
+        appName: randomAppName(), 
+        appVersion: randomVersion() 
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    
+    // Verify null was stored for Tor
+    const installation = await d1QueryOne<{ country_code: string | null }>(
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [body.id]
+    );
+    expect(installation?.country_code).toBe(null);
+  });
+
+  it('POST with form-encoded data should use CF-IPCountry header', async () => {
+    const base = getBase();
+    const formData = new URLSearchParams({
+      appName: 'icloud-docker',
+      appVersion: '2.5.1'
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'CF-IPCountry': 'JP'
+      },
+      body: formData.toString()
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    
+    // Verify country code from header
+    const installation = await d1QueryOne<{ country_code: string }>(
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [body.id]
+    );
+    expect(installation?.country_code).toBe('JP');
+  });
+
+  it('POST should handle lowercase CF-IPCountry header', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'CF-IPCountry': 'gb'
+      },
+      body: JSON.stringify({ 
+        appName: randomAppName(), 
+        appVersion: randomVersion() 
+      })
+    });
+    
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    
+    // Verify uppercase conversion
+    const installation = await d1QueryOne<{ country_code: string }>(
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [body.id]
+    );
+    expect(installation?.country_code).toBe('GB');
+  });
 });

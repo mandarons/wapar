@@ -289,13 +289,26 @@ If the installation was stale before this heartbeat:
 
 ## Geographic Data Enrichment
 
-Installation records are **automatically enriched with geographic data** (country code and region) using Cloudflare's built-in request metadata available on `request.cf`. This data is captured immediately when installations are created, with no external API calls or delays.
+Installation records are **automatically enriched with geographic data** using Cloudflare's `CF-IPCountry` header, which is available on all requests passing through Cloudflare Tunnels (including production deployments).
 
-**Benefits:**
-- ✅ Immediate geographic data availability (no waiting for background jobs)
-- ✅ Zero external dependencies (no rate limits or API failures)
-- ✅ Free and reliable (provided automatically by Cloudflare on all requests)
-- ✅ Better UX (maps and analytics populate in real-time)
+**Features:**
+- ✅ Automatic country code extraction from `CF-IPCountry` header
+- ✅ Client values take precedence (backward compatible)
+- ✅ Works for both `/api/installation` and `/api/heartbeat` endpoints
+- ✅ Handles auto-created installations from heartbeats
+- ✅ No external API calls or delays
+- ✅ Zero rate limits or dependencies
+
+**Implementation:**
+- Country codes are ISO 3166-1 Alpha-2 format (e.g., 'US', 'GB', 'JP')
+- Unknown/private IPs ('XX', 'T1') are stored as `null`
+- Region data must still be provided by clients (not available in headers)
+
+**How it works:**
+1. Server extracts country code from `CF-IPCountry` header
+2. If client provides `countryCode` in request body, that takes precedence
+3. Otherwise, uses header value
+4. Falls back to `null` if neither available
 
 ## Configuration
 

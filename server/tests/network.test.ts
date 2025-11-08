@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { extractClientIp } from '../src/utils/network';
+import { extractClientIp, extractCountryCode } from '../src/utils/network';
 
 describe('Network Utilities', () => {
   describe('extractClientIp', () => {
@@ -56,6 +56,53 @@ describe('Network Utilities', () => {
     it('should extract first IPv6 from comma-separated list', () => {
       const result = extractClientIp('2001:0db8::1, 192.168.1.1', undefined);
       expect(result).toBe('2001:0db8::1');
+    });
+  });
+
+  describe('extractCountryCode', () => {
+    it('should extract valid country code', () => {
+      expect(extractCountryCode('US')).toBe('US');
+      expect(extractCountryCode('GB')).toBe('GB');
+      expect(extractCountryCode('JP')).toBe('JP');
+      expect(extractCountryCode('CA')).toBe('CA');
+    });
+
+    it('should convert lowercase to uppercase', () => {
+      expect(extractCountryCode('us')).toBe('US');
+      expect(extractCountryCode('gb')).toBe('GB');
+      expect(extractCountryCode('jp')).toBe('JP');
+    });
+
+    it('should handle mixed case', () => {
+      expect(extractCountryCode('Us')).toBe('US');
+      expect(extractCountryCode('uS')).toBe('US');
+    });
+
+    it('should return null for unknown/private IPs (XX)', () => {
+      expect(extractCountryCode('XX')).toBe(null);
+    });
+
+    it('should return null for Tor exit nodes (T1)', () => {
+      expect(extractCountryCode('T1')).toBe(null);
+    });
+
+    it('should return null for undefined', () => {
+      expect(extractCountryCode(undefined)).toBe(null);
+    });
+
+    it('should return null for empty string', () => {
+      expect(extractCountryCode('')).toBe(null);
+    });
+
+    it('should handle valid lowercase special codes', () => {
+      expect(extractCountryCode('xx')).toBe(null);
+      expect(extractCountryCode('t1')).toBe(null);
+    });
+
+    it('should handle mixed case special codes', () => {
+      expect(extractCountryCode('Xx')).toBe(null);
+      expect(extractCountryCode('xX')).toBe(null);
+      expect(extractCountryCode('T1')).toBe(null);
     });
   });
 });

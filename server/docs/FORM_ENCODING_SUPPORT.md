@@ -51,6 +51,16 @@ curl -X POST https://wapar-api.mandarons.com/api/installation \
 | `countryCode` | string | No | ISO country code (e.g., "US") |
 | `region` | string | No | Region/state name |
 
+#### Automatic Geographic Enrichment
+
+The server automatically extracts country codes from Cloudflare's `CF-IPCountry` header for all installations passing through Cloudflare Tunnels.
+
+- **Client-provided values take precedence**: If you include `countryCode` in the request, it will be used
+- **Automatic fallback**: If not provided, the server uses the `CF-IPCountry` header
+- **No action required**: This works transparently for all clients
+
+This ensures geographic data is captured even when clients don't explicitly provide it.
+
 ### 2. Heartbeat Endpoint (`/api/heartbeat`)
 
 **Primary Format:** `application/json` (recommended)

@@ -670,4 +670,123 @@ describe(ENDPOINT, () => {
     );
     expect(Number(installationCount?.count ?? 0)).toBe(1);
   });
+
+  it('POST should auto-create installation with CF-IPCountry when installation missing', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'CF-IPCountry': 'AU'
+      },
+      body: JSON.stringify({ installationId: nonExistentId })
+    });
+    
+    expect(res.status).toBe(201);
+    
+    // Verify installation was created with country code
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    const installation = await d1QueryOne<{ country_code: string; app_name: string }>(
+      `SELECT country_code, app_name FROM Installation WHERE id = '${nonExistentId}'`
+    );
+    expect(installation?.country_code).toBe('AU');
+    expect(installation?.app_name).toBe('unknown');
+  });
+
+  it('POST should auto-create installation with null country when CF-IPCountry is XX', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'CF-IPCountry': 'XX'
+      },
+      body: JSON.stringify({ installationId: nonExistentId })
+    });
+    
+    expect(res.status).toBe(201);
+    
+    // Verify installation was created with null country
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    const installation = await d1QueryOne<{ country_code: string | null }>(
+      `SELECT country_code FROM Installation WHERE id = '${nonExistentId}'`
+    );
+    expect(installation?.country_code).toBe(null);
+  });
+
+  it('POST should auto-create installation with null country when CF-IPCountry is T1', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'CF-IPCountry': 'T1'
+      },
+      body: JSON.stringify({ installationId: nonExistentId })
+    });
+    
+    expect(res.status).toBe(201);
+    
+    // Verify installation was created with null country
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    const installation = await d1QueryOne<{ country_code: string | null }>(
+      `SELECT country_code FROM Installation WHERE id = '${nonExistentId}'`
+    );
+    expect(installation?.country_code).toBe(null);
+  });
+
+  it('POST should auto-create installation with uppercase country code', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'CF-IPCountry': 'se'
+      },
+      body: JSON.stringify({ installationId: nonExistentId })
+    });
+    
+    expect(res.status).toBe(201);
+    
+    // Verify country code was uppercased
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    const installation = await d1QueryOne<{ country_code: string }>(
+      `SELECT country_code FROM Installation WHERE id = '${nonExistentId}'`
+    );
+    expect(installation?.country_code).toBe('SE');
+  });
+
+  it('POST with form-encoded should use CF-IPCountry when auto-creating', async () => {
+    const base = getBase();
+    const nonExistentId = crypto.randomUUID();
+    const formData = new URLSearchParams({
+      installationId: nonExistentId
+    });
+    
+    const res = await fetch(`${base}${ENDPOINT}`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'CF-IPCountry': 'BR'
+      },
+      body: formData.toString()
+    });
+    
+    expect(res.status).toBe(201);
+    
+    // Verify country code from header
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    const installation = await d1QueryOne<{ country_code: string }>(
+      `SELECT country_code FROM Installation WHERE id = '${nonExistentId}'`
+    );
+    expect(installation?.country_code).toBe('BR');
+  });
 });

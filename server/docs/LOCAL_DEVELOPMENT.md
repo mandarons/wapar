@@ -293,6 +293,28 @@ When developing locally:
 
 See [../CONTRIBUTING.md](../../CONTRIBUTING.md) for full contribution guidelines.
 
+## Geographic Headers in Local Development
+
+**Important:** Cloudflare headers like `CF-IPCountry` are NOT available in local development environments.
+
+When running locally:
+- `CF-IPCountry` header will be `undefined`
+- Country codes will default to `null` unless explicitly provided
+- Test by manually adding the header in your requests
+
+**Testing Example:**
+```bash
+curl -X POST http://localhost:8787/api/installation \
+  -H "Content-Type: application/json" \
+  -H "CF-IPCountry: US" \
+  -d '{"appName": "test", "appVersion": "1.0.0"}'
+```
+
+In production (through Cloudflare Tunnels):
+- All requests automatically include `CF-IPCountry`
+- No configuration required
+- Works transparently for all clients
+
 ## Related Documentation
 
 - [Test Coverage Report](./TEST_COVERAGE_REPORT.md) - Detailed test coverage metrics
