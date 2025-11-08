@@ -104,5 +104,16 @@ describe('Network Utilities', () => {
       expect(extractCountryCode('xX')).toBe(null);
       expect(extractCountryCode('T1')).toBe(null);
     });
+
+    it('should return null for strings longer than 2 characters', () => {
+      expect(extractCountryCode('USA')).toBe(null);
+      expect(extractCountryCode('UNITED')).toBe(null);
+      expect(extractCountryCode('ABC')).toBe(null);
+    });
+
+    it('should return null for single character strings', () => {
+      expect(extractCountryCode('U')).toBe(null);
+      expect(extractCountryCode('A')).toBe(null);
+    });
   });
 });

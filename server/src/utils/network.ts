@@ -44,7 +44,8 @@ export function extractClientIp(
 export function extractCountryCode(
   cfIpCountry: string | undefined
 ): string | null {
-  if (!cfIpCountry) {
+  // Validate that country code is exactly 2 characters (ISO 3166-1 Alpha-2)
+  if (!cfIpCountry || cfIpCountry.length !== 2) {
     return null;
   }
   

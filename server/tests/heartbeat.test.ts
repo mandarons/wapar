@@ -687,9 +687,10 @@ describe(ENDPOINT, () => {
     expect(res.status).toBe(201);
     
     // Verify installation was created with country code
-    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Installation WHERE id = ?', [nonExistentId], 1);
     const installation = await d1QueryOne<{ country_code: string; app_name: string }>(
-      `SELECT country_code, app_name FROM Installation WHERE id = '${nonExistentId}'`
+      'SELECT country_code, app_name FROM Installation WHERE id = ?',
+      [nonExistentId]
     );
     expect(installation?.country_code).toBe('AU');
     expect(installation?.app_name).toBe('unknown');
@@ -711,9 +712,10 @@ describe(ENDPOINT, () => {
     expect(res.status).toBe(201);
     
     // Verify installation was created with null country
-    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Installation WHERE id = ?', [nonExistentId], 1);
     const installation = await d1QueryOne<{ country_code: string | null }>(
-      `SELECT country_code FROM Installation WHERE id = '${nonExistentId}'`
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [nonExistentId]
     );
     expect(installation?.country_code).toBe(null);
   });
@@ -734,9 +736,10 @@ describe(ENDPOINT, () => {
     expect(res.status).toBe(201);
     
     // Verify installation was created with null country
-    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Installation WHERE id = ?', [nonExistentId], 1);
     const installation = await d1QueryOne<{ country_code: string | null }>(
-      `SELECT country_code FROM Installation WHERE id = '${nonExistentId}'`
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [nonExistentId]
     );
     expect(installation?.country_code).toBe(null);
   });
@@ -757,9 +760,10 @@ describe(ENDPOINT, () => {
     expect(res.status).toBe(201);
     
     // Verify country code was uppercased
-    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Installation WHERE id = ?', [nonExistentId], 1);
     const installation = await d1QueryOne<{ country_code: string }>(
-      `SELECT country_code FROM Installation WHERE id = '${nonExistentId}'`
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [nonExistentId]
     );
     expect(installation?.country_code).toBe('SE');
   });
@@ -783,9 +787,10 @@ describe(ENDPOINT, () => {
     expect(res.status).toBe(201);
     
     // Verify country code from header
-    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${nonExistentId}'`, 1);
+    await waitForCount('SELECT COUNT(1) as count FROM Installation WHERE id = ?', [nonExistentId], 1);
     const installation = await d1QueryOne<{ country_code: string }>(
-      `SELECT country_code FROM Installation WHERE id = '${nonExistentId}'`
+      'SELECT country_code FROM Installation WHERE id = ?',
+      [nonExistentId]
     );
     expect(installation?.country_code).toBe('BR');
   });
