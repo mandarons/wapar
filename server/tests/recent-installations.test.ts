@@ -30,11 +30,11 @@ describe('Recent Installations API', () => {
     expect(data).toHaveProperty('total');
     expect(data).toHaveProperty('limit');
     expect(data).toHaveProperty('offset');
-    expect(data).toHaveProperty('installationsWithinThreshold');
-    expect(data).toHaveProperty('thresholdDays');
+    expect(data).toHaveProperty('installationsLast24h');
+    expect(data).toHaveProperty('installationsLast7d');
     expect(Array.isArray(data.installations)).toBe(true);
-    expect(typeof data.thresholdDays).toBe('number');
-    expect(data.thresholdDays).toBeGreaterThan(0);
+    expect(typeof data.installationsLast24h).toBe('number');
+    expect(typeof data.installationsLast7d).toBe('number');
     
     // Find our test installation
     const testInstall = data.installations.find((i: any) => i.id === id);
@@ -183,19 +183,22 @@ describe('Recent Installations API', () => {
     
     expect(response.status).toBe(200);
     // Should have counted our recent installations
-    expect(data.installationsWithinThreshold).toBeGreaterThanOrEqual(2);
-    expect(data.thresholdDays).toBeGreaterThan(0);
+    expect(data.installationsLast24h).toBeGreaterThanOrEqual(2);
+    expect(data.installationsLast7d).toBeGreaterThanOrEqual(2);
   });
 
-  it('should respect ACTIVITY_THRESHOLD_DAYS from environment', async () => {
+  it('should count installations in 24h and 7d windows correctly', async () => {
     const base = getBase();
     
-    // This test verifies that the endpoint uses the threshold value
-    // The actual threshold is set via environment variable in the server
+    // This test verifies that the endpoint correctly counts installations
+    // created within the last 24 hours and 7 days
     const response = await fetch(`${base}${ENDPOINT}`);
     const data = await response.json();
     
     expect(response.status).toBe(200);
-    expect(data.thresholdDays).toBe(3); // Default value in test environment
+    expect(typeof data.installationsLast24h).toBe('number');
+    expect(typeof data.installationsLast7d).toBe('number');
+    // 7 day count should be >= 24h count since it's a longer window
+    expect(data.installationsLast7d).toBeGreaterThanOrEqual(data.installationsLast24h);
   });
 });
