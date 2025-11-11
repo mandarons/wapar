@@ -37,6 +37,10 @@ installationStatsRoutes.get('/', async (c) => {
     const activeInstallations = activeInstallationsResult[0]?.count ?? 0;
 
     // Stale installations count (no recent heartbeat or never had heartbeat)
+    // Note: This explicit query adds an extra database round-trip compared to
+    // calculating stale as (total - active), but provides more accuracy and
+    // explicit verification of the stale filter logic. The performance impact
+    // is minimal for typical dataset sizes.
     const staleInstallationsResult = await Logger.measureOperation(
       'installation_stats.stale',
       () => db.select({ count: count() })

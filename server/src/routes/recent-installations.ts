@@ -4,7 +4,6 @@ import { getDb } from '../db/client';
 import { installations } from '../db/schema';
 import { desc, eq, and, gte, count, type SQL } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
-import { getActivityThresholdDays, getActivityCutoffDate } from '../utils/active-installations';
 
 export const recentInstallationsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -18,13 +17,9 @@ recentInstallationsRoutes.get('/', async (c) => {
   const offset = Math.max(parseInt(c.req.query('offset') || '0'), 0);
   const appName = c.req.query('appName');
   
-  // Get activity threshold from environment
-  const thresholdDays = getActivityThresholdDays(c.env);
-  const cutoffDate = getActivityCutoffDate(thresholdDays);
-  
   Logger.info('Recent installations request', {
     operation: 'recent-installations.fetch',
-    metadata: { limit, offset, appName, thresholdDays },
+    metadata: { limit, offset, appName },
     ...requestContext
   });
   
@@ -55,23 +50,40 @@ recentInstallationsRoutes.get('/', async (c) => {
       .where(conditions.length > 0 ? and(...conditions) : undefined);
     const totalCount = totalCountResult[0]?.count || 0;
     
-    // Get count for installations within the activity threshold window
-    const recentCountResult = await db.select({ count: count() })
+    // Calculate time boundaries for recent installation counts
+    // Note: These use hardcoded periods (24h, 7d) based on creation time,
+    // which is different from ACTIVITY_THRESHOLD_DAYS (heartbeat-based activity)
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    
+    // Get count for installations created in last 24 hours
+    const last24hResult = await db.select({ count: count() })
       .from(installations)
       .where(
         conditions.length > 0 
-          ? and(...conditions, gte(installations.createdAt, cutoffDate))
-          : gte(installations.createdAt, cutoffDate)
+          ? and(...conditions, gte(installations.createdAt, last24h))
+          : gte(installations.createdAt, last24h)
       );
-    const installationsWithinThreshold = recentCountResult[0]?.count || 0;
+    const installationsLast24h = last24hResult[0]?.count || 0;
+    
+    // Get count for installations created in last 7 days
+    const last7dResult = await db.select({ count: count() })
+      .from(installations)
+      .where(
+        conditions.length > 0 
+          ? and(...conditions, gte(installations.createdAt, last7d))
+          : gte(installations.createdAt, last7d)
+      );
+    const installationsLast7d = last7dResult[0]?.count || 0;
     
     const responseData = {
       installations: recentInstallations,
       total: totalCount,
       limit,
       offset,
-      installationsWithinThreshold,
-      thresholdDays
+      installationsLast24h,
+      installationsLast7d
     };
     
     Logger.success('Recent installations fetched', {
@@ -79,8 +91,8 @@ recentInstallationsRoutes.get('/', async (c) => {
       metadata: { 
         count: recentInstallations.length,
         total: totalCount,
-        withinThreshold: installationsWithinThreshold,
-        thresholdDays
+        last24h: installationsLast24h,
+        last7d: installationsLast7d
       }
     });
     
