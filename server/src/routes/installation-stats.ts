@@ -49,6 +49,18 @@ installationStatsRoutes.get('/', async (c) => {
     );
     const staleInstallations = staleInstallationsResult[0]?.count ?? 0;
 
+    // Validate that active + stale equals total
+    if (activeInstallations + staleInstallations !== totalInstallations) {
+      Logger.warn('Installation count mismatch', {
+        operation: 'installation_stats.validation',
+        metadata: { 
+          total: totalInstallations,
+          active: activeInstallations,
+          stale: staleInstallations,
+          difference: totalInstallations - (activeInstallations + staleInstallations)
+        }
+      });
+    }
     // Version breakdown for active installations only
     const activeVersionsResult = await Logger.measureOperation(
       'installation_stats.active_versions',
