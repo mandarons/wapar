@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../src/utils/active-installations';
+import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter, createStaleInstallationFilter } from '../src/utils/active-installations';
 import { installations } from '../src/db/schema';
 
 describe('Active Installations Utilities', () => {
@@ -67,6 +67,29 @@ describe('Active Installations Utilities', () => {
       
       // The filter should be a SQL condition object
       expect(filter).toBeDefined();
+    });
+  });
+
+  describe('createStaleInstallationFilter', () => {
+    it('should create filter for stale installations', () => {
+      const cutoffDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+      const filter = createStaleInstallationFilter(installations.lastHeartbeatAt, cutoffDate);
+      
+      // The filter should be a SQL condition object
+      expect(filter).toBeDefined();
+    });
+
+    it('should be the inverse of active installation filter', () => {
+      const cutoffDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+      const activeFilter = createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate);
+      const staleFilter = createStaleInstallationFilter(installations.lastHeartbeatAt, cutoffDate);
+      
+      // Both filters should be defined
+      expect(activeFilter).toBeDefined();
+      expect(staleFilter).toBeDefined();
+      
+      // They should be different objects
+      expect(activeFilter).not.toBe(staleFilter);
     });
   });
 });

@@ -8,7 +8,7 @@
  * @module active-installations
  */
 
-import { and, gte, isNotNull } from 'drizzle-orm';
+import { and, gte, isNotNull, lt, or, isNull } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 /**
@@ -102,5 +102,48 @@ export function createActiveInstallationFilter(
   return and(
     isNotNull(lastHeartbeatAtColumn),
     gte(lastHeartbeatAtColumn, cutoffDate)
+  );
+}
+
+/**
+ * Create a SQL condition for filtering stale installations
+ * 
+ * Generates a SQL WHERE clause that filters for stale installations.
+ * An installation is stale if:
+ * 1. lastHeartbeatAt is NULL (never sent a heartbeat), OR
+ * 2. lastHeartbeatAt < cutoffDate (last heartbeat is too old)
+ * 
+ * This is the inverse of the active installation filter.
+ * 
+ * @param lastHeartbeatAtColumn The lastHeartbeatAt column reference from Drizzle schema
+ * @param cutoffDate The cutoff date for active installations (ISO string)
+ * @returns SQL condition that checks if installation is stale
+ * 
+ * @example
+ * // Usage in a Drizzle query
+ * const cutoffDate = getActivityCutoffDate(3);
+ * const staleInstalls = await db
+ *   .select({ count: count() })
+ *   .from(installations)
+ *   .where(createStaleInstallationFilter(installations.lastHeartbeatAt, cutoffDate));
+ * 
+ * @example
+ * // Combined with other conditions
+ * import { and, eq } from 'drizzle-orm';
+ * const usStaleInstalls = await db
+ *   .select()
+ *   .from(installations)
+ *   .where(and(
+ *     createStaleInstallationFilter(installations.lastHeartbeatAt, cutoffDate),
+ *     eq(installations.countryCode, 'US')
+ *   ));
+ */
+export function createStaleInstallationFilter(
+  lastHeartbeatAtColumn: SQLiteColumn,
+  cutoffDate: string
+) {
+  return or(
+    isNull(lastHeartbeatAtColumn),
+    lt(lastHeartbeatAtColumn, cutoffDate)
   );
 }

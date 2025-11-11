@@ -4,7 +4,7 @@ import { getDb } from '../db/client';
 import { installations } from '../db/schema';
 import { count, desc, isNotNull, and } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
-import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
+import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter, createStaleInstallationFilter } from '../utils/active-installations';
 
 export const installationStatsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -37,7 +37,17 @@ installationStatsRoutes.get('/', async (c) => {
     const activeInstallations = activeInstallationsResult[0]?.count ?? 0;
 
     // Stale installations count (no recent heartbeat or never had heartbeat)
-    const staleInstallations = totalInstallations - activeInstallations;
+    const staleInstallationsResult = await Logger.measureOperation(
+      'installation_stats.stale',
+      () => db.select({ count: count() })
+        .from(installations)
+        .where(createStaleInstallationFilter(installations.lastHeartbeatAt, cutoffDate)),
+      {
+        metadata: { cutoffDate, thresholdDays },
+        ...requestContext
+      }
+    );
+    const staleInstallations = staleInstallationsResult[0]?.count ?? 0;
 
     // Version breakdown for active installations only
     const activeVersionsResult = await Logger.measureOperation(
