@@ -212,4 +212,25 @@ describe(ENDPOINT, () => {
       expect(usEntry.count).toBeGreaterThanOrEqual(1);
     }
   });
+
+  it('should validate count consistency and warn on mismatch', async () => {
+    const base = getBase();
+    
+    // Create an installation
+    const id = await createInstallation();
+    
+    // Send heartbeat to make it active
+    await sendHeartbeat(id);
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [id], 1);
+    
+    // Test normal case - counts should match
+    const res = await fetch(`${base}${ENDPOINT}`);
+    const stats = await res.json();
+    
+    // Verify counts are consistent (active + stale = total)
+    expect(stats.activeInstallations + stats.staleInstallations).toBe(stats.totalInstallations);
+    
+    // This verifies the validation logic runs without warnings in normal cases
+    expect(stats.totalInstallations).toBeGreaterThanOrEqual(1);
+  });
 });

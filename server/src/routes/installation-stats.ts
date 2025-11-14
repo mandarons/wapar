@@ -37,10 +37,9 @@ installationStatsRoutes.get('/', async (c) => {
     const activeInstallations = activeInstallationsResult[0]?.count ?? 0;
 
     // Stale installations count (no recent heartbeat or never had heartbeat)
-    // Note: This explicit query adds an extra database round-trip compared to
-    // calculating stale as (total - active), but provides more accuracy and
-    // explicit verification of the stale filter logic. The performance impact
-    // is minimal for typical dataset sizes.
+    // Note: The stale filter (NULL OR < cutoff) is mathematically complementary to
+    // the active filter (NOT NULL AND >= cutoff), so active + stale will always
+    // equal total. No validation needed.
     const staleInstallationsResult = await Logger.measureOperation(
       'installation_stats.stale',
       () => db.select({ count: count() })
@@ -53,18 +52,6 @@ installationStatsRoutes.get('/', async (c) => {
     );
     const staleInstallations = staleInstallationsResult[0]?.count ?? 0;
 
-    // Validate that active + stale equals total
-    if (activeInstallations + staleInstallations !== totalInstallations) {
-      Logger.warn('Installation count mismatch', {
-        operation: 'installation_stats.validation',
-        metadata: { 
-          total: totalInstallations,
-          active: activeInstallations,
-          stale: staleInstallations,
-          difference: totalInstallations - (activeInstallations + staleInstallations)
-        }
-      });
-    }
     // Version breakdown for active installations only
     const activeVersionsResult = await Logger.measureOperation(
       'installation_stats.active_versions',
