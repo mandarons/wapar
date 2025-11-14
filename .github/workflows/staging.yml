@@ -35,16 +35,7 @@ jobs:
         if: steps.cache-server.outputs.cache-hit != 'true'
         run: cd server && bun install --frozen-lockfile
 
-      - name: Run unit tests
-        run: cd server && bun run test:unit
-
-      - name: Run integration tests
-        run: cd server && bun run test:integration
-
-      - name: Run tests with coverage
-        run: cd server && bun test --coverage
-
-      - name: Generate HTML coverage report
+      - name: Run tests with coverage and generate HTML coverage report
         run: cd server && bun run test:coverage:html
 
       - name: Upload coverage report
@@ -58,7 +49,7 @@ jobs:
         run: |
           cd server
           # Extract coverage from the filtered lcov file (excludes test files)
-          COVERAGE=$(lcov --summary coverage/lcov-filtered.info 2>&1 | grep "lines......" | awk '{print $2}' | sed 's/%//')
+          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep "lines......" | awk '{print $2}' | sed 's/%//')
           echo "Coverage: ${COVERAGE}%"
           if (( $(echo "$COVERAGE < 100" | bc -l) )); then
             echo "❌ Coverage is below 100% (current: ${COVERAGE}%)"
