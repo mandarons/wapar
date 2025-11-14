@@ -48,7 +48,7 @@ jobs:
       - name: Check coverage threshold (must be 100%)
         run: |
           cd server
-          # Extract coverage from the filtered lcov file (excludes test files)
+          # Extract coverage from lcov.info (test files excluded via bunfig.toml)
           COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep "lines......" | awk '{print $2}' | sed 's/%//')
           echo "Coverage: ${COVERAGE}%"
           if (( $(echo "$COVERAGE < 100" | bc -l) )); then
