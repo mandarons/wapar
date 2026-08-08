@@ -1,104 +1,74 @@
-# AGENTS.md - WAPAR Repository Instructions
+# AGENTS.md — WAPAR Repository Instructions
 
-## Package Manager: Bun Only
+WAPAR (Web Application Performance Analytics and Reporting) is an application analytics platform that tracks installation metrics, user engagement, version adoption, and geographic distribution for applications (iCloud Docker and HA Bouncie). The `server/` exposes an ingestion + analytics API; the `app/` dashboard visualizes the data. The system runs on **local SQLite, not Cloudflare D1**, deployed via Docker in production.
 
-All commands use `bun`. Never use npm, yarn, or pnpm. They will fail.
+## Quick Reference
 
-## Two Workspaces
+- **Language(s):** TypeScript (Bun runtime)
+- **Framework(s):** Hono (server), SvelteKit + Tailwind + Skeleton UI (app), Drizzle ORM
+- **Package manager:** Bun ONLY — never npm, yarn, or pnpm; they will fail.
 
-| Directory | Stack | Entry Point |
-|-----------|-------|-------------|
-| `server/` | Hono + SQLite + Drizzle ORM | `server/src/index.ts` (app), `server/src/local.ts` (local dev) |
-| `app/` | SvelteKit + Tailwind + Skeleton UI | `app/src/routes/+page.server.ts` |
+## Commands
 
-## Essential Commands
+| Task | Command |
+|------|---------|
+| Install deps (server) | `cd server && bun install` |
+| Install deps (app) | `cd app && bun install` |
+| Server: one-command setup | `cd server && ./run.sh` (deps + db:push + start on :8787) |
+| Server start (dev) | `cd server && bun run dev` |
+| Server tests (all) | `cd server && bun test` |
+| Server tests (unit) | `cd server && bun test:unit` |
+| Server tests (integration) | `cd server && bun test:integration` |
+| Server coverage (100% gate) | `cd server && bun run test:coverage` |
+| DB schema (dev, no migrations) | `cd server && bun run db:push` |
+| DB schema (prod) | `cd server && bun run db:generate && bun run db:migrate` |
+| Verify schema = migrations | `cd server && bunx drizzle-kit check` |
+| App type check | `cd app && bun run check` |
+| App lint | `cd app && bun run lint` |
+| App format (auto-fix) | `cd app && bun run format` |
+| App unit tests | `cd app && bun run test:unit` |
+| App e2e tests | `cd app && bun run test:e2e` |
+| App all tests | `cd app && bun run test` |
 
-### Server (`server/`)
-```bash
-cd server && bun install
-./run.sh                          # One-command setup: deps + db push + start
-bun run dev                       # Start on :8787
-bun test                          # All tests
-bun test:unit                     # Unit tests (excludes tests/integration/)
-bun test:integration              # Integration tests only
-bun run test:coverage             # 100% line coverage required in CI
-bun run db:push                   # Apply schema changes (dev - no migration files)
-bun run db:generate               # Generate migration files (production)
-bun run db:migrate                # Apply migration files
-bunx drizzle-kit check            # Verify schema matches migrations
-```
+Always run the linter and relevant tests before declaring work complete.
 
-### Frontend (`app/`)
-```bash
-cd app && bun install
-bun dev                           # Dev server with --host
-bun run check                     # Type checking (svelte-check)
-bun run lint                      # Prettier + ESLint
-bun run format                    # Auto-fix formatting
-bun run test                      # Runs e2e + unit sequentially
-bun run test:unit                 # Vitest
-bun run test:e2e                  # Playwright
-```
+## Architecture Overview
 
-## Critical Architecture Facts
+Two-workspace repo: a Hono API (`server/`) exposing installation/heartbeat ingestion and analytics endpoints over a **local SQLite database** (wrapped as a D1-compatible shim), and a SvelteKit dashboard (`app/`) that fetches those endpoints server-side and renders charts/maps. `scripts/` holds legacy one-off migrations; `external/icloud-docker` is a git submodule that reports analytics into WAPAR. See `docs/index.md` for the full architecture map.
 
-### Server runs on local SQLite, NOT Cloudflare D1
-Despite `D1Database` type names in `server/src/types/database.ts`, this is a **local SQLite shim**. The mock adapter in `server/src/local.ts` wraps `bun:sqlite` as D1-compatible.
+## Key Conventions
 
-### Database file locations
-- **Dev**: `server/local.db` (created by `./run.sh` or `bun run db:push`)
-- **Tests**: In-memory only (`:memory:`)
-- **Docker**: `/data/local.db` (volume mount recommended)
-- **Override**: `DB_PATH` env var
+- **Bun only** — `bun install`, `bun test`, `bun run ...`; never npm/yarn/pnpm.
+- **Schema patterns** (see `docs/standards/coding.md`): text UUID primary keys; ISO timestamps in TEXT; JSON in TEXT with manual `JSON.stringify`/`parse`; text `references()` for FKs; indexes declared separately.
+- **UI**: use `wapar-*` design tokens from `app/tailwind.config.ts`; WCAG AA required; reusable components go in `app/src/lib/components/ui/`; follow `app/docs/UX_GUIDELINES.md`.
+- **API format**: endpoints accept JSON (recommended) and `application/x-www-form-urlencoded` (legacy) — see `server/docs/FORM_ENCODING_SUPPORT.md`.
 
-### 100% Server Test Coverage Required
-CI blocks merges if server line coverage drops below 100%. Enforced via `bunfig.toml` (`coverageThreshold = {lines = 100}`). Test files excluded from coverage (`coverageSkipTestFiles = true`).
+## Safety and Constraints
 
-### Server Tests: Always Reset State
-Tests share a global in-memory database. **Always call `resetDb()` at test start** to prevent state leakage between tests. Test utilities are in `tests/utils.ts` (provides `getBase()`, `resetDb()`, `d1Exec()`, `waitForCount()`).
+- **Server tests MUST maintain 100% line coverage** (CI blocks merges; enforced via `bunfig.toml` `coverageThreshold = {lines = 100}`). Adding source code requires adding tests.
+- **Server tests MUST call `resetDb()` at test start** — the suite shares one global in-memory DB; state leaks between tests otherwise.
+- **Server tests use `bun:test`, NOT Vitest** (`vitest.config.ts` is legacy). The test server binds fixed port **8787**.
+- **Never edit `server/schema.sql` and `server/src/db/schema.ts` inconsistently** — `schema.sql` is canonical for test DB init; `db/schema.ts` for dev DB via `db:push`/migrations. Use `db:push` in dev, `db:generate` + `db:migrate` in production.
+- **Local SQLite shim**: `src/local.ts` wraps `bun:sqlite` as a D1-compatible shim. Do not "fix" `D1Database` type names to real D1.
+- **High-risk edits**: `server/src/local.ts` (SQLite PRAGMAs, concurrency), `server/src/routes/*` analytics queries (index usage), migrations middleware in `server/src/index.ts`.
+- **Do not log secrets** (see `docs/standards/security.md`); test SQL route in `server/src/index.ts` MUST stay localhost-only.
 
-### Test Runner is Bun, NOT Vitest
-Server tests use `bun:test` (not Vitest). Preloaded via `bunfig.toml` from `tests/setup.ts`.
+## Documentation Map
 
-## Schema Patterns
-- Text primary keys (UUIDs), not auto-increment integers
-- ISO string timestamps stored as TEXT: `text('created_at').default(sql\`...\`)`
-- JSON in TEXT fields requires manual `JSON.stringify()` / `JSON.parse()`
-- Foreign keys use `text().references()`, not integer IDs
-- Indexes defined separately from table schema
+- `docs/index.md` — Start here for architecture and component overview
+- `docs/systems/server.md`, `docs/systems/app.md`, `docs/systems/scripts.md` — Per-component documentation
+- `docs/flows/` — End-to-end flow documentation
+- `docs/architecture/` — Cross-cutting design and deployment topology
+- `docs/standards/` — Coding, testing, performance, and security standards
+- `docs/glossary.md` — Domain terminology
+- `docs/adr/` — Architecture Decision Records
 
-## CI Checks (staging.yml / production.yml)
-1. Server tests with 100% coverage check (lcov)
-2. `bunx drizzle-kit check` - verify migrations ready
-3. Docker image build and push to GHCR
+Existing canonical docs (DRY — link, don't duplicate): `server/docs/` (LOCAL_DEVELOPMENT, ACTIVE_INSTALLATIONS, FORM_ENCODING_SUPPORT, TEST_COVERAGE_REPORT), `app/docs/` (UX_GUIDELINES, ACCESSIBILITY\*), `docs/INTEGRATION_TESTING.md`, `CONTRIBUTING.md`.
 
-## Docker
-```bash
-cd server
-docker compose up                     # Dev with volume mounts
-docker compose -f docker-compose.prod.yaml up  # Production
-```
+## Working in This Repo
 
-## Common Pitfalls
-
-1. **Frontend API URL**: `app/src/routes/+page.server.ts` defaults to `https://wapar-api.mandarons.com`. Override with `PUBLIC_API_URL` env var for local dev.
-
-2. **`db:push` vs `db:generate` + `db:migrate`**: Use `db:push` during development (no migration files). Use `db:generate` + `db:migrate` for production schema changes.
-
-3. **Test server is on fixed port 8787**: Tests start their own server instance on port 8787. Don't assume another port is available.
-
-4. **Schema file**: `server/schema.sql` is the canonical D1 schema. Used by test setup to initialize in-memory DB.
-
-5. **`run.sh` must be run from `server/` directory** - it checks for `package.json` in cwd.
-
-## UI Conventions
-- Design tokens defined in `app/tailwind.config.ts` - use `wapar-*` color names, spacing, typography
-- Accessibility: WCAG AA required for all UI changes
-- Reusable components go in `app/src/lib/components/ui/`
-- Follow UX guidelines in `app/docs/UX_GUIDELINES.md` before UI work
-
-## Reference Docs
-- `.github/copilot-instructions.md` - detailed architecture reference
-- `CONTRIBUTING.md` - contribution workflow and commit conventions
-- `app/docs/UX_GUIDELINES.md` - design system
-- `server/docs/` - API docs, local development guide, active installations spec
+1. Read `docs/index.md` for architecture context before making changes.
+2. Check `docs/systems/<component>.md` for the component you are modifying; local `AGENTS.md` in `server/` and `app/` carry component-specific commands.
+3. Run tests after every change (server: `bun test:unit` + `test:coverage`; app: `bun run check` + `test:unit`).
+4. Follow the standards in `docs/standards/` — loaded into every session.
+5. For schema changes: use `db:push` in dev, generate+migrate for production, and verify with `bunx drizzle-kit check`.

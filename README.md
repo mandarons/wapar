@@ -367,10 +367,21 @@ Key points:
 ## 📚 Additional Documentation
 
 - [Backend API Documentation](./server/README.md) - Detailed API reference
-- [Active Installations Technical Spec](./server/ACTIVE_INSTALLATIONS.md) - Implementation details
+- [Active Installations Technical Spec](./server/docs/ACTIVE_INSTALLATIONS.md) - Implementation details
 - [Frontend Documentation](./app/README.md) - SvelteKit app guide
-- [UX Guidelines](./docs/UX_GUIDELINES.md) - Design system and accessibility
+- [UX Guidelines](./app/docs/UX_GUIDELINES.md) - Design system and accessibility
 - [Contributing Guide](./CONTRIBUTING.md) - How to contribute
+
+## 🤖 Agent Tooling (OpenCode)
+
+This repository is set up for the [OpenCode](https://opencode.ai) AI coding agent:
+
+- **[AGENTS.md](./AGENTS.md)** — the primary agent instruction file (auto-loaded every session). It contains the exact build/test/lint commands, invariants, and safety constraints. Nested `AGENTS.md` files in `server/` and `app/` carry component-specific rules.
+- **[opencode.json](./opencode.json)** — loads `docs/index.md`, `docs/standards/*.md`, and `docs/glossary.md` into every session automatically.
+- **[docs/index.md](./docs/index.md)** — architecture orientation and full documentation map (systems, flows, standards, glossary, ADRs).
+- **Skills** — `.opencode/skills/` holds on-demand workflow guides (refactoring, feature development, bug fixes).
+
+Humans can use the same docs: start at `docs/index.md` for architecture, and `AGENTS.md` for commands.
 
 ## 📝 License
 
