@@ -1,4 +1,5 @@
 import type { PageServerLoad } from './$types';
+import { RECENT_PAGE_SIZE } from '$lib/pagination';
 
 // Check if process.env exists (Node.js) and has PUBLIC_API_URL, otherwise use production URL
 // This supports both staging (Node.js with env vars) and production (Cloudflare Workers)
@@ -57,17 +58,27 @@ export const load: PageServerLoad = async ({ url }) => {
 			};
 		}
 
-		// Fetch recent installations
+		// Fetch recent installations with pagination and app filter from URL search params
 		let recentInstallationsData;
 		try {
-			const recentRes = await fetch(`${API_URL}/api/recent-installations?limit=20`);
+			const recentOffset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0);
+			const recentAppName = url.searchParams.get('appName') || undefined;
+			const recentParams = new URLSearchParams({
+				limit: String(RECENT_PAGE_SIZE),
+				offset: String(recentOffset)
+			});
+			if (recentAppName) {
+				recentParams.set('appName', recentAppName);
+			}
+			const recentRes = await fetch(`${API_URL}/api/recent-installations?${recentParams}`);
 			recentInstallationsData = await recentRes.json();
+			recentInstallationsData.appName = recentAppName;
 		} catch (error) {
 			console.warn('Failed to fetch recent installations:', error);
 			recentInstallationsData = {
 				installations: [],
 				total: 0,
-				limit: 20,
+				limit: RECENT_PAGE_SIZE,
 				offset: 0,
 				installationsLast24h: 0,
 				installationsLast7d: 0

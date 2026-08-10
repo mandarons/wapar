@@ -44,6 +44,7 @@
 		offset: number;
 		installationsLast24h: number;
 		installationsLast7d: number;
+		appName?: string;
 	};
 
 	type HeartbeatAnalyticsPayload = {
@@ -1086,6 +1087,7 @@
 							offset={data.recentInstallations?.offset ?? 0}
 							installationsLast24h={data.recentInstallations?.installationsLast24h ?? 0}
 							installationsLast7d={data.recentInstallations?.installationsLast7d ?? 0}
+							appName={data.recentInstallations?.appName ?? undefined}
 						/>
 					</div>
 				{:else if tab.id === 'insights'}
