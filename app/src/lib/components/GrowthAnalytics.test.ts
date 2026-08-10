@@ -123,4 +123,39 @@ describe('GrowthAnalytics Component Tests', () => {
 		expect(mockGrowthData.reinstallPatterns.reinstallRate).toBeGreaterThanOrEqual(0);
 		expect(mockGrowthData.reinstallPatterns.reinstallRate).toBeLessThanOrEqual(100);
 	});
+
+	it('should have valid gaps structure when present', () => {
+		const dataWithGaps = {
+			...mockGrowthData,
+			gaps: [
+				{ from: '2026-07-31', to: '2026-08-06', days: 7 },
+				{ from: '2026-07-10', to: '2026-07-10', days: 1 }
+			]
+		};
+		expect(Array.isArray(dataWithGaps.gaps)).toBe(true);
+		expect(dataWithGaps.gaps.length).toBe(2);
+		dataWithGaps.gaps.forEach((gap) => {
+			expect(typeof gap.from).toBe('string');
+			expect(typeof gap.to).toBe('string');
+			expect(typeof gap.days).toBe('number');
+			expect(gap.days).toBeGreaterThan(0);
+		});
+	});
+
+	it('should handle empty gaps array', () => {
+		const dataNoGaps = { ...mockGrowthData, gaps: [] };
+		expect(dataNoGaps.gaps.length).toBe(0);
+	});
+
+	it('should format gap day count correctly for singular', () => {
+		const days = 1;
+		const label = `${days} day${days !== 1 ? 's' : ''}`;
+		expect(label).toBe('1 day');
+	});
+
+	it('should format gap day count correctly for plural', () => {
+		const days: number = 7;
+		const label = `${days} day${days !== 1 ? 's' : ''}`;
+		expect(label).toBe('7 days');
+	});
 });

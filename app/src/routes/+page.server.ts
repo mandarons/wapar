@@ -90,6 +90,7 @@ export const load: PageServerLoad = async ({ url }) => {
 					dormant: { count: 0, description: 'No heartbeat in 30 days' }
 				},
 				timeline: [],
+				gaps: [],
 				healthMetrics: {
 					avgHeartbeatsPerUser: 0,
 					avgTimeBetweenHeartbeats: '0 hours'
@@ -117,6 +118,7 @@ export const load: PageServerLoad = async ({ url }) => {
 					period: '30d'
 				},
 				timeline: [],
+				gaps: [],
 				topCountriesNewUsers: [],
 				reinstallPatterns: {
 					reinstallRate: 0
@@ -217,6 +219,7 @@ export const load: PageServerLoad = async ({ url }) => {
 					{ date: '2025-10-24', activeUsers: 148, totalHeartbeats: 3200 },
 					{ date: '2025-10-23', activeUsers: 152, totalHeartbeats: 3350 }
 				],
+				gaps: [],
 				healthMetrics: {
 					avgHeartbeatsPerUser: 5.8,
 					avgTimeBetweenHeartbeats: '4.2 hours'
@@ -239,6 +242,7 @@ export const load: PageServerLoad = async ({ url }) => {
 					{ date: '2025-10-24', newUsers: 420, reinstalls: 48, total: 468 },
 					{ date: '2025-10-23', newUsers: 435, reinstalls: 52, total: 487 }
 				],
+				gaps: [],
 				topCountriesNewUsers: [
 					{ countryCode: 'JP', count: 4075, percentage: 32.6 },
 					{ countryCode: 'RU', count: 4063, percentage: 32.5 },

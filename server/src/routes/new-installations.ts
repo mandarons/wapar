@@ -4,6 +4,7 @@ import { getDb } from '../db/client';
 import { installations } from '../db/schema';
 import { count, isNull, isNotNull, gte, desc, and } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
+import { fillTimelineGaps } from '../utils/timeline-gaps';
 
 export const newInstallationsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -113,12 +114,23 @@ newInstallationsRoutes.get('/', async (c) => {
       }
     );
     
-    const timeline = (timelineResult.results || []).map((row: any) => ({
+    const rawTimeline = (timelineResult.results || []).map((row: any) => ({
       date: row.date,
       newUsers: Number(row.new_users),
       reinstalls: Number(row.reinstalls),
       total: Number(row.total)
     }));
+
+    // Fill missing dates with zeros and detect gaps
+    const startDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+    const endDate = new Date();
+    const { timeline, gaps } = fillTimelineGaps(
+      rawTimeline,
+      startDate,
+      endDate,
+      groupBy,
+      { newUsers: 0, reinstalls: 0, total: 0 }
+    );
     
     // Top countries for new users only
     const topCountries = await Logger.measureOperation(
@@ -159,6 +171,7 @@ newInstallationsRoutes.get('/', async (c) => {
         period
       },
       timeline,
+      gaps,
       topCountriesNewUsers: topCountriesWithPercentage,
       reinstallPatterns: {
         reinstallRate

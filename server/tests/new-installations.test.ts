@@ -66,8 +66,25 @@ describe('New Installations API', () => {
     expect(data.summary.period).toBe('30d'); // default period
     
     expect(Array.isArray(data.timeline)).toBe(true);
+    expect(Array.isArray(data.gaps)).toBe(true);
     expect(Array.isArray(data.topCountriesNewUsers)).toBe(true);
     expect(data.reinstallPatterns).toHaveProperty('reinstallRate');
+  });
+
+  it('should include gaps array with correct structure', async () => {
+    const base = getBase();
+    
+    const response = await fetch(`${base}${ENDPOINT}?period=7d`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    expect(Array.isArray(data.gaps)).toBe(true);
+    for (const gap of data.gaps) {
+      expect(typeof gap.from).toBe('string');
+      expect(typeof gap.to).toBe('string');
+      expect(typeof gap.days).toBe('number');
+      expect(gap.days).toBeGreaterThan(0);
+    }
   });
 
   it('should group timeline by day', async () => {
