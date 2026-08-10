@@ -66,3 +66,12 @@ test('does not render deprecated engagement or analytics widgets', async ({ page
 		await expect(page.locator(`[data-testid="${testId}"]`)).toHaveCount(0);
 	}
 });
+
+test('renders growth tab with acquisition data', async ({ page }) => {
+	await page.getByTestId('tab-growth').click();
+	await expect(page.locator('text=Growth & Acquisition')).toBeVisible();
+	await expect(page.getByTestId('growth-total-new')).toBeVisible();
+	await expect(page.getByTestId('growth-reinstalls')).toBeVisible();
+	await expect(page.getByTestId('growth-new-user-rate')).toBeVisible();
+	await expect(page.getByTestId('growth-top-country')).toBeVisible();
+});

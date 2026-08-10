@@ -19,6 +19,7 @@ docs/
 ### [UX Guidelines](./UX_GUIDELINES.md)
 
 Comprehensive design system and UX guidelines:
+
 - Design principles and tokens
 - Component library
 - Typography and color system
@@ -29,6 +30,7 @@ Comprehensive design system and UX guidelines:
 ### [Accessibility Documentation](./ACCESSIBILITY.md)
 
 Complete accessibility implementation:
+
 - [ACCESSIBILITY.md](./ACCESSIBILITY.md) - Overview and standards
 - [ACCESSIBILITY_IMPLEMENTATION.md](./ACCESSIBILITY_IMPLEMENTATION.md) - Technical implementation
 - [ACCESSIBILITY_TESTING.md](./ACCESSIBILITY_TESTING.md) - Testing procedures

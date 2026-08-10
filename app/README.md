@@ -27,6 +27,7 @@ The dashboard prominently displays three key metrics with clear visual hierarchy
    - Indicates potential churn or retention issues
 
 **Visual Indicators:**
+
 - Stale percentage >25% shows warning styling
 - Tooltips explain each metric's meaning
 - Metrics update in real-time when data refreshes
@@ -34,38 +35,45 @@ The dashboard prominently displays three key metrics with clear visual hierarchy
 ### Dashboard Tabs
 
 **Overview Tab**
+
 - Active/stale/total installation counts
 - Summary statistics and recent growth
 - Quick insights and trend descriptions
 
 **Distribution Tab**
+
 - Market share comparison between supported integrations (iCloud Docker, HA Bouncie)
 - Interactive pie/doughnut/bar charts
 - Export chart functionality
 
 **Geography Tab**
+
 - Interactive world map showing **active installations only**
 - Top 10 countries by active installation count
 - Country details modal with ranking and percentages
 - Accessible data table toggle for screen readers
 
 **Versions Tab**
+
 - Version distribution for **active installations only**
 - Latest version identification
 - Outdated installation counts
 - Upgrade rate metrics (7-day and 30-day)
 
 **Active Usage Tab** (Heartbeat Analytics)
+
 - DAU/WAU/MAU metrics
 - Engagement levels breakdown
 - Timeline visualization
 - Churn risk indicators
 
 **Recent Installs Tab**
+
 - Latest installation activity feed
 - 24-hour and 7-day installation counts
 
 **Insights Tab**
+
 - Supplementary geographic analysis
 - Proportional estimates and trends
 
@@ -115,9 +123,11 @@ bun dev -- --open
 ### Environment Variables
 
 **Optional:**
+
 - `PUBLIC_API_URL`: Override the API base URL (defaults to production: `https://wapar-api.mandarons.com`)
 
 **Example `.env` file for local development:**
+
 ```env
 PUBLIC_API_URL=http://localhost:8787
 ```
@@ -163,27 +173,31 @@ The frontend gracefully handles both new and legacy API responses.
 
 ```typescript
 // Ensure we have required fields with defaults if API didn't provide them
-if (typeof data.activeInstallations === 'undefined' || 
-    typeof data.staleInstallations === 'undefined') {
-  console.warn('activeInstallations or staleInstallations missing from API response');
-  // Estimate: Assume 10% of installations are stale if not provided
-  const estimatedStale = Math.round(data.totalInstallations * 0.1);
-  data.activeInstallations = data.totalInstallations - estimatedStale;
-  data.staleInstallations = estimatedStale;
+if (
+	typeof data.activeInstallations === 'undefined' ||
+	typeof data.staleInstallations === 'undefined'
+) {
+	console.warn('activeInstallations or staleInstallations missing from API response');
+	// Estimate: Assume 10% of installations are stale if not provided
+	const estimatedStale = Math.round(data.totalInstallations * 0.1);
+	data.activeInstallations = data.totalInstallations - estimatedStale;
+	data.staleInstallations = estimatedStale;
 }
 if (typeof data.activityThresholdDays === 'undefined') {
-  data.activityThresholdDays = 3; // Default threshold
+	data.activityThresholdDays = 3; // Default threshold
 }
 ```
 
 ### Utility Functions
 
 **`buildOverviewMetrics`** (`lib/utils/overview.ts`)
+
 - Formats active/stale/total metrics for display
 - Generates subtitles with threshold information
 - Handles primary metric emphasis
 
 **`describeUpdate`** (`lib/utils/overview.ts`)
+
 - Creates human-readable summary of current state
 - Includes active count, total count, and country coverage
 - Formats recent installation growth
@@ -196,17 +210,18 @@ Located in `+page.svelte`, the overview metrics are built using the `buildOvervi
 
 ```typescript
 $: overviewMetrics = buildOverviewMetrics({
-  totalInstallations: data.totalInstallations,
-  activeInstallations: data.activeInstallations,
-  staleInstallations: data.staleInstallations,
-  iCloudDockerTotal: data.iCloudDocker.total,
-  haBouncieTotal: data.haBouncie.total,
-  activityThresholdDays: data.activityThresholdDays,
-  earliestInstallationDate: data.earliestInstallationDate
+	totalInstallations: data.totalInstallations,
+	activeInstallations: data.activeInstallations,
+	staleInstallations: data.staleInstallations,
+	iCloudDockerTotal: data.iCloudDocker.total,
+	haBouncieTotal: data.haBouncie.total,
+	activityThresholdDays: data.activityThresholdDays,
+	earliestInstallationDate: data.earliestInstallationDate
 });
 ```
 
 Each metric includes:
+
 - Label (e.g., "Active installations")
 - Formatted value (e.g., "750")
 - Test ID for automated testing
@@ -218,9 +233,8 @@ Each metric includes:
 The dashboard shows a visual warning when stale installations exceed 25%:
 
 ```typescript
-$: stalePercentage = data.totalInstallations > 0 
-  ? (data.staleInstallations / data.totalInstallations) * 100 
-  : 0;
+$: stalePercentage =
+	data.totalInstallations > 0 ? (data.staleInstallations / data.totalInstallations) * 100 : 0;
 $: isHighStale = stalePercentage > 25;
 ```
 
@@ -249,6 +263,7 @@ bun test:unit   # Unit tests only
 ```
 
 Unit tests verify:
+
 - Utility functions (`buildOverviewMetrics`, `describeUpdate`, etc.)
 - Data transformations
 - Metric calculations
@@ -260,12 +275,14 @@ bun test:e2e
 ```
 
 E2E tests validate:
+
 - Active/stale/total metrics display correctly
 - Tab navigation and accessibility
 - Map rendering and interactions
 - Data refresh functionality
 
 **Important:** E2E tests check for the presence of active/stale/total metrics:
+
 ```typescript
 // Test verifies all three metrics are present
 await expect(page.getByTestId('active-installations')).toBeVisible();
@@ -291,6 +308,7 @@ The dashboard follows the WAPAR design system documented in `/docs/UX_GUIDELINES
 - **Components**: Reusable UI components in `lib/components/`
 
 **Key Design Principles:**
+
 - Accessibility first (WCAG AA compliance)
 - Consistent visual hierarchy
 - Clear data visualization
@@ -302,9 +320,9 @@ The dashboard follows the WAPAR design system documented in `/docs/UX_GUIDELINES
 
 ```svelte
 <div class="metric-card" data-testid="active-installations">
-  <div class="metric-label">Active installations</div>
-  <div class="metric-value">750</div>
-  <div class="metric-subtitle">Heartbeat within last 3 days</div>
+	<div class="metric-label">Active installations</div>
+	<div class="metric-value">750</div>
+	<div class="metric-subtitle">Heartbeat within last 3 days</div>
 </div>
 ```
 

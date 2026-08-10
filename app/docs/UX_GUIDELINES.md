@@ -71,6 +71,7 @@ spacing: {
 ```
 
 **Usage:**
+
 ```html
 <div class="p-card-padding">...</div>
 <section class="py-section">...</section>
@@ -78,17 +79,18 @@ spacing: {
 
 ### Typography Scale
 
-| Token | Size | Line Height | Weight | Usage |
-|-------|------|-------------|--------|-------|
-| `heading-xl` | 2rem | 2.5rem | 600 | Page titles |
-| `heading-lg` | 1.5rem | 2rem | 600 | Section headers |
-| `heading-md` | 1.25rem | 1.75rem | 600 | Card titles |
-| `heading-sm` | 1.125rem | 1.5rem | 600 | Subsection headers |
-| `body-lg` | 1rem | 1.75rem | 400 | Large body text |
-| `body` | 0.875rem | 1.5rem | 400 | Standard body text |
-| `body-sm` | 0.75rem | 1.25rem | 400 | Small text, captions |
+| Token        | Size     | Line Height | Weight | Usage                |
+| ------------ | -------- | ----------- | ------ | -------------------- |
+| `heading-xl` | 2rem     | 2.5rem      | 600    | Page titles          |
+| `heading-lg` | 1.5rem   | 2rem        | 600    | Section headers      |
+| `heading-md` | 1.25rem  | 1.75rem     | 600    | Card titles          |
+| `heading-sm` | 1.125rem | 1.5rem      | 600    | Subsection headers   |
+| `body-lg`    | 1rem     | 1.75rem     | 400    | Large body text      |
+| `body`       | 0.875rem | 1.5rem      | 400    | Standard body text   |
+| `body-sm`    | 0.75rem  | 1.25rem     | 400    | Small text, captions |
 
 **Usage:**
+
 ```html
 <h1 class="text-heading-xl">Dashboard</h1>
 <p class="text-body">Description text</p>
@@ -120,15 +122,16 @@ boxShadow: {
 
 Used for primary actions and the Bouncie integration branding.
 
-| Shade | Hex | Contrast on White | Usage |
-|-------|-----|-------------------|-------|
-| 50 | `#f0fdf4` | - | Backgrounds |
-| 100 | `#dcfce7` | - | Light backgrounds |
-| 500 | `#22c55e` | ✓ AA | Buttons, links |
-| 600 | `#16a34a` | ✓ AA | Primary actions |
-| 900 | `#14532d` | ✓ AA | Text on light |
+| Shade | Hex       | Contrast on White | Usage             |
+| ----- | --------- | ----------------- | ----------------- |
+| 50    | `#f0fdf4` | -                 | Backgrounds       |
+| 100   | `#dcfce7` | -                 | Light backgrounds |
+| 500   | `#22c55e` | ✓ AA              | Buttons, links    |
+| 600   | `#16a34a` | ✓ AA              | Primary actions   |
+| 900   | `#14532d` | ✓ AA              | Text on light     |
 
 **Usage:**
+
 ```html
 <button class="bg-wapar-primary-600 text-white">Submit</button>
 <div class="bg-wapar-primary-50 border-wapar-primary-200">...</div>
@@ -138,31 +141,31 @@ Used for primary actions and the Bouncie integration branding.
 
 Used for secondary actions and the iCloud Docker integration branding.
 
-| Shade | Hex | Contrast on White | Usage |
-|-------|-----|-------------------|-------|
-| 50 | `#eef2ff` | - | Backgrounds |
-| 100 | `#e0e7ff` | - | Light backgrounds |
-| 500 | `#6366f1` | ✓ AA | Buttons, links |
-| 600 | `#4f46e5` | ✓ AA | Secondary actions |
-| 900 | `#312e81` | ✓ AA | Text on light |
+| Shade | Hex       | Contrast on White | Usage             |
+| ----- | --------- | ----------------- | ----------------- |
+| 50    | `#eef2ff` | -                 | Backgrounds       |
+| 100   | `#e0e7ff` | -                 | Light backgrounds |
+| 500   | `#6366f1` | ✓ AA              | Buttons, links    |
+| 600   | `#4f46e5` | ✓ AA              | Secondary actions |
+| 900   | `#312e81` | ✓ AA              | Text on light     |
 
 ### Neutral Palette (Gray)
 
 Used for text, borders, and neutral UI elements.
 
-| Shade | Hex | Contrast on White | Usage |
-|-------|-----|-------------------|-------|
-| 50 | `#f9fafb` | - | Page backgrounds |
-| 100 | `#f3f4f6` | - | Card backgrounds |
-| 200 | `#e5e7eb` | - | Borders |
-| 500 | `#6b7280` | ✓ AA | Secondary text |
-| 600 | `#4b5563` | ✓ AA | Body text |
-| 900 | `#111827` | ✓ AA | Headings |
+| Shade | Hex       | Contrast on White | Usage            |
+| ----- | --------- | ----------------- | ---------------- |
+| 50    | `#f9fafb` | -                 | Page backgrounds |
+| 100   | `#f3f4f6` | -                 | Card backgrounds |
+| 200   | `#e5e7eb` | -                 | Borders          |
+| 500   | `#6b7280` | ✓ AA              | Secondary text   |
+| 600   | `#4b5563` | ✓ AA              | Body text        |
+| 900   | `#111827` | ✓ AA              | Headings         |
 
 ### Semantic Colors
 
-| Color   | Shade | Hex       | Usage                        |
-|---------|-------|-----------|------------------------------|
+| Color   | Shade | Hex       | Usage                           |
+| ------- | ----- | --------- | ------------------------------- |
 | Success | 600   | `#16a34a` | Success states, positive growth |
 | Warning | 600   | `#d97706` | Warnings, outdated versions     |
 | Error   | 600   | `#dc2626` | Errors, negative states         |
@@ -179,11 +182,13 @@ Used for text, borders, and neutral UI elements.
 Location: `/app/src/lib/components/ui/Card.svelte`
 
 **Variants:**
+
 - `default`: Standard white card with border and shadow
 - `elevated`: Card with hover effect
 - `flat`: Card without shadow
 
 **Props:**
+
 ```typescript
 variant?: 'default' | 'elevated' | 'flat'
 padding?: 'sm' | 'md' | 'lg'
@@ -191,10 +196,11 @@ testId?: string
 ```
 
 **Example:**
+
 ```svelte
 <Card variant="elevated" padding="md" testId="my-card">
-  <h3>Card Title</h3>
-  <p>Card content</p>
+	<h3>Card Title</h3>
+	<p>Card content</p>
 </Card>
 ```
 
@@ -203,12 +209,14 @@ testId?: string
 Location: `/app/src/lib/components/ui/Button.svelte`
 
 **Variants:**
+
 - `primary`: Primary action button (green)
 - `secondary`: Secondary action button (indigo)
 - `outline`: Outlined button for tertiary actions
 - `ghost`: Minimal button for subtle actions
 
 **Props:**
+
 ```typescript
 variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
 size?: 'sm' | 'md' | 'lg'
@@ -218,10 +226,9 @@ testId?: string
 ```
 
 **Example:**
+
 ```svelte
-<Button variant="primary" size="md" on:click={handleSubmit}>
-  Submit
-</Button>
+<Button variant="primary" size="md" on:click={handleSubmit}>Submit</Button>
 ```
 
 ---
@@ -269,8 +276,10 @@ Use the spacing scale for consistent vertical rhythm:
 <div class="p-card-padding">...</div>
 
 <!-- Component gaps -->
-<div class="space-y-4">...</div>  <!-- 1rem gap -->
-<div class="space-y-6">...</div>  <!-- 1.5rem gap -->
+<div class="space-y-4">...</div>
+<!-- 1rem gap -->
+<div class="space-y-6">...</div>
+<!-- 1.5rem gap -->
 ```
 
 ### Responsive Layout
@@ -279,7 +288,7 @@ Use Tailwind's responsive prefixes for adaptive layouts:
 
 ```html
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  <!-- Content -->
+	<!-- Content -->
 </div>
 ```
 
@@ -290,10 +299,12 @@ Use Tailwind's responsive prefixes for adaptive layouts:
 ### Color Contrast
 
 **All text must meet WCAG AA requirements:**
+
 - Normal text (< 18pt / 24px): 4.5:1 contrast ratio
 - Large text (≥ 18pt / 24px or ≥ 14pt / 18.5px bold): 3:1 contrast ratio
 
 **Tools for testing:**
+
 - [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/)
 - Browser DevTools Accessibility Inspector
 
@@ -303,15 +314,14 @@ Use Tailwind's responsive prefixes for adaptive layouts:
 
 ```html
 <!-- ✅ Correct: native button with focus styles -->
-<button class="focus-visible:ring-2 focus-visible:ring-wapar-primary-500">
-  Click me
-</button>
+<button class="focus-visible:ring-2 focus-visible:ring-wapar-primary-500">Click me</button>
 
 <!-- ❌ Incorrect: div with click handler -->
-<div on:click={handleClick}>Click me</div>
+<div on:click="{handleClick}">Click me</div>
 ```
 
 **Focus indicators:**
+
 - Use `focus-visible:ring-2` for visible focus states
 - Ensure focus color contrasts with background
 - Never remove focus outlines with `outline: none` without replacement
@@ -333,6 +343,7 @@ Use Tailwind's responsive prefixes for adaptive layouts:
 ```
 
 **Hide decorative elements from screen readers:**
+
 ```html
 <span aria-hidden="true">→</span>
 ```
@@ -357,14 +368,14 @@ Use Tailwind's responsive prefixes for adaptive layouts:
 ```html
 <!-- ✅ Semantic structure -->
 <article>
-  <h2>Article Title</h2>
-  <p>Content</p>
+	<h2>Article Title</h2>
+	<p>Content</p>
 </article>
 
 <!-- ❌ Non-semantic divs -->
 <div class="article">
-  <div class="title">Article Title</div>
-  <div class="content">Content</div>
+	<div class="title">Article Title</div>
+	<div class="content">Content</div>
 </div>
 ```
 
@@ -375,6 +386,7 @@ Use Tailwind's responsive prefixes for adaptive layouts:
 ### Visual Testing
 
 **Checklist:**
+
 - [ ] Component renders correctly on mobile (320px+)
 - [ ] Component renders correctly on tablet (768px+)
 - [ ] Component renders correctly on desktop (1024px+)
@@ -383,6 +395,7 @@ Use Tailwind's responsive prefixes for adaptive layouts:
 - [ ] No layout shift or visual bugs
 
 **Tools:**
+
 - Browser DevTools responsive mode
 - `bun run dev` for live preview
 
@@ -402,6 +415,7 @@ bun run test:e2e
 ```
 
 **Manual Testing Checklist:**
+
 - [ ] Tab through all interactive elements
 - [ ] Focus indicators are visible
 - [ ] Screen reader announces content correctly
@@ -411,6 +425,7 @@ bun run test:e2e
 - [ ] Error messages are clear and accessible
 
 **Recommended Tools:**
+
 - **axe DevTools**: Browser extension for accessibility testing
 - **WAVE**: Web accessibility evaluation tool
 - **Lighthouse**: Built into Chrome DevTools
@@ -420,17 +435,18 @@ bun run test:e2e
 
 **Test all interactive elements:**
 
-| Key | Expected Behavior |
-|-----|-------------------|
-| Tab | Move focus forward |
-| Shift+Tab | Move focus backward |
+| Key         | Expected Behavior    |
+| ----------- | -------------------- |
+| Tab         | Move focus forward   |
+| Shift+Tab   | Move focus backward  |
 | Enter/Space | Activate button/link |
-| Escape | Close modal/dialog |
-| Arrow keys | Navigate lists/tabs |
+| Escape      | Close modal/dialog   |
+| Arrow keys  | Navigate lists/tabs  |
 
 ### Cross-Browser Testing
 
 **Supported Browsers:**
+
 - Chrome/Edge (latest 2 versions)
 - Firefox (latest 2 versions)
 - Safari (latest 2 versions)
@@ -462,32 +478,22 @@ bun run test:e2e
 ### Code Examples
 
 **✅ Good Example:**
+
 ```svelte
 <Card variant="default" padding="md">
-  <h2 class="text-heading-md text-wapar-gray-900 mb-4">
-    Installation Overview
-  </h2>
-  <p class="text-body text-wapar-gray-600">
-    View total installations across all integrations.
-  </p>
-  <Button variant="primary" size="md" on:click={handleViewMore}>
-    View Details
-  </Button>
+	<h2 class="text-heading-md text-wapar-gray-900 mb-4">Installation Overview</h2>
+	<p class="text-body text-wapar-gray-600">View total installations across all integrations.</p>
+	<Button variant="primary" size="md" on:click={handleViewMore}>View Details</Button>
 </Card>
 ```
 
 **❌ Bad Example:**
+
 ```svelte
 <div class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-  <div class="text-lg font-bold">
-    📊 Installation Overview
-  </div>
-  <div style="color: #666; font-size: 14px;">
-    View total installations across all integrations.
-  </div>
-  <div class="cursor-pointer" on:click={handleViewMore}>
-    View Details
-  </div>
+	<div class="text-lg font-bold">📊 Installation Overview</div>
+	<div style="color: #666; font-size: 14px;">View total installations across all integrations.</div>
+	<div class="cursor-pointer" on:click={handleViewMore}>View Details</div>
 </div>
 ```
 

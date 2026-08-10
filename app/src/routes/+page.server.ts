@@ -102,6 +102,28 @@ export const load: PageServerLoad = async ({ url }) => {
 			};
 		}
 
+		// Fetch new installations analytics
+		let newInstallations;
+		try {
+			const newInstallRes = await fetch(`${API_URL}/api/new-installations?period=30d&groupBy=day`);
+			newInstallations = await newInstallRes.json();
+		} catch (error) {
+			console.warn('Failed to fetch new installations analytics:', error);
+			newInstallations = {
+				summary: {
+					totalNew: 0,
+					totalReinstalls: 0,
+					newUserRate: 0,
+					period: '30d'
+				},
+				timeline: [],
+				topCountriesNewUsers: [],
+				reinstallPatterns: {
+					reinstallRate: 0
+				}
+			};
+		}
+
 		const data = { ...waparData };
 
 		// Ensure iCloudDocker and haBouncie always exist with defaults
@@ -117,6 +139,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		data.versionAnalytics = versionAnalytics;
 		data.recentInstallations = recentInstallationsData;
 		data.heartbeatAnalytics = heartbeatAnalytics;
+		data.newInstallations = newInstallations;
 
 		// Ensure we have the required fields with defaults if API didn't provide them
 		if (
@@ -202,6 +225,27 @@ export const load: PageServerLoad = async ({ url }) => {
 					usersInactive7Days: 45,
 					usersInactive14Days: 23,
 					usersInactive30Days: 12
+				}
+			},
+			newInstallations: {
+				summary: {
+					totalNew: 12500,
+					totalReinstalls: 1500,
+					newUserRate: 89.3,
+					period: '30d'
+				},
+				timeline: [
+					{ date: '2025-10-25', newUsers: 450, reinstalls: 55, total: 505 },
+					{ date: '2025-10-24', newUsers: 420, reinstalls: 48, total: 468 },
+					{ date: '2025-10-23', newUsers: 435, reinstalls: 52, total: 487 }
+				],
+				topCountriesNewUsers: [
+					{ countryCode: 'JP', count: 4075, percentage: 32.6 },
+					{ countryCode: 'RU', count: 4063, percentage: 32.5 },
+					{ countryCode: 'US', count: 4038, percentage: 32.3 }
+				],
+				reinstallPatterns: {
+					reinstallRate: 10.7
 				}
 			}
 		};
