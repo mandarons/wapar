@@ -101,25 +101,54 @@ describe(ENDPOINT, () => {
   it('should categorize users by engagement level', async () => {
     const base = getBase();
     
-    // Create a highly active user (>7 heartbeats in last 7 days)
+    // Create a highly active user (active on 7 of last 7 days)
     const highlyActiveInstall = await createInstallation();
     const now = new Date();
     
-    for (let i = 0; i < 8; i++) {
-      const timestamp = new Date(now.getTime() - i * 12 * 60 * 60 * 1000).toISOString(); // Every 12 hours
-      await createHeartbeat(highlyActiveInstall, timestamp);
+    // Create heartbeats on 7 distinct days (one per day)
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      date.setUTCHours(12, 0, 0, 0); // Noon UTC on each day
+      await createHeartbeat(highlyActiveInstall, date.toISOString());
     }
     
     // Wait for heartbeats to be created
-    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?`, [highlyActiveInstall], 8);
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?`, [highlyActiveInstall], 7);
     
     const response = await fetch(`${base}${ENDPOINT}`);
     const data = await response.json();
     
     expect(response.status).toBe(200);
-    // Should have at least one highly active user
+    // Should have at least one highly active user (7/7 days)
     expect(data.engagementLevels.highlyActive.count).toBeGreaterThanOrEqual(1);
-    expect(data.engagementLevels.highlyActive.description).toBe(">7 heartbeats/week");
+    expect(data.engagementLevels.highlyActive.description).toBe("Active 7/7 days");
+    // Active should exclude the highly active user (count < 7 distinct days)
+    expect(data.engagementLevels.active.description).toBe("Active 1-6 days/week");
+  });
+
+  it('should count users with 6 distinct active days as active, not highly active', async () => {
+    const base = getBase();
+    
+    // Create a user active on 6 of last 7 days (not highly active)
+    const activeInstall = await createInstallation();
+    const now = new Date();
+    
+    for (let i = 0; i < 6; i++) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      date.setUTCHours(12, 0, 0, 0);
+      await createHeartbeat(activeInstall, date.toISOString());
+    }
+    
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?`, [activeInstall], 6);
+    
+    const response = await fetch(`${base}${ENDPOINT}`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    // Should be in active, not highly active
+    expect(data.engagementLevels.active.count).toBeGreaterThanOrEqual(1);
   });
 
   it('should identify dormant installations', async () => {
