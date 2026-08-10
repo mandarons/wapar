@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy, tick } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
 	import 'svgmap/dist/svgMap.min.css';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import type { ModalSettings } from '@skeletonlabs/skeleton';
@@ -95,7 +96,6 @@
 	}
 
 	const modalStore = getModalStore();
-	const API_URL = 'https://wapar-api.mandarons.com';
 	let mapObj: SvgMapInstance | null = null;
 	let svgMapConstructor: (typeof import('svgmap'))['default'] | null = null;
 	let isRefreshing = false;
@@ -105,22 +105,6 @@
 	let marketShareChartRef: MarketShareChart | null = null;
 	let mapInitialized = false;
 	let mapEventListeners: Array<{ element: Element; handler: (e: Event) => void }> = [];
-
-	const fallbackVersions: VersionAnalyticsPayload = {
-		versionDistribution: [],
-		latestVersion: null,
-		outdatedInstallations: 0,
-		newInstallRate: { last7Days: 0, last30Days: 0 }
-	};
-
-	const fallbackRecent: RecentInstallationsPayload = {
-		installations: [],
-		total: 0,
-		limit: 20,
-		offset: 0,
-		installationsLast24h: 0,
-		installationsLast7d: 0
-	};
 
 	const tabConfig = [
 		{
@@ -356,51 +340,12 @@
 		destroyMap();
 	});
 
-	async function fetchWithFallback<T>(url: string, fallback: T): Promise<T> {
-		try {
-			const response = await fetch(url);
-			if (!response.ok) {
-				throw new Error(`Request failed: ${response.status}`);
-			}
-			return (await response.json()) as T;
-		} catch (error) {
-			console.warn(`Failed to fetch ${url}`, error);
-			return fallback;
-		}
-	}
-
-	async function refreshData() {
+	async function handleManualRefresh() {
 		try {
 			isRefreshing = true;
-			const usageRes = await fetch(`${API_URL}/api/usage`);
-			if (!usageRes.ok) {
-				throw new Error(`Usage request failed: ${usageRes.status}`);
-			}
-			const usageData = await usageRes.json();
-			const haRes = await fetch('https://analytics.home-assistant.io/custom_integrations.json');
-			if (!haRes.ok) {
-				throw new Error(`Home Assistant request failed: ${haRes.status}`);
-			}
-			const haData = await haRes.json();
-			const versionAnalytics = await fetchWithFallback(
-				`${API_URL}/api/version-analytics`,
-				fallbackVersions
-			);
-			const recentInstallations = await fetchWithFallback(
-				`${API_URL}/api/recent-installations?limit=20`,
-				fallbackRecent
-			);
-
-			data = {
-				...usageData,
-				totalInstallations: (haData.bouncie?.total ?? 0) + (usageData.iCloudDocker?.total ?? 0),
-				haBouncie: haData.bouncie ?? { total: 0 },
-				iCloudDocker: usageData.iCloudDocker ?? { total: 0 },
-				versionAnalytics,
-				recentInstallations
-			};
-			lastSyncedIso = usageData.createdAt ?? new Date().toISOString();
 			fetchError = null;
+			await invalidateAll();
+			lastSyncedIso = new Date().toISOString();
 			if (activeTab === MAP_TAB_ID) {
 				await initialiseMap();
 			} else if (mapInitialized) {
@@ -412,10 +357,6 @@
 		} finally {
 			isRefreshing = false;
 		}
-	}
-
-	async function handleManualRefresh() {
-		await refreshData();
 	}
 
 	$: overviewMetrics = buildOverviewMetrics({
@@ -633,6 +574,7 @@
 									class="inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
 									on:click={handleManualRefresh}
 									disabled={isRefreshing}
+									aria-busy={isRefreshing}
 									data-testid="manual-refresh-button"
 								>
 									{#if isRefreshing}
