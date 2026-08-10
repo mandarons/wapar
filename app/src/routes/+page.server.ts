@@ -126,6 +126,21 @@ export const load: PageServerLoad = async ({ url }) => {
 			};
 		}
 
+		// Fetch country insights (registration vs activity divergence)
+		let countryInsights;
+		try {
+			const insightsRes = await fetch(`${API_URL}/api/country-insights`);
+			countryInsights = await insightsRes.json();
+		} catch (error) {
+			console.warn('Failed to fetch country insights:', error);
+			countryInsights = {
+				countries: [],
+				period: '30d',
+				activityThresholdDays: 3,
+				generatedAt: new Date().toISOString()
+			};
+		}
+
 		const data = { ...waparData };
 
 		// Ensure iCloudDocker and haBouncie always exist with defaults
@@ -142,6 +157,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		data.recentInstallations = recentInstallationsData;
 		data.heartbeatAnalytics = heartbeatAnalytics;
 		data.newInstallations = newInstallations;
+		data.countryInsights = countryInsights;
 
 		// Ensure we have the required fields with defaults if API didn't provide them
 		if (
@@ -251,6 +267,37 @@ export const load: PageServerLoad = async ({ url }) => {
 				reinstallPatterns: {
 					reinstallRate: 10.7
 				}
+			},
+			countryInsights: {
+				countries: [
+					{
+						countryCode: 'JP',
+						new30d: 4075,
+						new30dShare: 32.6,
+						active: 3,
+						activeRate: 0.1,
+						total: 4078
+					},
+					{
+						countryCode: 'RU',
+						new30d: 4063,
+						new30dShare: 32.5,
+						active: 2,
+						activeRate: 0.0,
+						total: 4065
+					},
+					{
+						countryCode: 'US',
+						new30d: 4038,
+						new30dShare: 32.3,
+						active: 73,
+						activeRate: 1.8,
+						total: 4111
+					}
+				],
+				period: '30d',
+				activityThresholdDays: 3,
+				generatedAt: new Date('2024-01-01').toISOString()
 			}
 		};
 	}

@@ -95,6 +95,7 @@ bun run start
 - `GET /api/heartbeat-analytics` - Get heartbeat analytics
 - `GET /api/recent-installations` - Get recent installations
 - `GET /api/new-installations` - Get new installations analytics
+- `GET /api/country-insights` - Get per-country registration vs activity insights
 
 ## Active/Stale Installation Tracking
 
@@ -463,6 +464,7 @@ Uncovered areas:
 - `GET /api/heartbeat-analytics` – User engagement metrics
 - `GET /api/recent-installations` – Recent installation listing with filtering
 - `GET /api/new-installations` – New user analytics and trends
+- `GET /api/country-insights` – Per-country registration vs activity divergence
 
 ## CI
 
