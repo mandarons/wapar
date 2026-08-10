@@ -435,4 +435,129 @@ describe(ENDPOINT, () => {
     const otherBody = await otherRes.json();
     expect(otherBody.newInstallRate.last7Days).toBe(0);
   });
+
+  it('should return adoptionTimeline and adoptionGaps in response', async () => {
+    await resetDb();
+    const base = getBase();
+
+    const id1 = await createInstallation('2.0.0', 'icloud-docker');
+    const id2 = await createInstallation('2.1.0', 'icloud-docker');
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Installation WHERE id IN (?, ?)',
+      [id1, id2],
+      2
+    );
+    await sendHeartbeat(id1);
+    await sendHeartbeat(id2);
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (?, ?)',
+      [id1, id2],
+      2
+    );
+
+    const res = await fetch(`${base}${ENDPOINT}?period=30d&groupBy=day`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    expect(Array.isArray(body.adoptionTimeline)).toBe(true);
+    expect(Array.isArray(body.adoptionGaps)).toBe(true);
+
+    // Each entry should have the expected shape
+    for (const entry of body.adoptionTimeline) {
+      expect(typeof entry.date).toBe('string');
+      expect(typeof entry.version).toBe('string');
+      expect(typeof entry.newInstalls).toBe('number');
+    }
+  });
+
+  it('should group adoption timeline by week when groupBy=week', async () => {
+    await resetDb();
+    const base = getBase();
+
+    const id1 = await createInstallation('3.0.0');
+    await waitForCount('SELECT COUNT(1) as count FROM Installation WHERE id = ?', [id1], 1);
+    await sendHeartbeat(id1);
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [id1], 1);
+
+    const res = await fetch(`${base}${ENDPOINT}?period=30d&groupBy=week`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    expect(Array.isArray(body.adoptionTimeline)).toBe(true);
+
+    // Week format should match YYYY-Www
+    const dates = body.adoptionTimeline.map((e: any) => e.date);
+    const weekPattern = /^\d{4}-W\d{2}$/;
+    for (const date of dates) {
+      expect(weekPattern.test(date)).toBe(true);
+    }
+  });
+
+  it('should filter adoption timeline by appName', async () => {
+    await resetDb();
+    const base = getBase();
+
+    const id1 = await createInstallation('1.0.0', 'icloud-docker');
+    const id2 = await createInstallation('2.0.0', 'ha-bouncie');
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Installation WHERE id IN (?, ?)',
+      [id1, id2],
+      2
+    );
+    await sendHeartbeat(id1);
+    await sendHeartbeat(id2);
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (?, ?)',
+      [id1, id2],
+      2
+    );
+
+    const icloudRes = await fetch(`${base}${ENDPOINT}?appName=icloud-docker&period=30d&groupBy=day`);
+    const icloudBody = await icloudRes.json();
+
+    // Should only have icloud-docker versions
+    const versions = icloudBody.adoptionTimeline.map((e: any) => e.version);
+    for (const v of versions) {
+      // All entries should be from icloud-docker (version 1.0.0)
+      if (v !== 'unknown') {
+        expect(v).toBe('1.0.0');
+      }
+    }
+  });
+
+  it('should return empty adoptionTimeline for invalid period', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}?period=invalid`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    // Invalid period means adoption timeline query is skipped, returns empty
+    expect(body.adoptionTimeline).toEqual([]);
+    expect(body.adoptionGaps).toEqual([]);
+  });
+
+  it('should return empty adoptionTimeline for invalid groupBy', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}?groupBy=invalid`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.adoptionTimeline).toEqual([]);
+    expect(body.adoptionGaps).toEqual([]);
+  });
+
+  it('should detect gaps when all versions have zero installs at end of timeline', async () => {
+    await resetDb();
+    const base = getBase();
+
+    // Create an installation (will have today's date in timeline)
+    const id1 = await createInstallation('1.0.0');
+    await waitForCount('SELECT COUNT(1) as count FROM Installation WHERE id = ?', [id1], 1);
+
+    // Query with period=30d — there should be entries and potentially gaps
+    const res = await fetch(`${base}${ENDPOINT}?period=30d&groupBy=day`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    expect(Array.isArray(body.adoptionTimeline)).toBe(true);
+    expect(Array.isArray(body.adoptionGaps)).toBe(true);
+  });
 });

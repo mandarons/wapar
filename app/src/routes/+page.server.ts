@@ -60,7 +60,9 @@ export const load: PageServerLoad = async ({ url }) => {
 				versionDistribution: [],
 				latestVersion: null,
 				outdatedInstallations: 0,
-				newInstallRate: { last7Days: 0, last30Days: 0 }
+				newInstallRate: { last7Days: 0, last30Days: 0 },
+				adoptionTimeline: [],
+				adoptionGaps: []
 			};
 		}
 
@@ -284,7 +286,14 @@ export const load: PageServerLoad = async ({ url }) => {
 				],
 				latestVersion: '2.1.0',
 				outdatedInstallations: 305,
-				newInstallRate: { last7Days: 15, last30Days: 78 }
+				newInstallRate: { last7Days: 15, last30Days: 78 },
+				adoptionTimeline: [
+					{ date: '2025-10-25', version: '2.1.0', newInstalls: 12 },
+					{ date: '2025-10-25', version: '2.0.5', newInstalls: 8 },
+					{ date: '2025-10-24', version: '2.1.0', newInstalls: 10 },
+					{ date: '2025-10-24', version: '2.0.5', newInstalls: 6 }
+				],
+				adoptionGaps: []
 			},
 			recentInstallations: {
 				installations: [],

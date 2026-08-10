@@ -34,6 +34,8 @@
 		latestVersion: string | null;
 		outdatedInstallations: number;
 		newInstallRate: { last7Days: number; last30Days: number };
+		adoptionTimeline: Array<{ date: string; version: string; newInstalls: number }>;
+		adoptionGaps: Array<{ from: string; to: string; days: number }>;
 	};
 
 	type RecentInstallationsPayload = {
@@ -1142,6 +1144,8 @@
 								last30Days: 0
 							}}
 							upgradeAnalytics={data.upgradeAnalytics ?? null}
+							adoptionTimeline={data.versionAnalytics?.adoptionTimeline ?? []}
+							adoptionGaps={data.versionAnalytics?.adoptionGaps ?? []}
 						/>
 					</div>
 				{:else if tab.id === 'growth' && data.newInstallations}

@@ -196,6 +196,8 @@ Returns comprehensive app version distribution analytics.
 
 **Query Parameters:**
 - `appName` (optional): Filter results by application name (e.g., `icloud-docker`, `ha-bouncie`). When omitted, returns aggregate data across all apps.
+- `period` (optional): Time window for adoption timeline. Pattern: `\d+d` (e.g., `30d`, `90d`). Default: `30d`.
+- `groupBy` (optional): Grouping granularity for adoption timeline. One of `day`, `week`. Default: `day`.
 
 **Response:**
 ```json
@@ -210,7 +212,14 @@ Returns comprehensive app version distribution analytics.
   "newInstallRate": {
     "last7Days": 15,
     "last30Days": 78
-  }
+  },
+  "adoptionTimeline": [
+    { "date": "2025-10-25", "version": "2.1.0", "newInstalls": 12 },
+    { "date": "2025-10-25", "version": "2.0.5", "newInstalls": 5 }
+  ],
+  "adoptionGaps": [
+    { "from": "2025-10-20", "to": "2025-10-22", "days": 3 }
+  ]
 }
 ```
 
@@ -219,6 +228,8 @@ Returns comprehensive app version distribution analytics.
 - `latestVersion`: Version with highest installation count (null if no data)
 - `outdatedInstallations`: Count of active installations not on latest version
 - `newInstallRate`: Number of installations created in last 7 and 30 days (filtered by `appName` if provided)
+- `adoptionTimeline`: Per-version install counts over time, grouped by `groupBy` (day or week) for the selected `period`. Each entry contains `date`, `version`, and `newInstalls`. Bounded to `period` days for performance.
+- `adoptionGaps`: Detected gaps (consecutive zero-install periods) in the adoption timeline.
 
 **Important Note:**
 - This endpoint returns data for **active installations only** (breaking change from previous behavior)
