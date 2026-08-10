@@ -117,6 +117,22 @@ export const load: PageServerLoad = async ({ url }) => {
 					usersInactive7Days: 0,
 					usersInactive14Days: 0,
 					usersInactive30Days: 0
+				},
+				syncHealth: {
+					last7d: {
+						installationsReporting: 0,
+						avgSyncDurationSec: null,
+						errorRate: 0,
+						driveActiveCount: 0,
+						photosActiveCount: 0
+					},
+					last30d: {
+						installationsReporting: 0,
+						avgSyncDurationSec: null,
+						errorRate: 0,
+						driveActiveCount: 0,
+						photosActiveCount: 0
+					}
 				}
 			};
 		}
@@ -299,6 +315,22 @@ export const load: PageServerLoad = async ({ url }) => {
 					usersInactive7Days: 45,
 					usersInactive14Days: 23,
 					usersInactive30Days: 12
+				},
+				syncHealth: {
+					last7d: {
+						installationsReporting: 180,
+						avgSyncDurationSec: 42.3,
+						errorRate: 0.05,
+						driveActiveCount: 150,
+						photosActiveCount: 120
+					},
+					last30d: {
+						installationsReporting: 350,
+						avgSyncDurationSec: 38.7,
+						errorRate: 0.03,
+						driveActiveCount: 300,
+						photosActiveCount: 250
+					}
 				}
 			},
 			newInstallations: {

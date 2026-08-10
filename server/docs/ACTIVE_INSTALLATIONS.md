@@ -475,3 +475,68 @@ curl https://wapar-api.mandarons.com/api/upgrade-analytics
   "upgradesLast30d": 80
 }
 ```
+
+## Heartbeat Telemetry Data
+
+### Overview
+
+Clients (iCloud Docker) send rich sync-health telemetry in the heartbeat `data` JSON field. This data is stored in the `Heartbeat.data` TEXT column and aggregated by the `GET /api/heartbeat-analytics` endpoint.
+
+### Telemetry Fields
+
+The `data` object in heartbeat requests contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sync_duration` | `number` | Total sync wall-clock time in seconds |
+| `has_drive_activity` | `boolean` | Whether drive sync had activity (files downloaded, skipped, or removed) |
+| `has_photos_activity` | `boolean` | Whether photo sync had activity |
+| `has_errors` | `boolean` | Whether either drive or photos had errors |
+| `timestamp` | `string \| null` | ISO 8601 datetime of when the sync ended |
+| `drive` | `object` | Optional: `{ files_count, bytes_count, has_errors }` |
+| `photos` | `object` | Optional: `{ photos_count, bytes_count, hardlinks_count, has_errors }` |
+
+### Sync Health Analytics
+
+The `GET /api/heartbeat-analytics` endpoint aggregates this telemetry over 7-day and 30-day windows:
+
+**Response fields** (additive, non-breaking):
+
+```json
+{
+  "syncHealth": {
+    "last7d": {
+      "installationsReporting": 180,
+      "avgSyncDurationSec": 42.3,
+      "errorRate": 0.05,
+      "driveActiveCount": 150,
+      "photosActiveCount": 120
+    },
+    "last30d": {
+      "installationsReporting": 350,
+      "avgSyncDurationSec": 38.7,
+      "errorRate": 0.03,
+      "driveActiveCount": 300,
+      "photosActiveCount": 250
+    }
+  }
+}
+```
+
+**Aggregation rules:**
+
+- `installationsReporting`: Distinct installations with non-null `Heartbeat.data` in the window
+- `avgSyncDurationSec`: Average of `data.sync_duration` across heartbeats; `null` if no data
+- `errorRate`: Fraction of heartbeats where `data.has_errors === true`
+- `driveActiveCount`: Distinct installations with `data.has_drive_activity === true`
+- `photosActiveCount`: Distinct installations with `data.has_photos_activity === true`
+
+### Filtering by App
+
+The sync health data respects the `appName` query parameter:
+
+```bash
+curl https://wapar-api.mandarons.com/api/heartbeat-analytics?appName=icloud-docker
+```
+
+This returns sync health metrics only for heartbeats from the specified application.

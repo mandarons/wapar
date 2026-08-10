@@ -362,6 +362,94 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
     // This aligns with the API spec where churn risk tracks users who haven't sent heartbeats
     const usersInactive30Days = dormant;
     
+    // Sync Health — aggregate Heartbeat.data telemetry over bounded windows
+    async function computeSyncHealth(windowStart: string) {
+      const heartbeatsWithDataResult = await Logger.measureOperation(
+        'heartbeat-analytics.sync_health_data',
+        () => appName
+          ? c.env.DB.prepare(`
+              SELECT h.data
+              FROM Heartbeat h
+              INNER JOIN Installation i ON h.installation_id = i.id
+              WHERE h.created_at >= ? AND i.app_name = ? AND h.data IS NOT NULL
+            `).bind(windowStart, appName).all<{ data: string }>()
+          : c.env.DB.prepare(`
+              SELECT h.data
+              FROM Heartbeat h
+              WHERE h.created_at >= ? AND h.data IS NOT NULL
+            `).bind(windowStart).all<{ data: string }>(),
+        requestContext
+      );
+
+      const rows = heartbeatsWithDataResult?.results ?? [];
+      let totalSyncDuration = 0;
+      let syncDurationCount = 0;
+      let errorCount = 0;
+      let totalWithData = 0;
+      const driveActiveInstallations = new Set<string>();
+      const photosActiveInstallations = new Set<string>();
+
+      for (const row of rows) {
+        totalWithData++;
+        try {
+          const parsed = JSON.parse(row.data);
+          if (typeof parsed.sync_duration === 'number') {
+            totalSyncDuration += parsed.sync_duration;
+            syncDurationCount++;
+          }
+          if (parsed.has_errors === true) {
+            errorCount++;
+          }
+        } catch {
+          // Skip malformed data
+        }
+      }
+
+      // For drive/photos active counts, we need installation IDs — re-query with IDs
+      const heartbeatsWithIdsResult = await Logger.measureOperation(
+        'heartbeat-analytics.sync_health_ids',
+        () => appName
+          ? c.env.DB.prepare(`
+              SELECT h.installation_id, h.data
+              FROM Heartbeat h
+              INNER JOIN Installation i ON h.installation_id = i.id
+              WHERE h.created_at >= ? AND i.app_name = ? AND h.data IS NOT NULL
+            `).bind(windowStart, appName).all<{ installation_id: string; data: string }>()
+          : c.env.DB.prepare(`
+              SELECT h.installation_id, h.data
+              FROM Heartbeat h
+              WHERE h.created_at >= ? AND h.data IS NOT NULL
+            `).bind(windowStart).all<{ installation_id: string; data: string }>(),
+        requestContext
+      );
+
+      const idRows = heartbeatsWithIdsResult?.results ?? [];
+      for (const row of idRows) {
+        try {
+          const parsed = JSON.parse(row.data);
+          if (parsed.has_drive_activity === true) {
+            driveActiveInstallations.add(row.installation_id);
+          }
+          if (parsed.has_photos_activity === true) {
+            photosActiveInstallations.add(row.installation_id);
+          }
+        } catch {
+          // Skip malformed data
+        }
+      }
+
+      return {
+        installationsReporting: totalWithData,
+        avgSyncDurationSec: syncDurationCount > 0 ? Math.round((totalSyncDuration / syncDurationCount) * 10) / 10 : null,
+        errorRate: totalWithData > 0 ? Math.round((errorCount / totalWithData) * 1000) / 1000 : 0,
+        driveActiveCount: driveActiveInstallations.size,
+        photosActiveCount: photosActiveInstallations.size
+      };
+    }
+
+    const syncHealthLast7d = await computeSyncHealth(last7d);
+    const syncHealthLast30d = await computeSyncHealth(last30d);
+
     const responseData = {
       activeUsers: {
         daily: dau,
@@ -385,12 +473,20 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
         usersInactive7Days,
         usersInactive14Days,
         usersInactive30Days
+      },
+      syncHealth: {
+        last7d: syncHealthLast7d,
+        last30d: syncHealthLast30d
       }
     };
     
     Logger.success('Heartbeat analytics generated', {
       operation: 'heartbeat-analytics.success',
-      metadata: { dau, wau, mau, dauMauRatio: responseData.activeUsers.dau_mau_ratio },
+      metadata: {
+        dau, wau, mau, dauMauRatio: responseData.activeUsers.dau_mau_ratio,
+        syncHealth7d: syncHealthLast7d.installationsReporting,
+        syncHealth30d: syncHealthLast30d.installationsReporting
+      },
       ...requestContext
     });
     

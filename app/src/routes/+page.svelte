@@ -85,6 +85,22 @@
 			usersInactive14Days: number;
 			usersInactive30Days: number;
 		};
+		syncHealth: {
+			last7d: {
+				installationsReporting: number;
+				avgSyncDurationSec: number | null;
+				errorRate: number;
+				driveActiveCount: number;
+				photosActiveCount: number;
+			};
+			last30d: {
+				installationsReporting: number;
+				avgSyncDurationSec: number | null;
+				errorRate: number;
+				driveActiveCount: number;
+				photosActiveCount: number;
+			};
+		};
 	};
 
 	type NewInstallationsPayload = {
@@ -205,7 +221,7 @@
 		{
 			id: 'heartbeat',
 			label: 'Active Usage',
-			description: 'User engagement metrics, DAU/WAU/MAU, and churn risk analysis.'
+			description: 'User engagement metrics, DAU/WAU/MAU, churn risk, and sync health analysis.'
 		},
 		{
 			id: 'recent',
@@ -1159,6 +1175,22 @@
 								usersInactive7Days: 0,
 								usersInactive14Days: 0,
 								usersInactive30Days: 0
+							}}
+							syncHealth={data.heartbeatAnalytics?.syncHealth ?? {
+								last7d: {
+									installationsReporting: 0,
+									avgSyncDurationSec: null,
+									errorRate: 0,
+									driveActiveCount: 0,
+									photosActiveCount: 0
+								},
+								last30d: {
+									installationsReporting: 0,
+									avgSyncDurationSec: null,
+									errorRate: 0,
+									driveActiveCount: 0,
+									photosActiveCount: 0
+								}
 							}}
 						/>
 					</div>
