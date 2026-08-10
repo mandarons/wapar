@@ -171,7 +171,7 @@ ACTIVITY_THRESHOLD_DAYS = "5"  # 5 days for production
   ],
   "latestVersion": "2.0.0",
   "outdatedInstallations": 25,
-  "upgradeRate": {
+  "newInstallRate": {
     "last7Days": 10,
     "last30Days": 45
   }
@@ -381,7 +381,7 @@ curl https://wapar-api.mandarons.com/api/version-analytics
   ],
   "latestVersion": "2.1.0",
   "outdatedInstallations": 300,
-  "upgradeRate": {
+  "newInstallRate": {
     "last7Days": 25,
     "last30Days": 120
   }
@@ -392,7 +392,7 @@ curl https://wapar-api.mandarons.com/api/version-analytics
 - All counts and percentages reflect **active installations only** (750 total)
 - `outdatedInstallations` (300) are active installations not on latest version
 - Percentages sum to 100% across active installations
-- Upgrade rates track version changes among active users
+- New install rates track recently created installations
 
 ### Example 6: Geographic Distribution Query
 

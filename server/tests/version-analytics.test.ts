@@ -41,9 +41,9 @@ describe(ENDPOINT, () => {
     expect(Array.isArray(body.versionDistribution)).toBe(true);
     expect(typeof body.outdatedInstallations).toBe('number');
     expect(body.latestVersion === null || typeof body.latestVersion === 'string').toBe(true);
-    expect(typeof body.upgradeRate).toBe('object');
-    expect(typeof body.upgradeRate.last7Days).toBe('number');
-    expect(typeof body.upgradeRate.last30Days).toBe('number');
+    expect(typeof body.newInstallRate).toBe('object');
+    expect(typeof body.newInstallRate.last7Days).toBe('number');
+    expect(typeof body.newInstallRate.last30Days).toBe('number');
   });
 
   it('should return correct version distribution with counts and percentages', async () => {
@@ -201,18 +201,18 @@ describe(ENDPOINT, () => {
     expect(res.status).toBe(200);
     const body = await res.json();
 
-    // Verify upgrade rate structure
-    expect(typeof body.upgradeRate.last7Days).toBe('number');
-    expect(typeof body.upgradeRate.last30Days).toBe('number');
-    expect(body.upgradeRate.last7Days).toBeGreaterThanOrEqual(0);
-    expect(body.upgradeRate.last30Days).toBeGreaterThanOrEqual(0);
+    // Verify new install rate structure
+    expect(typeof body.newInstallRate.last7Days).toBe('number');
+    expect(typeof body.newInstallRate.last30Days).toBe('number');
+    expect(body.newInstallRate.last7Days).toBeGreaterThanOrEqual(0);
+    expect(body.newInstallRate.last30Days).toBeGreaterThanOrEqual(0);
     
     // 30-day count should be >= 7-day count
-    expect(body.upgradeRate.last30Days).toBeGreaterThanOrEqual(body.upgradeRate.last7Days);
+    expect(body.newInstallRate.last30Days).toBeGreaterThanOrEqual(body.newInstallRate.last7Days);
     
     // At least our newly created installation should be counted
-    expect(body.upgradeRate.last7Days).toBeGreaterThanOrEqual(1);
-    expect(body.upgradeRate.last30Days).toBeGreaterThanOrEqual(1);
+    expect(body.newInstallRate.last7Days).toBeGreaterThanOrEqual(1);
+    expect(body.newInstallRate.last30Days).toBeGreaterThanOrEqual(1);
   });
 
   it('should handle empty database gracefully', async () => {
@@ -225,7 +225,7 @@ describe(ENDPOINT, () => {
     // Even with empty data, structure should be valid
     expect(Array.isArray(body.versionDistribution)).toBe(true);
     expect(typeof body.outdatedInstallations).toBe('number');
-    expect(body.upgradeRate).toBeDefined();
+    expect(body.newInstallRate).toBeDefined();
   });
 
   it('should return versions ordered by count descending', async () => {

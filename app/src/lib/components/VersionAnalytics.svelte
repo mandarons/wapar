@@ -6,7 +6,7 @@
 	}> = [];
 	export let latestVersion: string | null = null;
 	export let outdatedInstallations: number = 0;
-	export let upgradeRate: { last7Days: number; last30Days: number } = {
+	export let newInstallRate: { last7Days: number; last30Days: number } = {
 		last7Days: 0,
 		last30Days: 0
 	};
@@ -41,7 +41,7 @@
 			versionDistribution,
 			latestVersion,
 			outdatedInstallations,
-			upgradeRate,
+			newInstallRate,
 			exportedAt: new Date().toISOString()
 		};
 
@@ -151,9 +151,9 @@
 				<span class="stat-value">{formatNumber(outdatedInstallations)}</span>
 			</div>
 			<div class="stat-item">
-				<span class="stat-label">Upgrades (7d / 30d):</span>
+				<span class="stat-label">New Installs (7d / 30d):</span>
 				<span class="stat-value">
-					{formatNumber(upgradeRate.last7Days)} / {formatNumber(upgradeRate.last30Days)}
+					{formatNumber(newInstallRate.last7Days)} / {formatNumber(newInstallRate.last30Days)}
 				</span>
 			</div>
 		</div>

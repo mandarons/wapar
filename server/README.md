@@ -204,7 +204,7 @@ Returns comprehensive app version distribution analytics.
   ],
   "latestVersion": "2.1.0",
   "outdatedInstallations": 550,
-  "upgradeRate": {
+  "newInstallRate": {
     "last7Days": 15,
     "last30Days": 78
   }
@@ -215,7 +215,7 @@ Returns comprehensive app version distribution analytics.
 - `versionDistribution`: Array of version objects with count and percentage (**active installations only**)
 - `latestVersion`: Version with highest installation count (null if no data)
 - `outdatedInstallations`: Count of active installations not on latest version
-- `upgradeRate`: Number of installations updated in last 7 and 30 days
+- `newInstallRate`: Number of installations created in last 7 and 30 days
 
 **Important Note:**
 - This endpoint now returns data for **active installations only** (breaking change from previous behavior)

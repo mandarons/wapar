@@ -69,15 +69,15 @@ versionAnalyticsRoutes.get('/', async (c) => {
           .reduce((sum, v) => sum + v.count, 0)
       : 0;
 
-    // Calculate upgrade rates (installations updated in last 7 and 30 days)
+    // Calculate new installation rates (installations created in last 7 and 30 days)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const last7DaysResult = await Logger.measureOperation(
-      'version_analytics.upgrades_7d',
+      'version_analytics.new_installs_7d',
       () => db.select({ count: count() })
         .from(installations)
-        .where(gte(installations.updatedAt, sevenDaysAgo)),
+        .where(gte(installations.createdAt, sevenDaysAgo)),
       {
         metadata: { sinceDate: sevenDaysAgo },
         ...requestContext
@@ -85,10 +85,10 @@ versionAnalyticsRoutes.get('/', async (c) => {
     );
 
     const last30DaysResult = await Logger.measureOperation(
-      'version_analytics.upgrades_30d',
+      'version_analytics.new_installs_30d',
       () => db.select({ count: count() })
         .from(installations)
-        .where(gte(installations.updatedAt, thirtyDaysAgo)),
+        .where(gte(installations.createdAt, thirtyDaysAgo)),
       {
         metadata: { sinceDate: thirtyDaysAgo },
         ...requestContext
@@ -99,7 +99,7 @@ versionAnalyticsRoutes.get('/', async (c) => {
       versionDistribution,
       latestVersion,
       outdatedInstallations,
-      upgradeRate: {
+      newInstallRate: {
         last7Days: last7DaysResult[0]?.count ?? 0,
         last30Days: last30DaysResult[0]?.count ?? 0
       }

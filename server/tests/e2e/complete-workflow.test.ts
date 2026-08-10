@@ -126,7 +126,7 @@ describe('E2E: Complete Application Workflow', () => {
       expect(data.versionDistribution).toBeDefined();
       expect(Array.isArray(data.versionDistribution)).toBe(true);
       expect(data.latestVersion).toBeDefined();
-      expect(data.upgradeRate).toBeDefined();
+      expect(data.newInstallRate).toBeDefined();
     });
 
     it('should retrieve heartbeat analytics', async () => {
@@ -236,7 +236,7 @@ describe('E2E: Complete Application Workflow', () => {
       const analyticsData = await analyticsResponse.json() as any;
       
       expect(analyticsData.versionDistribution).toBeDefined();
-      expect(analyticsData.upgradeRate).toBeDefined();
+      expect(analyticsData.newInstallRate).toBeDefined();
     });
   });
 

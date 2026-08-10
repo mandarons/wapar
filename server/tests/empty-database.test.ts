@@ -49,8 +49,8 @@ describe('Empty Database Coverage Tests', () => {
     expect(body.versionDistribution.length).toBe(0);
     expect(body.outdatedInstallations).toBe(0);
     expect(body.latestVersion).toBeNull();
-    expect(body.upgradeRate.last7Days).toBe(0);
-    expect(body.upgradeRate.last30Days).toBe(0);
+    expect(body.newInstallRate.last7Days).toBe(0);
+    expect(body.newInstallRate.last30Days).toBe(0);
   });
 
   it('Non-localhost POST to /api should trigger warning', async () => {

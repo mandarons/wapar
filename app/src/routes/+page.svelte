@@ -25,7 +25,7 @@
 		}>;
 		latestVersion: string | null;
 		outdatedInstallations: number;
-		upgradeRate: { last7Days: number; last30Days: number };
+		newInstallRate: { last7Days: number; last30Days: number };
 	};
 
 	type RecentInstallationsPayload = {
@@ -110,7 +110,7 @@
 		versionDistribution: [],
 		latestVersion: null,
 		outdatedInstallations: 0,
-		upgradeRate: { last7Days: 0, last30Days: 0 }
+		newInstallRate: { last7Days: 0, last30Days: 0 }
 	};
 
 	const fallbackRecent: RecentInstallationsPayload = {
@@ -921,7 +921,10 @@
 							versionDistribution={data.versionAnalytics?.versionDistribution ?? []}
 							latestVersion={data.versionAnalytics?.latestVersion ?? null}
 							outdatedInstallations={data.versionAnalytics?.outdatedInstallations ?? 0}
-							upgradeRate={data.versionAnalytics?.upgradeRate ?? { last7Days: 0, last30Days: 0 }}
+							newInstallRate={data.versionAnalytics?.newInstallRate ?? {
+								last7Days: 0,
+								last30Days: 0
+							}}
 						/>
 					</div>
 				{:else if tab.id === 'heartbeat' && data.heartbeatAnalytics}
