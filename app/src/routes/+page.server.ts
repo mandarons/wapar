@@ -144,6 +144,24 @@ export const load: PageServerLoad = async ({ url }) => {
 			};
 		}
 
+		// Fetch upgrade analytics
+		let upgradeAnalytics;
+		try {
+			const upgradeParams = appName ? `?appName=${encodeURIComponent(appName)}` : '';
+			const upgradeRes = await fetch(`${API_URL}/api/upgrade-analytics${upgradeParams}`);
+			upgradeAnalytics = await upgradeRes.json();
+		} catch (error) {
+			console.warn('Failed to fetch upgrade analytics:', error);
+			upgradeAnalytics = {
+				upgradeFlows: [],
+				skipLevelUpgrades: { count: 0, rate: 0 },
+				downgradeRate: 0,
+				upgradeThenStale30d: { count: 0, rate: 0 },
+				upgradesLast7d: 0,
+				upgradesLast30d: 0
+			};
+		}
+
 		// Fetch country insights (registration vs activity divergence)
 		let countryInsights;
 		try {
@@ -175,6 +193,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		data.recentInstallations = recentInstallationsData;
 		data.heartbeatAnalytics = heartbeatAnalytics;
 		data.newInstallations = newInstallations;
+		data.upgradeAnalytics = upgradeAnalytics;
 		data.countryInsights = countryInsights;
 
 		// Ensure we have the required fields with defaults if API didn't provide them
@@ -303,6 +322,18 @@ export const load: PageServerLoad = async ({ url }) => {
 				reinstallPatterns: {
 					reinstallRate: 10.7
 				}
+			},
+			upgradeAnalytics: {
+				upgradeFlows: [
+					{ from: '1.24.0', to: '2.0.0', count: 45 },
+					{ from: '1.23.0', to: '2.0.0', count: 30 },
+					{ from: '1.22.0', to: '2.0.0', count: 15 }
+				],
+				skipLevelUpgrades: { count: 20, rate: 22.2 },
+				downgradeRate: 1.1,
+				upgradeThenStale30d: { count: 5, rate: 5.6 },
+				upgradesLast7d: 15,
+				upgradesLast30d: 90
 			},
 			countryInsights: {
 				countries: [

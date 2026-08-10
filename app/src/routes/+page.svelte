@@ -129,6 +129,15 @@
 		generatedAt: string;
 	};
 
+	type UpgradeAnalyticsPayload = {
+		upgradeFlows: Array<{ from: string; to: string; count: number }>;
+		skipLevelUpgrades: { count: number; rate: number };
+		downgradeRate: number;
+		upgradeThenStale30d: { count: number; rate: number };
+		upgradesLast7d: number;
+		upgradesLast30d: number;
+	};
+
 	export let data: {
 		totalInstallations: number;
 		activeInstallations: number;
@@ -145,6 +154,7 @@
 		recentInstallations?: RecentInstallationsPayload;
 		heartbeatAnalytics?: HeartbeatAnalyticsPayload;
 		newInstallations?: NewInstallationsPayload;
+		upgradeAnalytics?: UpgradeAnalyticsPayload;
 		countryInsights?: CountryInsightsPayload;
 		appName?: string | null;
 	};
@@ -1107,6 +1117,7 @@
 								last7Days: 0,
 								last30Days: 0
 							}}
+							upgradeAnalytics={data.upgradeAnalytics ?? null}
 						/>
 					</div>
 				{:else if tab.id === 'growth' && data.newInstallations}

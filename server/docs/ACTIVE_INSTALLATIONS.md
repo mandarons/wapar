@@ -426,3 +426,52 @@ The active/stale installation tracking provides:
 5. **Real-time Updates**: Heartbeats immediately transition stale to active
 
 This feature enables data-driven decisions about user engagement, version adoption, and geographic expansion.
+
+## Upgrade Analytics
+
+The `GET /api/upgrade-analytics` endpoint leverages the `previousId` lineage to provide upgrade intelligence.
+
+### How It Works
+
+When a client registers with `previousId`, it links the new installation to its predecessor. The upgrade analytics endpoint JOINs on this lineage to answer:
+
+- **What did users upgrade FROM?** (version-to-version flows)
+- **How many upgrades are skip-level?** (e.g., 1.24.0 → 2.0.0 skips 1.x)
+- **How many installs are downgrades?**
+- **Do users go stale shortly after upgrading?**
+
+### Response Fields
+
+| Field | Description |
+|-------|-------------|
+| `upgradeFlows` | Aggregated from→to version pairs with counts (last 30d) |
+| `skipLevelUpgrades` | Count and rate of skip-level upgrades |
+| `downgradeRate` | Percentage of flows that are downgrades |
+| `upgradeThenStale30d` | Upgraded within 30d, then went stale |
+| `upgradesLast7d` | Total upgrade events in last 7 days |
+| `upgradesLast30d` | Total upgrade events in last 30 days |
+
+### Unresolved Previous IDs
+
+If `previousId` points to an installation that no longer exists (deleted or data loss), the flow counts as `from: "unresolved"`. This is tracked but excluded from skip-level and downgrade calculations.
+
+### Example
+
+```bash
+curl https://wapar-api.mandarons.com/api/upgrade-analytics
+```
+
+```json
+{
+  "upgradeFlows": [
+    { "from": "1.24.0", "to": "2.0.0", "count": 45 },
+    { "from": "1.23.0", "to": "2.0.0", "count": 30 },
+    { "from": "unresolved", "to": "2.0.0", "count": 5 }
+  ],
+  "skipLevelUpgrades": { "count": 12, "rate": 15.0 },
+  "downgradeRate": 1.3,
+  "upgradeThenStale30d": { "count": 3, "rate": 3.8 },
+  "upgradesLast7d": 8,
+  "upgradesLast30d": 80
+}
+```
