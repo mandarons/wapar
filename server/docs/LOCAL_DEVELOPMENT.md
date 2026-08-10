@@ -159,6 +159,7 @@ Once running on `http://localhost:8787`:
 - `GET /api/heartbeat-analytics` - Heartbeat analytics
 - `GET /api/recent-installations` - Recent installations
 - `GET /api/new-installations` - New installation analytics
+- `GET /api/country-insights` - Country registration vs activity insights
 
 ## Database Management
 

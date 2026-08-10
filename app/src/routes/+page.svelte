@@ -108,6 +108,20 @@
 		};
 	};
 
+	type CountryInsightsPayload = {
+		countries: Array<{
+			countryCode: string;
+			new30d: number;
+			new30dShare: number;
+			active: number;
+			activeRate: number;
+			total: number;
+		}>;
+		period: string;
+		activityThresholdDays: number;
+		generatedAt: string;
+	};
+
 	export let data: {
 		totalInstallations: number;
 		activeInstallations: number;
@@ -123,6 +137,7 @@
 		recentInstallations?: RecentInstallationsPayload;
 		heartbeatAnalytics?: HeartbeatAnalyticsPayload;
 		newInstallations?: NewInstallationsPayload;
+		countryInsights?: CountryInsightsPayload;
 	};
 
 	interface SvgMapInstance {
@@ -154,7 +169,8 @@
 		{
 			id: 'geography',
 			label: 'Geography',
-			description: 'Regional coverage, top countries, and world map (active installations only).'
+			description:
+				'Regional coverage, top countries, country health, and world map (active installations only).'
 		},
 		{
 			id: 'versions',
@@ -898,6 +914,75 @@
 								</div>
 							</div>
 						</div>
+
+						{#if data.countryInsights && data.countryInsights.countries.length > 0}
+							{@const sortedInsights = [...data.countryInsights.countries].sort(
+								(a, b) => b.new30d - a.new30d
+							)}
+							<div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+								<h3 class="text-base font-semibold text-gray-900">Country health</h3>
+								<p class="mt-1 text-sm text-gray-500">
+									Registration volume vs active engagement — a low active rate may indicate proxy or
+									datacenter registrations.
+								</p>
+								<div class="mt-4 overflow-x-auto" role="table" aria-label="Country health insights">
+									<table class="min-w-full text-sm">
+										<thead>
+											<tr
+												class="border-b border-gray-200 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+											>
+												<th class="pb-2 pr-3" scope="col">Country</th>
+												<th class="pb-2 pr-3 text-right" scope="col">New (30d)</th>
+												<th class="pb-2 pr-3 text-right" scope="col">Share</th>
+												<th class="pb-2 pr-3 text-right" scope="col">Active</th>
+												<th class="pb-2 text-right" scope="col">Active rate</th>
+											</tr>
+										</thead>
+										<tbody>
+											{#each sortedInsights.slice(0, 10) as insight, index}
+												<tr class="border-b border-gray-100 hover:bg-gray-50">
+													<td class="py-2.5 pr-3 font-medium text-gray-900">
+														<span class="mr-1.5 text-xs text-gray-400">#{index + 1}</span>
+														{getCountryName(insight.countryCode)}
+														<span class="ml-1 text-xs text-gray-400">({insight.countryCode})</span>
+													</td>
+													<td class="py-2.5 pr-3 text-right text-gray-700">
+														{insight.new30d.toLocaleString()}
+													</td>
+													<td class="py-2.5 pr-3 text-right text-gray-500">
+														{insight.new30dShare.toFixed(1)}%
+													</td>
+													<td class="py-2.5 pr-3 text-right text-gray-700">
+														{insight.active.toLocaleString()}
+													</td>
+													<td class="py-2.5 text-right">
+														{#if insight.new30d > 0}
+															{@const rate = insight.activeRate}
+															<span
+																class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium
+																	{rate < 1
+																	? 'bg-red-50 text-red-700'
+																	: rate < 10
+																		? 'bg-amber-50 text-amber-700'
+																		: 'bg-green-50 text-green-700'}"
+															>
+																{rate.toFixed(1)}%
+																{#if rate < 1}
+																	<span class="sr-only">— low engagement</span>
+																	<span aria-hidden="true" class="text-[10px]">!</span>
+																{/if}
+															</span>
+														{:else}
+															<span class="text-xs text-gray-400">—</span>
+														{/if}
+													</td>
+												</tr>
+											{/each}
+										</tbody>
+									</table>
+								</div>
+							</div>
+						{/if}
 					</div>
 				{:else if tab.id === 'versions' && data.versionAnalytics}
 					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
