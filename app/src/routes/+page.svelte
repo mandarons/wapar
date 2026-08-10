@@ -202,6 +202,21 @@
 
 	type TabId = (typeof tabConfig)[number]['id'];
 	const MAP_TAB_ID: TabId = 'geography';
+	const VALID_TAB_IDS = new Set<string>(tabConfig.map((t) => t.id));
+
+	function getHashTab(): TabId {
+		const hash = location.hash.replace(/^#/, '');
+		if (hash && VALID_TAB_IDS.has(hash)) {
+			return hash as TabId;
+		}
+		return 'overview';
+	}
+
+	function syncHashFromTab(tabId: TabId) {
+		if (location.hash !== `#${tabId}`) {
+			location.hash = tabId;
+		}
+	}
 
 	let activeTab: TabId = 'overview';
 	let activeTabIndex = 0;
@@ -252,6 +267,7 @@
 		}
 		activeTab = tab.id;
 		activeTabIndex = index;
+		syncHashFromTab(tab.id);
 		await tick();
 		const node = tabRefs[index];
 		if (node) {
@@ -388,13 +404,36 @@
 		mapInitialized = false;
 	}
 
+	function onHashChange() {
+		const hashTab = getHashTab();
+		if (hashTab !== activeTab) {
+			const prevTab = activeTab;
+			if (prevTab === MAP_TAB_ID) {
+				destroyMap();
+			}
+			activeTab = hashTab;
+		}
+	}
+
 	onMount(async () => {
+		const hashTab = getHashTab();
+		if (hashTab !== activeTab) {
+			activeTab = hashTab;
+		} else {
+			syncHashFromTab(activeTab);
+		}
+
+		window.addEventListener('hashchange', onHashChange);
+
 		if (activeTab === MAP_TAB_ID) {
 			await initialiseMap();
 		}
 	});
 
 	onDestroy(() => {
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('hashchange', onHashChange);
+		}
 		destroyMap();
 	});
 
