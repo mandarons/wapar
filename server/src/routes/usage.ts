@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getDb } from '../db/client';
 import { installations, heartbeats } from '../db/schema';
-import { count, countDistinct, eq, isNotNull, gte, desc, and } from 'drizzle-orm';
+import { count, countDistinct, eq, isNotNull, gte, desc, and, min } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
 import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
 import type { D1Database } from '../types/database';
@@ -78,6 +78,14 @@ usageRoutes.get('/', async (c) => {
       }
     );
 
+    // Earliest installation date (start of collected data)
+    const earliestInstallationResult = await Logger.measureOperation(
+      'usage.earliest_installation',
+      () => db.select({ earliestInstallationDate: min(installations.createdAt) }).from(installations),
+      requestContext
+    );
+    const earliestInstallationDate = earliestInstallationResult[0]?.earliestInstallationDate ?? null;
+
     // App-specific counts
     const getAppCount = async (appName: string) => {
       const result = await Logger.measureOperation(
@@ -106,6 +114,7 @@ usageRoutes.get('/', async (c) => {
       monthlyActive,
       activityThresholdDays: thresholdDays,
       createdAt: now,
+      earliestInstallationDate,
       countryToCount: countryToCount.map((r) => ({ 
         countryCode: r.country_code, 
         count: Number(r.count) 

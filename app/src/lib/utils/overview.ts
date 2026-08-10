@@ -17,7 +17,7 @@ export interface OverviewMetricInput {
 	iCloudDockerTotal: number;
 	haBouncieTotal: number;
 	activityThresholdDays: number;
-	createdAt: string | null;
+	earliestInstallationDate: string | null;
 }
 
 export interface OverviewSummaryInput {
@@ -26,7 +26,7 @@ export interface OverviewSummaryInput {
 	countryCount: number;
 	installationsLast24h: number | null;
 	installationsLast7d: number | null;
-	createdAt: string | null;
+	earliestInstallationDate: string | null;
 }
 
 export interface LastSyncedMeta {
@@ -52,8 +52,8 @@ export function buildOverviewMetrics(input: OverviewMetricInput): OverviewMetric
 			label: 'Total installations',
 			value: formatInstallCount(input.totalInstallations),
 			testId: 'total-installations',
-			subtitle: input.createdAt
-				? `Since ${new Date(input.createdAt).toLocaleDateString()}`
+			subtitle: input.earliestInstallationDate
+				? `Since ${new Date(input.earliestInstallationDate).toLocaleDateString()}`
 				: 'All time'
 		},
 		{
@@ -79,8 +79,8 @@ function formatChangeDescriptor(label: string, value: number | null): string | n
 export function describeUpdate(input: OverviewSummaryInput): string {
 	const segments: string[] = ['Tracking adoption for iCloud Docker and HA Bouncie integrations.'];
 
-	const createdDate = input.createdAt
-		? new Date(input.createdAt).toLocaleDateString()
+	const createdDate = input.earliestInstallationDate
+		? new Date(input.earliestInstallationDate).toLocaleDateString()
 		: 'the beginning';
 	segments.push(
 		`${formatInstallCount(input.activeInstallations)} active installations (${formatInstallCount(input.totalInstallations)} total since ${createdDate}) across ${input.countryCount} ${
