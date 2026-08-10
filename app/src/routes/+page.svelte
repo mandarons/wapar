@@ -9,6 +9,7 @@
 	import VersionAnalytics from '$lib/components/VersionAnalytics.svelte';
 	import RecentInstallations from '$lib/components/RecentInstallations.svelte';
 	import HeartbeatAnalytics from '$lib/components/HeartbeatAnalytics.svelte';
+	import GrowthAnalytics from '$lib/components/GrowthAnalytics.svelte';
 	import {
 		buildOverviewMetrics,
 		describeUpdate,
@@ -74,6 +75,29 @@
 		};
 	};
 
+	type NewInstallationsPayload = {
+		summary: {
+			totalNew: number;
+			totalReinstalls: number;
+			newUserRate: number;
+			period: string;
+		};
+		timeline: Array<{
+			date: string;
+			newUsers: number;
+			reinstalls: number;
+			total: number;
+		}>;
+		topCountriesNewUsers: Array<{
+			countryCode: string;
+			count: number;
+			percentage: number;
+		}>;
+		reinstallPatterns: {
+			reinstallRate: number;
+		};
+	};
+
 	export let data: {
 		totalInstallations: number;
 		activeInstallations: number;
@@ -88,6 +112,7 @@
 		versionAnalytics?: VersionAnalyticsPayload;
 		recentInstallations?: RecentInstallationsPayload;
 		heartbeatAnalytics?: HeartbeatAnalyticsPayload;
+		newInstallations?: NewInstallationsPayload;
 	};
 
 	interface SvgMapInstance {
@@ -128,6 +153,11 @@
 				'Release adoption, outdated installs, and upgrade rate (active installations only).'
 		},
 		{
+			id: 'growth',
+			label: 'Growth',
+			description: 'New user acquisition, reinstalls, and top countries driving growth.'
+		},
+		{
 			id: 'heartbeat',
 			label: 'Active Usage',
 			description: 'User engagement metrics, DAU/WAU/MAU, and churn risk analysis.'
@@ -154,6 +184,9 @@
 	$: visibleTabs = tabConfig.filter((tab) => {
 		if (tab.id === 'versions') {
 			return Boolean(data.versionAnalytics);
+		}
+		if (tab.id === 'growth') {
+			return Boolean(data.newInstallations);
 		}
 		if (tab.id === 'recent') {
 			return Boolean(data.recentInstallations);
@@ -866,6 +899,19 @@
 								last7Days: 0,
 								last30Days: 0
 							}}
+						/>
+					</div>
+				{:else if tab.id === 'growth' && data.newInstallations}
+					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+						<GrowthAnalytics
+							summary={data.newInstallations?.summary ?? {
+								totalNew: 0,
+								totalReinstalls: 0,
+								newUserRate: 0,
+								period: '30d'
+							}}
+							timeline={data.newInstallations?.timeline ?? []}
+							topCountriesNewUsers={data.newInstallations?.topCountriesNewUsers ?? []}
 						/>
 					</div>
 				{:else if tab.id === 'heartbeat' && data.heartbeatAnalytics}

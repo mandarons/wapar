@@ -5,6 +5,7 @@ Integration tests for the deployed WAPAR frontend application and its API integr
 ## Overview
 
 These tests run against the **deployed staging environment** (Cloudflare Pages + Workers) to verify:
+
 - Frontend loads correctly in production environment
 - API endpoints return valid data
 - User interface components render properly
@@ -65,12 +66,14 @@ See `.github/workflows/staging.yml` for the complete workflow.
 ## Test Structure
 
 ### UI Tests
+
 - Page loading and rendering
 - Navigation between tabs
 - Interactive elements (buttons, maps, charts)
 - Error states and loading indicators
 
 ### API Tests (via Playwright request context)
+
 - `/api/usage` - Usage analytics data
 - `/api/installation-stats` - Installation statistics
 - `/api/version-analytics` - Version distribution
@@ -94,11 +97,11 @@ See `.github/workflows/staging.yml` for the complete workflow.
 
 ```typescript
 test('should display feature X', async ({ page }) => {
-  await page.goto(FRONTEND_URL);
-  await page.waitForLoadState('networkidle');
-  
-  // Test UI elements
-  await expect(page.getByTestId('feature-x')).toBeVisible();
+	await page.goto(FRONTEND_URL);
+	await page.waitForLoadState('networkidle');
+
+	// Test UI elements
+	await expect(page.getByTestId('feature-x')).toBeVisible();
 });
 ```
 
@@ -106,13 +109,13 @@ test('should display feature X', async ({ page }) => {
 
 ```typescript
 test('API endpoint returns expected data', async ({ request }) => {
-  const response = await request.get(`${API_URL}/api/endpoint`);
-  
-  expect(response.ok()).toBeTruthy();
-  
-  const data = await response.json();
-  expect(data).toHaveProperty('expectedField');
-  expect(typeof data.expectedField).toBe('string');
+	const response = await request.get(`${API_URL}/api/endpoint`);
+
+	expect(response.ok()).toBeTruthy();
+
+	const data = await response.json();
+	expect(data).toHaveProperty('expectedField');
+	expect(typeof data.expectedField).toBe('string');
 });
 ```
 
@@ -123,6 +126,7 @@ test('API endpoint returns expected data', async ({ request }) => {
 **Problem**: Tests take too long and timeout
 
 **Solutions**:
+
 - Check network connectivity to staging environment
 - Verify deployments completed successfully
 - Increase `timeout` in `playwright.config.integration.ts`
@@ -133,6 +137,7 @@ test('API endpoint returns expected data', async ({ request }) => {
 **Problem**: `page.goto()` fails or page shows errors
 
 **Solutions**:
+
 - Verify `STAGING_FRONTEND_URL` is correct
 - Check browser console for errors: `page.on('console', msg => console.log(msg.text()))`
 - Ensure Pages deployment completed successfully
@@ -143,6 +148,7 @@ test('API endpoint returns expected data', async ({ request }) => {
 **Problem**: API requests return 500 or unexpected errors
 
 **Solutions**:
+
 - Verify database migrations were applied: `wrangler d1 migrations list wapar-db --remote`
 - Check Workers deployment logs
 - Verify `STAGING_API_URL` environment variable is correct
@@ -153,6 +159,7 @@ test('API endpoint returns expected data', async ({ request }) => {
 **Problem**: "Browser not found" error when running tests
 
 **Solution**:
+
 ```bash
 bunx playwright install --with-deps chromium
 ```
@@ -185,6 +192,6 @@ Tests run after both deployments complete, ensuring the full stack is tested in 
 ✅ **Frontend build errors** - Would fail page load tests  
 ✅ **Data format changes** - Would fail response validation tests  
 ✅ **Environment configuration** - Would fail if env vars not set correctly  
-✅ **Deployment failures** - Would fail if services not accessible  
+✅ **Deployment failures** - Would fail if services not accessible
 
 This addresses the gap that allowed the recent production incident where database migrations weren't applied.

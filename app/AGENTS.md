@@ -4,16 +4,16 @@ SvelteKit + Tailwind + Skeleton UI dashboard that fetches the WAPAR API server-s
 
 ## Local Commands
 
-| Task | Command |
-|------|---------|
-| Dev server | `bun dev` (SvelteKit, port 5173) |
-| Type check | `bun run check` (svelte-check) |
-| Lint (Prettier + ESLint) | `bun run lint` |
-| Format (auto-fix) | `bun run format` |
-| Unit tests | `bun run test:unit` (Vitest) |
-| E2E tests | `bun run test:e2e` (Playwright) |
-| Deployed integration | `bun run test:integration` |
-| Full test suite | `bun run test` (e2e then unit) |
+| Task                     | Command                          |
+| ------------------------ | -------------------------------- |
+| Dev server               | `bun dev` (SvelteKit, port 5173) |
+| Type check               | `bun run check` (svelte-check)   |
+| Lint (Prettier + ESLint) | `bun run lint`                   |
+| Format (auto-fix)        | `bun run format`                 |
+| Unit tests               | `bun run test:unit` (Vitest)     |
+| E2E tests                | `bun run test:e2e` (Playwright)  |
+| Deployed integration     | `bun run test:integration`       |
+| Full test suite          | `bun run test` (e2e then unit)   |
 
 ## Local Rules
 
