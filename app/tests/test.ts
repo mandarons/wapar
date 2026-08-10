@@ -113,3 +113,42 @@ test('deep-link to hidden tab falls back to first visible tab', async ({ page })
 		expect(overviewVisible).toBe(true);
 	}
 });
+
+test('recent installs tab shows pagination controls when multiple pages exist', async ({
+	page
+}) => {
+	await page.goto('/#recent');
+	await page.getByTestId('tab-recent').click();
+	const filter = page.getByTestId('recent-app-filter');
+	await expect(filter).toBeVisible();
+	const paginationInfo = page.locator('text=/Page \\d+ of \\d+/');
+	const prevButton = page.getByTestId('recent-prev-page');
+	const nextButton = page.getByTestId('recent-next-page');
+	if (await paginationInfo.isVisible()) {
+		await expect(prevButton).toBeVisible();
+		await expect(nextButton).toBeVisible();
+		await expect(prevButton).toBeDisabled();
+	}
+});
+
+test('recent installs next button navigates to next page', async ({ page }) => {
+	await page.goto('/#recent');
+	await page.getByTestId('tab-recent').click();
+	const nextButton = page.getByTestId('recent-next-page');
+	if (await nextButton.isVisible()) {
+		await nextButton.click();
+		await expect(page).toHaveURL(/offset=\d+/);
+		await expect(page.getByTestId('recent-prev-page')).toBeEnabled();
+	}
+});
+
+test('recent installs filter shows app filter dropdown', async ({ page }) => {
+	await page.goto('/#recent');
+	await page.getByTestId('tab-recent').click();
+	const filter = page.getByTestId('recent-app-filter');
+	await expect(filter).toBeVisible();
+	await expect(filter).toHaveValue('');
+	const options = filter.locator('option');
+	const count = await options.count();
+	expect(count).toBeGreaterThanOrEqual(3);
+});
