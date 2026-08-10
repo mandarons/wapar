@@ -39,6 +39,11 @@ export function formatInstallCount(value: number): string {
 	return numberFormatter.format(Math.max(0, Math.trunc(value)));
 }
 
+export function formatStalePercentage(value: number): string {
+	const clamped = Math.max(0, Math.min(100, value));
+	return `${clamped.toFixed(1)}%`;
+}
+
 export function buildOverviewMetrics(input: OverviewMetricInput): OverviewMetric[] {
 	const metrics = [
 		{
