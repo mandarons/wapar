@@ -53,6 +53,12 @@
 		totalHeartbeats: number;
 	}> = [];
 
+	export let gaps: Array<{
+		from: string;
+		to: string;
+		days: number;
+	}> = [];
+
 	export let churnRisk: {
 		usersInactive7Days: number;
 		usersInactive14Days: number;
@@ -375,6 +381,23 @@
 			<div class="text-2xl font-bold">{healthMetrics.avgTimeBetweenHeartbeats}</div>
 		</div>
 	</div>
+
+	<!-- Data Gap Alerts -->
+	{#if gaps.length > 0}
+		<div class="alert variant-filled-warning mb-6" role="status">
+			<div class="alert-message">
+				<h4 class="h4">⚠️ Data Gap Detected</h4>
+				<ul class="list-disc list-inside mt-2">
+					{#each gaps as gap}
+						<li>
+							{gap.from} — {gap.to} ({gap.days} day{gap.days !== 1 ? 's' : ''}) — likely ingestion
+							outage; counts may be understated.
+						</li>
+					{/each}
+				</ul>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Churn Risk Alerts -->
 	{#if churnRisk.usersInactive7Days > 0}

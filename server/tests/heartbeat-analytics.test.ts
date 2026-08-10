@@ -198,6 +198,48 @@ describe(ENDPOINT, () => {
     }
   });
 
+  it('should include gaps array in response', async () => {
+    const base = getBase();
+    const response = await fetch(`${base}${ENDPOINT}`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    expect(Array.isArray(data.gaps)).toBe(true);
+    // Each gap should have from, to, days
+    for (const gap of data.gaps) {
+      expect(typeof gap.from).toBe('string');
+      expect(typeof gap.to).toBe('string');
+      expect(typeof gap.days).toBe('number');
+      expect(gap.days).toBeGreaterThan(0);
+    }
+  });
+
+  it('should fill timeline with contiguous dates even when data is sparse', async () => {
+    const base = getBase();
+    
+    // Create installation with heartbeat only today
+    const install = await createInstallation();
+    await createHeartbeat(install, new Date().toISOString());
+    
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?`, [install], 1);
+    
+    const response = await fetch(`${base}${ENDPOINT}`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    // Timeline should have 31 entries (one per day for 30-day window inclusive)
+    expect(data.timeline.length).toBe(31);
+    
+    // All dates should be contiguous
+    const sortedDates = data.timeline.map((t: any) => t.date).sort();
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prev = new Date(sortedDates[i - 1] + 'T00:00:00Z');
+      const curr = new Date(sortedDates[i] + 'T00:00:00Z');
+      const diffDays = (curr.getTime() - prev.getTime()) / (24 * 60 * 60 * 1000);
+      expect(diffDays).toBe(1);
+    }
+  });
+
   it('should calculate health metrics', async () => {
     const base = getBase();
     

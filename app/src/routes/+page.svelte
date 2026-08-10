@@ -64,6 +64,11 @@
 			activeUsers: number;
 			totalHeartbeats: number;
 		}>;
+		gaps: Array<{
+			from: string;
+			to: string;
+			days: number;
+		}>;
 		healthMetrics: {
 			avgHeartbeatsPerUser: number;
 			avgTimeBetweenHeartbeats: string;
@@ -87,6 +92,11 @@
 			newUsers: number;
 			reinstalls: number;
 			total: number;
+		}>;
+		gaps: Array<{
+			from: string;
+			to: string;
+			days: number;
 		}>;
 		topCountriesNewUsers: Array<{
 			countryCode: string;
@@ -911,6 +921,7 @@
 								period: '30d'
 							}}
 							timeline={data.newInstallations?.timeline ?? []}
+							gaps={data.newInstallations?.gaps ?? []}
 							topCountriesNewUsers={data.newInstallations?.topCountriesNewUsers ?? []}
 						/>
 					</div>
@@ -930,6 +941,7 @@
 								dormant: { count: 0, description: 'No heartbeat in 30 days' }
 							}}
 							timeline={data.heartbeatAnalytics?.timeline ?? []}
+							gaps={data.heartbeatAnalytics?.gaps ?? []}
 							healthMetrics={data.heartbeatAnalytics?.healthMetrics ?? {
 								avgHeartbeatsPerUser: 0,
 								avgTimeBetweenHeartbeats: '0 hours'

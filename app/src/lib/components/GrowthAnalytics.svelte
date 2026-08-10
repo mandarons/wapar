@@ -29,6 +29,12 @@
 		total: number;
 	}> = [];
 
+	export let gaps: Array<{
+		from: string;
+		to: string;
+		days: number;
+	}> = [];
+
 	export let topCountriesNewUsers: Array<{
 		countryCode: string;
 		count: number;
@@ -235,6 +241,43 @@
 			</p>
 		</div>
 	</div>
+
+	<!-- Data Gap Alerts -->
+	{#if gaps.length > 0}
+		<div class="rounded-md border border-amber-300 bg-amber-50 p-4 mb-6" role="status">
+			<div class="flex items-start gap-3">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="text-amber-600 mt-0.5 shrink-0"
+				>
+					<path
+						d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+					/>
+					<line x1="12" y1="9" x2="12" y2="13" />
+					<line x1="12" y1="17" x2="12.01" y2="17" />
+				</svg>
+				<div>
+					<h4 class="text-sm font-semibold text-amber-800">Data Gap Detected</h4>
+					<ul class="list-disc list-inside mt-1 text-sm text-amber-700">
+						{#each gaps as gap}
+							<li>
+								{gap.from} — {gap.to} ({gap.days} day{gap.days !== 1 ? 's' : ''}) — likely ingestion
+								outage; counts may be understated.
+							</li>
+						{/each}
+					</ul>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Timeline Chart -->
 	{#if timeline.length > 0}

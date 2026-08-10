@@ -4,6 +4,7 @@ import { getDb } from '../db/client';
 import { heartbeats } from '../db/schema';
 import { countDistinct, gte } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
+import { fillTimelineGaps } from '../utils/timeline-gaps';
 
 export const heartbeatAnalyticsRoutes = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -137,11 +138,21 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
       `).bind(last30d).all<{ date: string; active_users: number; total_heartbeats: number }>(),
       requestContext
     );
-    const timeline = (timelineResult?.results ?? []).map(row => ({
+    const rawTimeline = (timelineResult?.results ?? []).map(row => ({
       date: row.date,
       activeUsers: Number(row.active_users),
       totalHeartbeats: Number(row.total_heartbeats)
     }));
+
+    // Fill missing dates with zeros and detect gaps
+    const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const { timeline, gaps } = fillTimelineGaps(
+      rawTimeline,
+      startDate,
+      now,
+      'day',
+      { activeUsers: 0, totalHeartbeats: 0 }
+    );
     
     // Health metrics - average heartbeats per user in last 30 days
     const avgHeartbeatsResult = await Logger.measureOperation(
@@ -237,6 +248,7 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
         dormant: { count: dormant, description: "No heartbeat in 30 days" }
       },
       timeline,
+      gaps,
       healthMetrics: {
         avgHeartbeatsPerUser: Math.round(avgHeartbeatsPerUser * 10) / 10,
         avgTimeBetweenHeartbeats: `${avgHours} hours`
