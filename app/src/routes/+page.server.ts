@@ -7,7 +7,7 @@ const API_URL =
 		? process.env.PUBLIC_API_URL
 		: 'https://wapar-api.mandarons.com';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ url }) => {
 	try {
 		// Fetch WAPAR usage data
 		let waparData;
