@@ -42,6 +42,7 @@ describe(ENDPOINT, () => {
     
     // Verify the response structure without assuming empty data
     expect(Array.isArray(body.countryToCount)).toBe(true);
+    expect(Array.isArray(body.allTimeCountryToCount)).toBe(true);
     expect(typeof body.totalInstallations).toBe('number');
     expect(typeof body.monthlyActive).toBe('number');
     expect(typeof body.iCloudDocker.total).toBe('number');
@@ -164,5 +165,39 @@ describe(ENDPOINT, () => {
     
     // Verify that both installations are counted in iCloudDocker.total
     expect(body.iCloudDocker.total).toBeGreaterThanOrEqual(initialICloudTotal + 2);
+  });
+
+  it('should include allTimeCountryToCount with stale installations', async () => {
+    await resetDb();
+    const base = getBase();
+
+    // Create an active installation (with heartbeat)
+    const activeId = await createInstallation();
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${activeId}'`, 1);
+    await d1Exec(`UPDATE Installation SET country_code = 'US' WHERE id = ?`, [activeId]);
+    await d1Exec(`INSERT INTO Heartbeat (id, installation_id, created_at, updated_at) VALUES (?, ?, datetime('now'), datetime('now'))`, [crypto.randomUUID(), activeId]);
+    await d1Exec(`UPDATE Installation SET last_heartbeat_at = datetime('now') WHERE id = ?`, [activeId]);
+    await waitForCount(`SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = '${activeId}'`, 1);
+
+    // Create a stale installation (no heartbeat)
+    const staleId = await createInstallation();
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${staleId}'`, 1);
+    await d1Exec(`UPDATE Installation SET country_code = 'JP' WHERE id = ?`, [staleId]);
+
+    const res = await fetch(`${base}${ENDPOINT}`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    // Active countryToCount should only have US
+    const activeCodes = body.countryToCount.map((c: any) => c.countryCode);
+    expect(activeCodes).toContain('US');
+
+    // allTimeCountryToCount should have both US and JP
+    const allTimeCodes = body.allTimeCountryToCount.map((c: any) => c.countryCode);
+    expect(allTimeCodes).toContain('US');
+    expect(allTimeCodes).toContain('JP');
+
+    // JP should appear in allTime but not in active
+    expect(activeCodes).not.toContain('JP');
   });
 });

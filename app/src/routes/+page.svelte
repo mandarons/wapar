@@ -18,6 +18,12 @@
 		formatStalePercentage
 	} from '$lib/utils/overview';
 	import { getCountryName } from '$lib/utils/countries';
+	import {
+		getGeographyLayerData,
+		sortCountriesDescending,
+		getTopCountries,
+		type GeographyLayer
+	} from '$lib/utils/geographicMetrics';
 
 	type VersionAnalyticsPayload = {
 		versionDistribution: Array<{
@@ -132,6 +138,7 @@
 		createdAt: string | null;
 		earliestInstallationDate: string | null;
 		countryToCount: { countryCode: string; count: number }[];
+		allTimeCountryToCount?: { countryCode: string; count: number }[];
 		iCloudDocker: { total: number };
 		haBouncie: { total: number };
 		versionAnalytics?: VersionAnalyticsPayload;
@@ -171,7 +178,7 @@
 			id: 'geography',
 			label: 'Geography',
 			description:
-				'Regional coverage, top countries, country health, and world map (active installations only).'
+				'Regional coverage, top countries, country health, and world map with Active/New/All-time layers.'
 		},
 		{
 			id: 'versions',
@@ -350,7 +357,7 @@
 				applyData: 'installations',
 				values: Object.fromEntries(
 					new Map(
-						data.countryToCount.map(({ countryCode, count }) => [
+						geographyLayerData.countries.map(({ countryCode, count }) => [
 							countryCode,
 							{ installations: count }
 						])
@@ -371,7 +378,9 @@
 					const countryId = country.getAttribute('data-id');
 					if (countryId) {
 						const countryName = getCountryName(countryId);
-						const countryData = data.countryToCount.find((c) => c.countryCode === countryId);
+						const countryData = geographyLayerData.countries.find(
+							(c) => c.countryCode === countryId
+						);
 						const installs = countryData ? countryData.count.toLocaleString() : '0';
 						country.setAttribute(
 							'aria-label',
@@ -481,8 +490,19 @@
 	});
 
 	$: lastSyncedMeta = deriveLastSynced(lastSyncedIso);
-	$: sortedCountries = [...(data.countryToCount ?? [])].sort((a, b) => b.count - a.count);
-	$: top10Countries = sortedCountries.slice(0, 10);
+
+	$: newCountries = (data.newInstallations?.topCountriesNewUsers ?? []).map((c) => ({
+		countryCode: c.countryCode,
+		count: c.count
+	}));
+	$: geographyLayerData = getGeographyLayerData(
+		selectedGeographyLayer,
+		data.countryToCount ?? [],
+		data.allTimeCountryToCount ?? [],
+		newCountries
+	);
+	$: sortedCountries = sortCountriesDescending(geographyLayerData.countries);
+	$: top10Countries = getTopCountries(geographyLayerData.countries);
 
 	function formatPercentage(count: number, total: number): string {
 		if (total === 0) return '0%';
@@ -501,11 +521,13 @@
 	}
 
 	function showCountryDetails(countryCode: string) {
-		const countryData = data.countryToCount?.find((entry) => entry.countryCode === countryCode);
+		const countryData = geographyLayerData.countries.find(
+			(entry) => entry.countryCode === countryCode
+		);
 		if (!countryData) return;
 
 		const countryName = getCountryName(countryCode);
-		const percentage = formatPercentage(countryData.count, data.totalInstallations);
+		const percentage = formatPercentage(countryData.count, geographyLayerData.totalCount);
 		const ranking = sortedCountries.findIndex((entry) => entry.countryCode === countryCode) + 1;
 
 		const modal: ModalSettings = {
@@ -523,7 +545,7 @@
 </div>
 <div class="flex justify-between">
 <span class="font-semibold">Ranking:</span>
-<span>#${ranking} of ${data.countryToCount?.length ?? 0}</span>
+<span>#${ranking} of ${geographyLayerData.countries.length}</span>
 </div>
 </div>
 `,
@@ -575,6 +597,19 @@
 	let showMapDataTable = false;
 	function toggleMapDataTable() {
 		showMapDataTable = !showMapDataTable;
+	}
+
+	// Geography layer toggle
+	let selectedGeographyLayer: GeographyLayer = 'active';
+
+	function setGeographyLayer(layer: GeographyLayer) {
+		selectedGeographyLayer = layer;
+		if (mapInitialized && mapObj) {
+			mapObj.destroy?.();
+			mapObj = null;
+			mapInitialized = false;
+			initialiseMap();
+		}
 	}
 </script>
 
@@ -828,8 +863,44 @@
 						<div class="text-center">
 							<h2 class="text-xl font-semibold text-gray-900">Geographic coverage</h2>
 							<p class="mt-2 text-sm text-gray-600">
-								Top countries by combined installation count and interactive world map.
+								{geographyLayerData.description}
 							</p>
+						</div>
+
+						<div class="flex justify-center">
+							<div
+								class="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1"
+								role="group"
+								aria-label="Geography data layer"
+							>
+								<button
+									on:click={() => setGeographyLayer('active')}
+									class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedGeographyLayer ===
+									'active'
+										? 'bg-white text-indigo-600 shadow-sm'
+										: 'text-gray-600 hover:text-gray-900'}"
+									data-testid="layer-active"
+									aria-pressed={selectedGeographyLayer === 'active'}>Active</button
+								>
+								<button
+									on:click={() => setGeographyLayer('new-30d')}
+									class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedGeographyLayer ===
+									'new-30d'
+										? 'bg-white text-indigo-600 shadow-sm'
+										: 'text-gray-600 hover:text-gray-900'}"
+									data-testid="layer-new-30d"
+									aria-pressed={selectedGeographyLayer === 'new-30d'}>New (30d)</button
+								>
+								<button
+									on:click={() => setGeographyLayer('all-time')}
+									class="px-4 py-2 text-sm font-medium rounded-md transition-colors {selectedGeographyLayer ===
+									'all-time'
+										? 'bg-white text-indigo-600 shadow-sm'
+										: 'text-gray-600 hover:text-gray-900'}"
+									data-testid="layer-all-time"
+									aria-pressed={selectedGeographyLayer === 'all-time'}>All-time</button
+								>
+							</div>
 						</div>
 						<div class="flex flex-col gap-6 lg:flex-row">
 							<div class="w-full lg:w-1/3">
@@ -848,7 +919,7 @@
 												aria-label={getCountryButtonLabel(
 													country.countryCode,
 													country.count,
-													data.totalInstallations
+													geographyLayerData.totalCount
 												)}
 											>
 												<span class="flex items-center gap-2">
@@ -860,7 +931,7 @@
 														>{country.count.toLocaleString()}</span
 													>
 													<span class="block text-xs text-gray-500"
-														>{formatPercentage(country.count, data.totalInstallations)}</span
+														>{formatPercentage(country.count, geographyLayerData.totalCount)}</span
 													>
 												</span>
 											</button>
@@ -880,9 +951,10 @@
 										aria-describedby="map-description"
 									></div>
 									<div id="map-description" class="sr-only">
-										World map visualization showing {data.countryToCount?.length ?? 0} countries with
-										installation data. Use keyboard navigation to explore countries or press the toggle
-										button below to view the data table for detailed information.
+										World map visualization showing {geographyLayerData.countries.length} countries with
+										{geographyLayerData.description.toLowerCase()}. Use keyboard navigation to
+										explore countries or press the toggle button below to view the data table for
+										detailed information.
 									</div>
 
 									<!-- Toggle button for map data table -->
@@ -943,7 +1015,7 @@
 																{country.count.toLocaleString()}
 															</td>
 															<td class="px-4 py-2 text-sm text-gray-900 text-right">
-																{formatPercentage(country.count, data.totalInstallations)}
+																{formatPercentage(country.count, geographyLayerData.totalCount)}
 															</td>
 														</tr>
 													{/each}

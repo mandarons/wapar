@@ -26,6 +26,7 @@ export const load: PageServerLoad = async ({ url }) => {
 				createdAt: new Date().toISOString(),
 				earliestInstallationDate: null,
 				countryToCount: [],
+				allTimeCountryToCount: [],
 				iCloudDocker: { total: 0 },
 				haBouncie: { total: 0 }
 			};
@@ -171,6 +172,9 @@ export const load: PageServerLoad = async ({ url }) => {
 		data.countryInsights = countryInsights;
 
 		// Ensure we have the required fields with defaults if API didn't provide them
+		if (!data.allTimeCountryToCount) {
+			data.allTimeCountryToCount = [];
+		}
 		if (
 			typeof data.activeInstallations === 'undefined' ||
 			typeof data.staleInstallations === 'undefined'
@@ -212,6 +216,18 @@ export const load: PageServerLoad = async ({ url }) => {
 				{ countryCode: 'CH', count: 30 },
 				{ countryCode: 'AT', count: 25 },
 				{ countryCode: 'ES', count: 10 }
+			],
+			allTimeCountryToCount: [
+				{ countryCode: 'JP', count: 4078 },
+				{ countryCode: 'RU', count: 4065 },
+				{ countryCode: 'US', count: 4111 },
+				{ countryCode: 'DE', count: 120 },
+				{ countryCode: 'GB', count: 110 },
+				{ countryCode: 'CA', count: 90 },
+				{ countryCode: 'FR', count: 75 },
+				{ countryCode: 'AU', count: 65 },
+				{ countryCode: 'NL', count: 55 },
+				{ countryCode: 'SE', count: 45 }
 			],
 			iCloudDocker: { total: 555 },
 			haBouncie: { total: 445 },

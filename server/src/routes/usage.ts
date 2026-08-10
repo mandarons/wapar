@@ -78,6 +78,20 @@ usageRoutes.get('/', async (c) => {
       }
     );
 
+    // All-time country counts (no active filter)
+    const allTimeCountryToCount = await Logger.measureOperation(
+      'usage.all_time_country_counts',
+      () => db.select({
+        country_code: installations.countryCode,
+        count: count()
+      })
+        .from(installations)
+        .where(isNotNull(installations.countryCode))
+        .groupBy(installations.countryCode)
+        .orderBy(desc(count())),
+      requestContext
+    );
+
     // Earliest installation date (start of collected data)
     const earliestInstallationResult = await Logger.measureOperation(
       'usage.earliest_installation',
@@ -119,6 +133,10 @@ usageRoutes.get('/', async (c) => {
         countryCode: r.country_code, 
         count: Number(r.count) 
       })),
+      allTimeCountryToCount: allTimeCountryToCount.map((r) => ({ 
+        countryCode: r.country_code, 
+        count: Number(r.count) 
+      })),
       iCloudDocker: { total: iCloudDockerTotal },
       haBouncie: { total: haBouncieTotal },
     };
@@ -144,6 +162,7 @@ usageRoutes.get('/', async (c) => {
         staleInstallations: totalInstallations - activeInstallations,
         monthlyActive,
         countriesWithData: countryToCount.length,
+        allTimeCountriesWithData: allTimeCountryToCount.length,
         topApps: { iCloudDockerTotal, haBouncieTotal }
       }
     });
