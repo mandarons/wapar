@@ -96,6 +96,7 @@ bun run start
 - `GET /api/recent-installations` - Get recent installations
 - `GET /api/new-installations` - Get new installations analytics
 - `GET /api/country-insights` - Get per-country registration vs activity insights
+- `GET /api/upgrade-analytics` - Get upgrade path analytics from previousId lineage
 
 ## Active/Stale Installation Tracking
 
@@ -225,6 +226,41 @@ Returns comprehensive app version distribution analytics.
 - `outdatedInstallations` counts only active installations on older versions
 
 **Performance:** Optimized for fast response times (<500ms)
+
+### GET /api/upgrade-analytics
+
+Returns upgrade path analytics derived from the `previousId` lineage on installations.
+
+**Query Parameters:**
+- `appName` (optional): Filter results by application name. When omitted, returns aggregate data across all apps.
+
+**Response:**
+```json
+{
+  "upgradeFlows": [
+    { "from": "1.24.0", "to": "2.0.0", "count": 45 },
+    { "from": "1.23.0", "to": "2.0.0", "count": 30 }
+  ],
+  "skipLevelUpgrades": {
+    "count": 15,
+    "rate": 20.0
+  },
+  "downgradeRate": 1.1,
+  "upgradeThenStale30d": {
+    "count": 5,
+    "rate": 5.6
+  },
+  "upgradesLast7d": 12,
+  "upgradesLast30d": 75
+}
+```
+
+**Fields:**
+- `upgradeFlows`: Aggregated from→to version pairs with counts (last 30 days). `from` is `"unresolved"` when `previousId` points to a deleted installation.
+- `skipLevelUpgrades`: Count and rate of skip-level upgrades (version jump > 1 major/minor step)
+- `downgradeRate`: Percentage of upgrade flows that are version downgrades
+- `upgradeThenStale30d`: Count and rate of installations that upgraded in the last 30 days but are now stale
+- `upgradesLast7d` / `upgradesLast30d`: Total upgrade events in the respective time windows
 
 ### POST /api/installation
 
@@ -466,6 +502,7 @@ Uncovered areas:
 - `GET /api/recent-installations` – Recent installation listing with filtering
 - `GET /api/new-installations` – New user analytics and trends
 - `GET /api/country-insights` – Per-country registration vs activity divergence
+- `GET /api/upgrade-analytics` – Upgrade path analytics from previousId lineage
 
 ## CI
 

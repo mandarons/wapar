@@ -10,6 +10,14 @@
 		last7Days: 0,
 		last30Days: 0
 	};
+	export let upgradeAnalytics: {
+		upgradeFlows: Array<{ from: string; to: string; count: number }>;
+		skipLevelUpgrades: { count: number; rate: number };
+		downgradeRate: number;
+		upgradeThenStale30d: { count: number; rate: number };
+		upgradesLast7d: number;
+		upgradesLast30d: number;
+	} | null = null;
 	export let title: string = 'App Version Distribution';
 
 	// Calculate max count for bar sizing
@@ -156,7 +164,44 @@
 					{formatNumber(newInstallRate.last7Days)} / {formatNumber(newInstallRate.last30Days)}
 				</span>
 			</div>
+			{#if upgradeAnalytics}
+				<div class="stat-item">
+					<span class="stat-label">Upgrades (7d / 30d):</span>
+					<span class="stat-value">
+						{formatNumber(upgradeAnalytics.upgradesLast7d)} / {formatNumber(
+							upgradeAnalytics.upgradesLast30d
+						)}
+					</span>
+				</div>
+				{#if upgradeAnalytics.skipLevelUpgrades.count > 0}
+					<div class="stat-item">
+						<span class="stat-label">Skip-level Upgrades:</span>
+						<span class="stat-value">{upgradeAnalytics.skipLevelUpgrades.rate}%</span>
+					</div>
+				{/if}
+				{#if upgradeAnalytics.downgradeRate > 0}
+					<div class="stat-item">
+						<span class="stat-label">Downgrade Rate:</span>
+						<span class="stat-value">{upgradeAnalytics.downgradeRate}%</span>
+					</div>
+				{/if}
+			{/if}
 		</div>
+		{#if upgradeAnalytics && upgradeAnalytics.upgradeFlows.length > 0}
+			<div class="upgrade-paths" role="region" aria-label="Most common upgrade paths">
+				<h4 class="upgrade-paths-title">Most common upgrade paths</h4>
+				<div class="upgrade-paths-list">
+					{#each upgradeAnalytics.upgradeFlows.slice(0, 5) as flow}
+						<div class="upgrade-path-item">
+							<span class="upgrade-from">{flow.from}</span>
+							<span class="upgrade-arrow" aria-hidden="true">&rarr;</span>
+							<span class="upgrade-to">{flow.to}</span>
+							<span class="upgrade-count">{flow.count}</span>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -318,6 +363,53 @@
 		font-size: 1.125rem;
 		font-weight: 600;
 		color: #1f2937;
+	}
+
+	.upgrade-paths {
+		margin-top: 1.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid #e5e7eb;
+	}
+
+	.upgrade-paths-title {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #374151;
+		margin: 0 0 0.75rem 0;
+	}
+
+	.upgrade-paths-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.upgrade-path-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+	}
+
+	.upgrade-from {
+		color: #6b7280;
+		font-family: monospace;
+	}
+
+	.upgrade-arrow {
+		color: #9ca3af;
+	}
+
+	.upgrade-to {
+		color: #1f2937;
+		font-weight: 500;
+		font-family: monospace;
+	}
+
+	.upgrade-count {
+		margin-left: auto;
+		color: #6b7280;
+		font-size: 0.75rem;
 	}
 
 	@media (max-width: 640px) {
