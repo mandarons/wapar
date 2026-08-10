@@ -55,6 +55,9 @@ describe(ENDPOINT, () => {
     expect(data).toHaveProperty('timeline');
     expect(data).toHaveProperty('healthMetrics');
     expect(data).toHaveProperty('churnRisk');
+    expect(data).toHaveProperty('syncHealth');
+    expect(data.syncHealth).toHaveProperty('last7d');
+    expect(data.syncHealth).toHaveProperty('last30d');
   });
 
   it('should calculate DAU, WAU, MAU correctly', async () => {
@@ -462,5 +465,153 @@ describe(ENDPOINT, () => {
     const icloudRes = await fetch(`${base}${ENDPOINT}?appName=icloud-docker`);
     const icloudData = await icloudRes.json();
     expect(icloudData.churnRisk.usersInactive7Days).toBe(0);
+  });
+
+  it('should include syncHealth in response structure', async () => {
+    await resetDb();
+    const base = getBase();
+    const response = await fetch(`${base}${ENDPOINT}`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    expect(data).toHaveProperty('syncHealth');
+    expect(data.syncHealth).toHaveProperty('last7d');
+    expect(data.syncHealth).toHaveProperty('last30d');
+    expect(data.syncHealth.last7d).toHaveProperty('installationsReporting');
+    expect(data.syncHealth.last7d).toHaveProperty('avgSyncDurationSec');
+    expect(data.syncHealth.last7d).toHaveProperty('errorRate');
+    expect(data.syncHealth.last7d).toHaveProperty('driveActiveCount');
+    expect(data.syncHealth.last7d).toHaveProperty('photosActiveCount');
+  });
+
+  it('should aggregate sync health data from heartbeats with telemetry', async () => {
+    await resetDb();
+    const base = getBase();
+
+    const install1 = await createInstallation('icloud-docker');
+    const install2 = await createInstallation('icloud-docker');
+
+    // Insert heartbeats with sync health data via direct SQL
+    const hb1Id = crypto.randomUUID();
+    const hb2Id = crypto.randomUUID();
+    const now = new Date().toISOString();
+
+    await d1Exec(`
+      INSERT INTO Heartbeat (id, installation_id, data, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+    `, [hb1Id, install1, JSON.stringify({
+      sync_duration: 30.5,
+      has_drive_activity: true,
+      has_photos_activity: true,
+      has_errors: false,
+      timestamp: now
+    }), now, now]);
+
+    await d1Exec(`
+      INSERT INTO Heartbeat (id, installation_id, data, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+    `, [hb2Id, install2, JSON.stringify({
+      sync_duration: 45.2,
+      has_drive_activity: true,
+      has_photos_activity: false,
+      has_errors: true,
+      timestamp: now
+    }), now, now]);
+
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE data IS NOT NULL', [], 2);
+
+    const response = await fetch(`${base}${ENDPOINT}`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    expect(data.syncHealth.last7d.installationsReporting).toBeGreaterThanOrEqual(2);
+    expect(data.syncHealth.last7d.avgSyncDurationSec).toBeGreaterThanOrEqual(30);
+    expect(data.syncHealth.last7d.errorRate).toBeGreaterThan(0);
+    expect(data.syncHealth.last7d.driveActiveCount).toBeGreaterThanOrEqual(2);
+    expect(data.syncHealth.last7d.photosActiveCount).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should return zero syncHealth when no heartbeats have data', async () => {
+    await resetDb();
+    const base = getBase();
+
+    const install = await createInstallation();
+    await createHeartbeat(install, new Date().toISOString());
+    
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [install], 1);
+
+    const response = await fetch(`${base}${ENDPOINT}`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    expect(data.syncHealth.last7d.installationsReporting).toBe(0);
+    expect(data.syncHealth.last7d.avgSyncDurationSec).toBeNull();
+    expect(data.syncHealth.last7d.errorRate).toBe(0);
+    expect(data.syncHealth.last7d.driveActiveCount).toBe(0);
+    expect(data.syncHealth.last7d.photosActiveCount).toBe(0);
+  });
+
+  it('should filter syncHealth by appName', async () => {
+    await resetDb();
+    const base = getBase();
+
+    const icloudInstall = await createInstallation('icloud-docker');
+    const bouncieInstall = await createInstallation('ha-bouncie');
+
+    const now = new Date().toISOString();
+
+    // iCloud Docker heartbeat with sync data
+    await d1Exec(`
+      INSERT INTO Heartbeat (id, installation_id, data, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+    `, [crypto.randomUUID(), icloudInstall, JSON.stringify({
+      sync_duration: 25.0,
+      has_drive_activity: true,
+      has_photos_activity: false,
+      has_errors: false
+    }), now, now]);
+
+    // HA Bouncie heartbeat without sync data
+    await d1Exec(`
+      INSERT INTO Heartbeat (id, installation_id, data, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+    `, [crypto.randomUUID(), bouncieInstall, null, now, now]);
+
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat', [], 2);
+
+    // Filter by icloud-docker should include sync data
+    const icloudRes = await fetch(`${base}${ENDPOINT}?appName=icloud-docker`);
+    const icloudData = await icloudRes.json();
+    expect(icloudData.syncHealth.last7d.installationsReporting).toBeGreaterThanOrEqual(1);
+
+    // Filter by ha-bouncie should not include sync data (heartbeat has null data)
+    const bouncieRes = await fetch(`${base}${ENDPOINT}?appName=ha-bouncie`);
+    const bouncieData = await bouncieRes.json();
+    expect(bouncieData.syncHealth.last7d.installationsReporting).toBe(0);
+  });
+
+  it('should handle malformed heartbeat data gracefully in syncHealth', async () => {
+    await resetDb();
+    const base = getBase();
+
+    const install = await createInstallation();
+    const now = new Date().toISOString();
+
+    // Insert heartbeat with malformed JSON data
+    await d1Exec(`
+      INSERT INTO Heartbeat (id, installation_id, data, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+    `, [crypto.randomUUID(), install, 'not-valid-json', now, now]);
+
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE data IS NOT NULL', [], 1);
+
+    const response = await fetch(`${base}${ENDPOINT}`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    // Malformed data should be skipped, resulting in zero counts
+    expect(data.syncHealth.last7d.installationsReporting).toBe(1);
+    expect(data.syncHealth.last7d.avgSyncDurationSec).toBeNull();
+    expect(data.syncHealth.last7d.errorRate).toBe(0);
   });
 });

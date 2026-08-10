@@ -70,6 +70,38 @@
 		avgTimeBetweenHeartbeats: string;
 	} = { avgHeartbeatsPerUser: 0, avgTimeBetweenHeartbeats: '0 hours' };
 
+	export let syncHealth: {
+		last7d: {
+			installationsReporting: number;
+			avgSyncDurationSec: number | null;
+			errorRate: number;
+			driveActiveCount: number;
+			photosActiveCount: number;
+		};
+		last30d: {
+			installationsReporting: number;
+			avgSyncDurationSec: number | null;
+			errorRate: number;
+			driveActiveCount: number;
+			photosActiveCount: number;
+		};
+	} = {
+		last7d: {
+			installationsReporting: 0,
+			avgSyncDurationSec: null,
+			errorRate: 0,
+			driveActiveCount: 0,
+			photosActiveCount: 0
+		},
+		last30d: {
+			installationsReporting: 0,
+			avgSyncDurationSec: null,
+			errorRate: 0,
+			driveActiveCount: 0,
+			photosActiveCount: 0
+		}
+	};
+
 	export let title: string = 'Active Usage Analytics';
 
 	let engagementChart: Chart | null = null;
@@ -259,6 +291,7 @@
 			timeline,
 			healthMetrics,
 			churnRisk,
+			syncHealth,
 			exportedAt: new Date().toISOString()
 		};
 
@@ -379,6 +412,81 @@
 		<div class="card variant-filled-surface p-4">
 			<div class="text-sm opacity-75 mb-1">Avg Time Between Heartbeats</div>
 			<div class="text-2xl font-bold">{healthMetrics.avgTimeBetweenHeartbeats}</div>
+		</div>
+	</div>
+
+	<!-- Sync Health -->
+	<div class="mb-6">
+		<h4 class="h4 mb-3">Sync Health</h4>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<!-- 7-day window -->
+			<div class="card variant-filled-surface p-4">
+				<div class="text-sm opacity-75 mb-3">Last 7 Days</div>
+				<div class="grid grid-cols-2 gap-3">
+					<div>
+						<div class="text-xs opacity-60">Reporting</div>
+						<div class="text-lg font-bold">{syncHealth.last7d.installationsReporting}</div>
+					</div>
+					<div>
+						<div class="text-xs opacity-60">Avg Sync Duration</div>
+						<div class="text-lg font-bold">
+							{syncHealth.last7d.avgSyncDurationSec !== null
+								? `${syncHealth.last7d.avgSyncDurationSec.toFixed(1)}s`
+								: '—'}
+						</div>
+					</div>
+					<div>
+						<div class="text-xs opacity-60">Error Rate</div>
+						<div
+							class="text-lg font-bold {syncHealth.last7d.errorRate > 0.1 ? 'text-error-600' : ''}"
+						>
+							{(syncHealth.last7d.errorRate * 100).toFixed(1)}%
+						</div>
+					</div>
+					<div>
+						<div class="text-xs opacity-60">Drive Active</div>
+						<div class="text-lg font-bold">{syncHealth.last7d.driveActiveCount}</div>
+					</div>
+					<div>
+						<div class="text-xs opacity-60">Photos Active</div>
+						<div class="text-lg font-bold">{syncHealth.last7d.photosActiveCount}</div>
+					</div>
+				</div>
+			</div>
+			<!-- 30-day window -->
+			<div class="card variant-filled-surface p-4">
+				<div class="text-sm opacity-75 mb-3">Last 30 Days</div>
+				<div class="grid grid-cols-2 gap-3">
+					<div>
+						<div class="text-xs opacity-60">Reporting</div>
+						<div class="text-lg font-bold">{syncHealth.last30d.installationsReporting}</div>
+					</div>
+					<div>
+						<div class="text-xs opacity-60">Avg Sync Duration</div>
+						<div class="text-lg font-bold">
+							{syncHealth.last30d.avgSyncDurationSec !== null
+								? `${syncHealth.last30d.avgSyncDurationSec.toFixed(1)}s`
+								: '—'}
+						</div>
+					</div>
+					<div>
+						<div class="text-xs opacity-60">Error Rate</div>
+						<div
+							class="text-lg font-bold {syncHealth.last30d.errorRate > 0.1 ? 'text-error-600' : ''}"
+						>
+							{(syncHealth.last30d.errorRate * 100).toFixed(1)}%
+						</div>
+					</div>
+					<div>
+						<div class="text-xs opacity-60">Drive Active</div>
+						<div class="text-lg font-bold">{syncHealth.last30d.driveActiveCount}</div>
+					</div>
+					<div>
+						<div class="text-xs opacity-60">Photos Active</div>
+						<div class="text-lg font-bold">{syncHealth.last30d.photosActiveCount}</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 
