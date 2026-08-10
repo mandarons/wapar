@@ -61,9 +61,9 @@ describe('Version Analytics Performance Tests', () => {
       expect(Array.isArray(data.versionDistribution)).toBe(true);
       expect(typeof data.outdatedInstallations).toBe('number');
       expect(data.latestVersion === null || typeof data.latestVersion === 'string').toBe(true);
-      expect(typeof data.upgradeRate).toBe('object');
-      expect(typeof data.upgradeRate.last7Days).toBe('number');
-      expect(typeof data.upgradeRate.last30Days).toBe('number');
+      expect(typeof data.newInstallRate).toBe('object');
+      expect(typeof data.newInstallRate.last7Days).toBe('number');
+      expect(typeof data.newInstallRate.last30Days).toBe('number');
     });
     
     // Version distributions should be consistent (same data)

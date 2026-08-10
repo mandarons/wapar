@@ -10,7 +10,7 @@ describe('VersionAnalytics Component Tests', () => {
 		],
 		latestVersion: '2.1.0',
 		outdatedInstallations: 550,
-		upgradeRate: {
+		newInstallRate: {
 			last7Days: 15,
 			last30Days: 78
 		}
@@ -48,11 +48,11 @@ describe('VersionAnalytics Component Tests', () => {
 	});
 
 	it('should have valid upgrade rate data', () => {
-		expect(mockVersionData.upgradeRate).toBeDefined();
-		expect(mockVersionData.upgradeRate.last7Days).toBeGreaterThanOrEqual(0);
-		expect(mockVersionData.upgradeRate.last30Days).toBeGreaterThanOrEqual(0);
-		expect(mockVersionData.upgradeRate.last30Days).toBeGreaterThanOrEqual(
-			mockVersionData.upgradeRate.last7Days
+		expect(mockVersionData.newInstallRate).toBeDefined();
+		expect(mockVersionData.newInstallRate.last7Days).toBeGreaterThanOrEqual(0);
+		expect(mockVersionData.newInstallRate.last30Days).toBeGreaterThanOrEqual(0);
+		expect(mockVersionData.newInstallRate.last30Days).toBeGreaterThanOrEqual(
+			mockVersionData.newInstallRate.last7Days
 		);
 	});
 
@@ -86,7 +86,7 @@ describe('VersionAnalytics Component Tests', () => {
 			versionDistribution: [],
 			latestVersion: null,
 			outdatedInstallations: 0,
-			upgradeRate: { last7Days: 0, last30Days: 0 }
+			newInstallRate: { last7Days: 0, last30Days: 0 }
 		};
 
 		expect(emptyData.versionDistribution.length).toBe(0);

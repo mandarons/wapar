@@ -53,7 +53,7 @@ export const load: PageServerLoad = async () => {
 				versionDistribution: [],
 				latestVersion: null,
 				outdatedInstallations: 0,
-				upgradeRate: { last7Days: 0, last30Days: 0 }
+				newInstallRate: { last7Days: 0, last30Days: 0 }
 			};
 		}
 
@@ -104,7 +104,7 @@ export const load: PageServerLoad = async () => {
 		}
 
 		const data = { ...waparData };
-		
+
 		// Ensure iCloudDocker and haBouncie always exist with defaults
 		if (!data.iCloudDocker) {
 			data.iCloudDocker = { total: 0 };
@@ -112,7 +112,7 @@ export const load: PageServerLoad = async () => {
 		if (!haData.bouncie) {
 			haData.bouncie = { total: 0 };
 		}
-		
+
 		data.totalInstallations = haData.bouncie.total + (data.iCloudDocker?.total || 0);
 		data.haBouncie = haData.bouncie;
 		data.versionAnalytics = versionAnalytics;
@@ -120,7 +120,10 @@ export const load: PageServerLoad = async () => {
 		data.heartbeatAnalytics = heartbeatAnalytics;
 
 		// Ensure we have the required fields with defaults if API didn't provide them
-		if (typeof data.activeInstallations === 'undefined' || typeof data.staleInstallations === 'undefined') {
+		if (
+			typeof data.activeInstallations === 'undefined' ||
+			typeof data.staleInstallations === 'undefined'
+		) {
 			console.warn(
 				'activeInstallations or staleInstallations missing from API response. Using estimated values.'
 			);
@@ -169,7 +172,7 @@ export const load: PageServerLoad = async () => {
 				],
 				latestVersion: '2.1.0',
 				outdatedInstallations: 305,
-				upgradeRate: { last7Days: 15, last30Days: 78 }
+				newInstallRate: { last7Days: 15, last30Days: 78 }
 			},
 			recentInstallations: {
 				installations: [],
