@@ -55,6 +55,8 @@ describe(ENDPOINT, () => {
     expect(data).toHaveProperty('timeline');
     expect(data).toHaveProperty('healthMetrics');
     expect(data).toHaveProperty('churnRisk');
+    expect(data).toHaveProperty('retention');
+    expect(Array.isArray(data.retention)).toBe(true);
     expect(data).toHaveProperty('syncHealth');
     expect(data.syncHealth).toHaveProperty('last7d');
     expect(data.syncHealth).toHaveProperty('last30d');
@@ -172,7 +174,9 @@ describe(ENDPOINT, () => {
     expect(response.status).toBe(200);
     // Should have at least one dormant installation
     expect(data.engagementLevels.dormant.count).toBeGreaterThanOrEqual(1);
-    expect(data.engagementLevels.dormant.description).toBe("No heartbeat in 30 days");
+    expect(data.engagementLevels.dormant.description).toBe("No heartbeat in 30 days (includes never-active)");
+    // Previously active then inactive = churn, not dormant-only
+    expect(data.churnRisk.usersInactive30Days).toBeGreaterThanOrEqual(1);
   });
 
   it('should provide timeline data', async () => {
@@ -443,6 +447,65 @@ describe(ENDPOINT, () => {
     const bouncieData = await bouncieRes.json();
     const bouncieHeartbeats = bouncieData.timeline.reduce((sum: number, t: any) => sum + t.totalHeartbeats, 0);
     expect(bouncieHeartbeats).toBe(0);
+  });
+
+  it('should distinguish never-active from churn (previously active then inactive)', async () => {
+    const base = getBase();
+    await resetDb();
+
+    // Create installation that never sent a heartbeat (dormant, NOT churn)
+    const neverActiveInstall = await createInstallation('icloud-docker');
+
+    // Create installation that was active 31 days ago (dormant AND churn)
+    const previouslyActiveInstall = await createInstallation('icloud-docker');
+    const longAgo = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
+    await createHeartbeat(previouslyActiveInstall, longAgo);
+
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?',
+      [previouslyActiveInstall],
+      1
+    );
+
+    const response = await fetch(`${base}${ENDPOINT}?appName=icloud-docker`);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    // Dormant includes both never-active and previously-active
+    expect(data.engagementLevels.dormant.count).toBeGreaterThanOrEqual(2);
+    // Churn only counts the previously-active one
+    expect(data.churnRisk.usersInactive30Days).toBeGreaterThanOrEqual(1);
+    expect(data.churnRisk.usersInactive30Days).toBeLessThan(data.engagementLevels.dormant.count);
+  });
+
+  it('should include retention array in response', async () => {
+    const base = getBase();
+    await resetDb();
+
+    // Create an installation with a heartbeat today
+    const install = await createInstallation('icloud-docker');
+    await createHeartbeat(install, new Date().toISOString());
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?',
+      [install],
+      1
+    );
+
+    const response = await fetch(`${base}${ENDPOINT}`);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(data.retention)).toBe(true);
+    // Each retention entry should have the expected shape
+    for (const cohort of data.retention) {
+      expect(typeof cohort.cohort).toBe('string');
+      expect(typeof cohort.n).toBe('number');
+      expect(typeof cohort.week1Active).toBe('number');
+      expect(typeof cohort.week2Active).toBe('number');
+      expect(typeof cohort.week3Active).toBe('number');
+      expect(typeof cohort.week4Active).toBe('number');
+      expect(cohort.n).toBeGreaterThan(0);
+    }
   });
 
   it('should filter churn risk by appName', async () => {

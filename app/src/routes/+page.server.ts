@@ -118,6 +118,7 @@ export const load: PageServerLoad = async ({ url }) => {
 					usersInactive14Days: 0,
 					usersInactive30Days: 0
 				},
+				retention: [],
 				syncHealth: {
 					last7d: {
 						installationsReporting: 0,

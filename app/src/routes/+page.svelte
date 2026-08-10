@@ -85,6 +85,14 @@
 			usersInactive14Days: number;
 			usersInactive30Days: number;
 		};
+		retention: Array<{
+			cohort: string;
+			n: number;
+			week1Active: number;
+			week2Active: number;
+			week3Active: number;
+			week4Active: number;
+		}>;
 		syncHealth: {
 			last7d: {
 				installationsReporting: number;
@@ -1192,6 +1200,7 @@
 									photosActiveCount: 0
 								}
 							}}
+							retention={data.heartbeatAnalytics?.retention ?? []}
 						/>
 					</div>
 				{:else if tab.id === 'recent' && data.recentInstallations}

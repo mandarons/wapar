@@ -21,6 +21,7 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
   const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const last14d = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
   const last30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const last90d = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString();
     
     // Daily Active Users (DAU)
     const dauResult = await Logger.measureOperation(
@@ -358,10 +359,119 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
     );
     const usersInactive14Days = Number(inactive14dResult?.count ?? 0);
     
-    // Users inactive for 30+ days = dormant installations (no heartbeat in last 30 days)
-    // This aligns with the API spec where churn risk tracks users who haven't sent heartbeats
-    const usersInactive30Days = dormant;
+    // Churn: previously active (≥1 heartbeat ever) then inactive for 30+ days.
+    // This differs from "dormant" which includes never-active registrations.
+    const inactive30dResult = await Logger.measureOperation(
+      'heartbeat-analytics.inactive_30d',
+      () => appName
+        ? c.env.DB.prepare(`
+            SELECT COUNT(DISTINCT i.id) as count
+            FROM Installation i
+            WHERE i.app_name = ?
+              AND NOT EXISTS (
+                SELECT 1 FROM Heartbeat h 
+                WHERE h.installation_id = i.id 
+                  AND h.created_at >= ?
+              )
+              AND EXISTS (
+                SELECT 1 FROM Heartbeat h2 
+                WHERE h2.installation_id = i.id 
+              )
+          `).bind(appName, last30d).first<{ count: number }>()
+        : c.env.DB.prepare(`
+            SELECT COUNT(DISTINCT i.id) as count
+            FROM Installation i
+            WHERE NOT EXISTS (
+              SELECT 1 FROM Heartbeat h 
+              WHERE h.installation_id = i.id 
+                AND h.created_at >= ?
+            )
+            AND EXISTS (
+              SELECT 1 FROM Heartbeat h2 
+              WHERE h2.installation_id = i.id
+            )
+          `).bind(last30d).first<{ count: number }>(),
+      requestContext
+    );
+    const usersInactive30Days = Number(inactive30dResult?.count ?? 0);
     
+    // Cohort retention — weekly cohorts for last 12 weeks (90d bounded)
+    const cohortRetentionResult = await Logger.measureOperation(
+      'heartbeat-analytics.cohort_retention',
+      () => appName
+        ? c.env.DB.prepare(`
+            SELECT strftime('%Y-W%W', i.created_at) as cohort_week, COUNT(*) as n
+            FROM Installation i
+            WHERE i.app_name = ?
+              AND i.created_at >= ?
+            GROUP BY cohort_week
+            ORDER BY cohort_week DESC
+            LIMIT 12
+          `).bind(appName, last90d).all<{ cohort_week: string; n: number }>()
+        : c.env.DB.prepare(`
+            SELECT strftime('%Y-W%W', i.created_at) as cohort_week, COUNT(*) as n
+            FROM Installation i
+            WHERE i.created_at >= ?
+            GROUP BY cohort_week
+            ORDER BY cohort_week DESC
+            LIMIT 12
+          `).bind(last90d).all<{ cohort_week: string; n: number }>(),
+      requestContext
+    );
+
+    // Build per-week retention for each cohort
+    const retention = await Promise.all(
+      (cohortRetentionResult?.results ?? []).map(async (row) => {
+        const cohortWeek = row.cohort_week;
+        // Get the Monday of the cohort week for week offset calculations
+        const [yearStr, weekStr] = cohortWeek.split('-W');
+        const year = parseInt(yearStr, 10);
+        const weekNum = parseInt(weekStr, 10);
+        // Approximate week start: Jan 4 is always in week 1
+        const jan4 = new Date(year, 0, 4);
+        const weekStart = new Date(jan4.getTime() + (weekNum - 1) * 7 * 24 * 60 * 60 * 1000);
+        while (weekStart.getDay() !== 1) weekStart.setDate(weekStart.getDate() - 1);
+
+        const weekOffsets = [0, 1, 2, 3];
+        const weekCounts = await Promise.all(
+          weekOffsets.map(async (offset) => {
+            const weekStartOffset = new Date(weekStart.getTime() + offset * 7 * 24 * 60 * 60 * 1000);
+            const weekEndOffset = new Date(weekStartOffset.getTime() + 7 * 24 * 60 * 60 * 1000);
+            if (weekEndOffset > now) return 0;
+            const weekStartIso = weekStartOffset.toISOString();
+            const weekEndIso = weekEndOffset.toISOString();
+
+            const result = await (appName
+              ? c.env.DB.prepare(`
+                  SELECT COUNT(DISTINCT h.installation_id) as count
+                  FROM Heartbeat h
+                  INNER JOIN Installation i ON h.installation_id = i.id
+                  WHERE i.app_name = ?
+                    AND strftime('%Y-W%W', i.created_at) = ?
+                    AND h.created_at >= ? AND h.created_at < ?
+                `).bind(appName, cohortWeek, weekStartIso, weekEndIso).first<{ count: number }>()
+              : c.env.DB.prepare(`
+                  SELECT COUNT(DISTINCT h.installation_id) as count
+                  FROM Heartbeat h
+                  INNER JOIN Installation i ON h.installation_id = i.id
+                  WHERE strftime('%Y-W%W', i.created_at) = ?
+                    AND h.created_at >= ? AND h.created_at < ?
+                `).bind(cohortWeek, weekStartIso, weekEndIso).first<{ count: number }>());
+            return Number(result?.count ?? 0);
+          })
+        );
+
+        return {
+          cohort: cohortWeek,
+          n: Number(row.n),
+          week1Active: weekCounts[0],
+          week2Active: weekCounts[1],
+          week3Active: weekCounts[2],
+          week4Active: weekCounts[3]
+        };
+      })
+    );
+
     // Sync Health — aggregate Heartbeat.data telemetry over bounded windows
     async function computeSyncHealth(windowStart: string) {
       const heartbeatsWithDataResult = await Logger.measureOperation(
@@ -461,7 +571,7 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
         highlyActive: { count: highlyActive, description: "Active 7/7 days" },
         active: { count: active, description: "Active 1-6 days/week" },
         occasional: { count: occasional, description: "Active in last 30d but not last 7d" },
-        dormant: { count: dormant, description: "No heartbeat in 30 days" }
+        dormant: { count: dormant, description: "No heartbeat in 30 days (includes never-active)" }
       },
       timeline,
       gaps,
@@ -474,6 +584,7 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
         usersInactive14Days,
         usersInactive30Days
       },
+      retention,
       syncHealth: {
         last7d: syncHealthLast7d,
         last30d: syncHealthLast30d

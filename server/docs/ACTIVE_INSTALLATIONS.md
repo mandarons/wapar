@@ -209,6 +209,59 @@ An installation is considered "stale" if:
 
 **Calculation**: `staleInstallations = totalInstallations - activeInstallations`
 
+### Churn (Previously Active then Inactive)
+
+**Churn** counts installations that **were previously active** (sent at least one heartbeat) but have stopped sending heartbeats. This is distinct from "dormant" which includes never-active registrations.
+
+The `churnRisk` fields in `/api/heartbeat-analytics` use honest churn definitions:
+
+| Field | Definition |
+|-------|------------|
+| `usersInactive7Days` | ≥1 heartbeat ever AND no heartbeat in last 7 days AND ≥1 heartbeat in last 30 days |
+| `usersInactive14Days` | ≥1 heartbeat ever AND no heartbeat in last 14 days AND ≥1 heartbeat in last 30 days |
+| `usersInactive30Days` | ≥1 heartbeat ever AND no heartbeat in last 30 days |
+
+**Example**: Of 25,000 total installs, if only 710 are MAU and 24,290 have never sent a heartbeat, the churn count for 30 days would be ~0 (or the small number of genuinely churned users), not ~25,000.
+
+### Dormant (Never Active or Long-Inactive)
+
+**Dormant** counts all installations with no heartbeat in the last 30 days, **including never-active registrations**. This is a broader bucket than churn.
+
+- `engagementLevels.dormant.count` = installations with no heartbeat in 30 days (includes never-active)
+- `churnRisk.usersInactive30Days` = installations with ≥1 heartbeat ever AND no heartbeat in 30 days (churn only)
+
+The difference between `dormant` and `usersInactive30Days` represents never-active registrations.
+
+### Cohort Retention
+
+The `/api/heartbeat-analytics` endpoint returns a `retention` array with weekly cohort data:
+
+```json
+{
+  "retention": [
+    {
+      "cohort": "2026-W27",
+      "n": 15,
+      "week1Active": 12,
+      "week2Active": 10,
+      "week3Active": 8,
+      "week4Active": 7
+    }
+  ]
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `cohort` | Installation week (`YYYY-Www` format) |
+| `n` | Total installations in cohort |
+| `week1Active` | Installations with ≥1 heartbeat in installation week |
+| `week2Active` | Installations with ≥1 heartbeat in week after installation |
+| `week3Active` | Installations with ≥1 heartbeat in 2nd week after installation |
+| `week4Active` | Installations with ≥1 heartbeat in 3rd week after installation |
+
+The retention table shows week-1 → week-4 decay, indicating how many users from each weekly cohort remain active over time.
+
 ### Total Installations
 The count of all installations ever created (active + stale), unchanged from before.
 

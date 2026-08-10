@@ -65,6 +65,15 @@
 		usersInactive30Days: number;
 	} = { usersInactive7Days: 0, usersInactive14Days: 0, usersInactive30Days: 0 };
 
+	export let retention: Array<{
+		cohort: string;
+		n: number;
+		week1Active: number;
+		week2Active: number;
+		week3Active: number;
+		week4Active: number;
+	}> = [];
+
 	export let healthMetrics: {
 		avgHeartbeatsPerUser: number;
 		avgTimeBetweenHeartbeats: string;
@@ -291,6 +300,7 @@
 			timeline,
 			healthMetrics,
 			churnRisk,
+			retention,
 			syncHealth,
 			exportedAt: new Date().toISOString()
 		};
@@ -507,16 +517,67 @@
 		</div>
 	{/if}
 
-	<!-- Churn Risk Alerts -->
-	{#if churnRisk.usersInactive7Days > 0}
+	<!-- Churn Risk Alerts (previously active then inactive) -->
+	{#if churnRisk.usersInactive7Days > 0 || churnRisk.usersInactive14Days > 0 || churnRisk.usersInactive30Days > 0}
 		<div class="alert variant-filled-warning">
 			<div class="alert-message">
 				<h4 class="h4">⚠️ Churn Risk Alert</h4>
 				<ul class="list-disc list-inside mt-2">
-					<li>{churnRisk.usersInactive7Days} users inactive for 7+ days</li>
-					<li>{churnRisk.usersInactive14Days} users inactive for 14+ days</li>
-					<li>{churnRisk.usersInactive30Days} users inactive for 30+ days</li>
+					<li>
+						{churnRisk.usersInactive7Days} previously active installs stopped heartbeating for 7+ days
+					</li>
+					<li>
+						{churnRisk.usersInactive14Days} previously active installs stopped heartbeating for 14+ days
+					</li>
+					<li>
+						{churnRisk.usersInactive30Days} previously active installs stopped heartbeating for 30+ days
+					</li>
 				</ul>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Cohort Retention -->
+	{#if retention.length > 0}
+		<div class="mb-6">
+			<h4 class="h4 mb-3">Cohort Retention (Last 12 Weeks)</h4>
+			<div class="card p-4 overflow-x-auto">
+				<table class="table table-compact w-full" aria-label="Weekly cohort retention">
+					<thead>
+						<tr>
+							<th scope="col">Cohort</th>
+							<th scope="col" class="text-right">Installations</th>
+							<th scope="col" class="text-right">Week 1</th>
+							<th scope="col" class="text-right">Week 2</th>
+							<th scope="col" class="text-right">Week 3</th>
+							<th scope="col" class="text-right">Week 4</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each retention as cohort}
+							<tr>
+								<td>{cohort.cohort}</td>
+								<td class="text-right">{cohort.n}</td>
+								<td class="text-right">
+									{cohort.n > 0 ? ((cohort.week1Active / cohort.n) * 100).toFixed(0) : '0'}%
+									<span class="text-xs opacity-60">({cohort.week1Active})</span>
+								</td>
+								<td class="text-right">
+									{cohort.n > 0 ? ((cohort.week2Active / cohort.n) * 100).toFixed(0) : '0'}%
+									<span class="text-xs opacity-60">({cohort.week2Active})</span>
+								</td>
+								<td class="text-right">
+									{cohort.n > 0 ? ((cohort.week3Active / cohort.n) * 100).toFixed(0) : '0'}%
+									<span class="text-xs opacity-60">({cohort.week3Active})</span>
+								</td>
+								<td class="text-right">
+									{cohort.n > 0 ? ((cohort.week4Active / cohort.n) * 100).toFixed(0) : '0'}%
+									<span class="text-xs opacity-60">({cohort.week4Active})</span>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
 		</div>
 	{/if}
