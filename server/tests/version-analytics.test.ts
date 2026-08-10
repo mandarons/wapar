@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { getBase, waitForCount } from './utils';
+import { getBase, resetDb, waitForCount } from './utils';
 
 const ENDPOINT = '/api/version-analytics';
 const INSTALL_ENDPOINT = '/api/installation';
@@ -10,12 +10,12 @@ function randomAppName() {
   return apps[Math.floor(Math.random() * apps.length)];
 }
 
-async function createInstallation(appVersion: string): Promise<string> {
+async function createInstallation(appVersion: string, appName?: string): Promise<string> {
   const base = getBase();
   const res = await fetch(`${base}${INSTALL_ENDPOINT}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ appName: randomAppName(), appVersion })
+    body: JSON.stringify({ appName: appName || randomAppName(), appVersion })
   });
   const body = await res.json();
   return body.id as string;
@@ -348,5 +348,91 @@ describe(ENDPOINT, () => {
     versions.forEach(version => {
       expect(returnedVersions).toContain(version);
     });
+  });
+
+  it('should filter by appName when provided', async () => {
+    await resetDb();
+    const base = getBase();
+
+    // Create installations for specific apps
+    const icloudId1 = await createInstallation('1.0.0', 'icloud-docker');
+    const icloudId2 = await createInstallation('1.0.0', 'icloud-docker');
+    const bouncieId1 = await createInstallation('2.0.0', 'ha-bouncie');
+
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Installation WHERE id IN (?, ?, ?)',
+      [icloudId1, icloudId2, bouncieId1],
+      3
+    );
+
+    // Send heartbeats to make them active
+    await sendHeartbeat(icloudId1);
+    await sendHeartbeat(icloudId2);
+    await sendHeartbeat(bouncieId1);
+
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (?, ?, ?)',
+      [icloudId1, icloudId2, bouncieId1],
+      3
+    );
+
+    // Filter by icloud-docker
+    const icloudRes = await fetch(`${base}${ENDPOINT}?appName=icloud-docker`);
+    expect(icloudRes.status).toBe(200);
+    const icloudBody = await icloudRes.json();
+
+    // Should only see icloud-docker versions
+    const icloudTotal = icloudBody.versionDistribution.reduce(
+      (sum: number, v: any) => sum + v.count, 0
+    );
+    expect(icloudTotal).toBeGreaterThanOrEqual(2);
+
+    // Filter by ha-bouncie
+    const bouncieRes = await fetch(`${base}${ENDPOINT}?appName=ha-bouncie`);
+    expect(bouncieRes.status).toBe(200);
+    const bouncieBody = await bouncieRes.json();
+
+    const bouncieTotal = bouncieBody.versionDistribution.reduce(
+      (sum: number, v: any) => sum + v.count, 0
+    );
+    expect(bouncieTotal).toBeGreaterThanOrEqual(1);
+
+    // Without filter should include both
+    const allRes = await fetch(`${base}${ENDPOINT}`);
+    const allBody = await allRes.json();
+    const allTotal = allBody.versionDistribution.reduce(
+      (sum: number, v: any) => sum + v.count, 0
+    );
+    expect(allTotal).toBeGreaterThanOrEqual(icloudTotal + 1);
+  });
+
+  it('should return empty distribution for non-existent appName', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}?appName=nonexistent`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.versionDistribution).toEqual([]);
+    expect(body.outdatedInstallations).toBe(0);
+    expect(body.newInstallRate.last7Days).toBe(0);
+    expect(body.newInstallRate.last30Days).toBe(0);
+  });
+
+  it('should filter new install rates by appName', async () => {
+    await resetDb();
+    const base = getBase();
+
+    // Create recent installations for a specific app
+    const id1 = await createInstallation('5.0.0', 'ha-bouncie');
+    await waitForCount('SELECT COUNT(1) as count FROM Installation WHERE id = ?', [id1], 1);
+
+    // Filter by ha-bouncie should include our new install
+    const filteredRes = await fetch(`${base}${ENDPOINT}?appName=ha-bouncie`);
+    const filteredBody = await filteredRes.json();
+    expect(filteredBody.newInstallRate.last7Days).toBeGreaterThanOrEqual(1);
+
+    // Filter by a different app should not include it
+    const otherRes = await fetch(`${base}${ENDPOINT}?appName=icloud-docker`);
+    const otherBody = await otherRes.json();
+    expect(otherBody.newInstallRate.last7Days).toBe(0);
   });
 });

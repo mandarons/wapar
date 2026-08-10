@@ -10,10 +10,14 @@ const API_URL =
 
 export const load: PageServerLoad = async ({ url }) => {
 	try {
+		// Read global appName filter from URL search params
+		const appName = url.searchParams.get('app') || undefined;
+
 		// Fetch WAPAR usage data
 		let waparData;
 		try {
-			const res = await fetch(`${API_URL}/api/usage`);
+			const usageParams = appName ? `?appName=${encodeURIComponent(appName)}` : '';
+			const res = await fetch(`${API_URL}/api/usage${usageParams}`);
 			waparData = await res.json();
 		} catch (error) {
 			console.warn('Failed to fetch WAPAR usage data:', error);
@@ -47,7 +51,8 @@ export const load: PageServerLoad = async ({ url }) => {
 		// Fetch version analytics
 		let versionAnalytics;
 		try {
-			const versionRes = await fetch(`${API_URL}/api/version-analytics`);
+			const versionParams = appName ? `?appName=${encodeURIComponent(appName)}` : '';
+			const versionRes = await fetch(`${API_URL}/api/version-analytics${versionParams}`);
 			versionAnalytics = await versionRes.json();
 		} catch (error) {
 			console.warn('Failed to fetch version analytics:', error);
@@ -89,7 +94,8 @@ export const load: PageServerLoad = async ({ url }) => {
 		// Fetch heartbeat analytics
 		let heartbeatAnalytics;
 		try {
-			const heartbeatRes = await fetch(`${API_URL}/api/heartbeat-analytics`);
+			const heartbeatParams = appName ? `?appName=${encodeURIComponent(appName)}` : '';
+			const heartbeatRes = await fetch(`${API_URL}/api/heartbeat-analytics${heartbeatParams}`);
 			heartbeatAnalytics = await heartbeatRes.json();
 		} catch (error) {
 			console.warn('Failed to fetch heartbeat analytics:', error);
@@ -190,6 +196,9 @@ export const load: PageServerLoad = async ({ url }) => {
 		if (typeof data.activityThresholdDays === 'undefined') {
 			data.activityThresholdDays = 3;
 		}
+
+		// Pass the appName filter through to the page
+		data.appName = appName ?? null;
 
 		return data;
 	} catch (error) {

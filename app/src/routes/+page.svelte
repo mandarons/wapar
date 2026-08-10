@@ -146,6 +146,7 @@
 		heartbeatAnalytics?: HeartbeatAnalyticsPayload;
 		newInstallations?: NewInstallationsPayload;
 		countryInsights?: CountryInsightsPayload;
+		appName?: string | null;
 	};
 
 	interface SvgMapInstance {
@@ -1167,6 +1168,7 @@
 						iCloudDockerTotal={data.iCloudDocker?.total ?? 0}
 						haBouncieTotal={data.haBouncie?.total ?? 0}
 						countryToCount={data.countryToCount ?? []}
+						appName={data.appName ?? null}
 					/>
 				{/if}
 			</div>
