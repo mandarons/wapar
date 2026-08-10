@@ -160,6 +160,36 @@ describe('Recent Installations API', () => {
     expect(testInstall.region).toBe('California');
   });
 
+  it('should NOT expose ipAddress, previousId, or data in response', async () => {
+    const base = getBase();
+    
+    const now = new Date().toISOString();
+    const id = getUniqueId();
+    
+    await d1Exec(`
+      INSERT INTO Installation (id, app_name, app_version, ip_address, previous_id, data, country_code, region, created_at, updated_at)
+      VALUES (?, 'test-no-leak', '1.0.0', '10.0.0.1', 'old-id', '{"secret":"value"}', 'GB', 'England', ?, ?)
+    `, [id, now, now]);
+    
+    const response = await fetch(`${base}${ENDPOINT}?limit=100`);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    
+    const testInstall = data.installations.find((i: any) => i.id === id);
+    expect(testInstall).toBeDefined();
+    
+    // Sensitive/internal fields must be absent
+    expect(testInstall).not.toHaveProperty('ipAddress');
+    expect(testInstall).not.toHaveProperty('previousId');
+    expect(testInstall).not.toHaveProperty('data');
+    
+    // Public fields must be present
+    expect(testInstall.appName).toBe('test-no-leak');
+    expect(testInstall.countryCode).toBe('GB');
+    expect(testInstall.region).toBe('England');
+  });
+
   it('should count recent installations correctly', async () => {
     const base = getBase();
     
