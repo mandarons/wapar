@@ -157,7 +157,7 @@ ACTIVITY_THRESHOLD_DAYS = "5"  # 5 days for production
 
 **Method**: GET
 
-**Description**: Returns version distribution analytics now filtered to active installations only.
+**Description**: Returns version distribution analytics now filtered to active installations only, with per-version adoption timeline.
 
 **Response**:
 ```json
@@ -174,13 +174,20 @@ ACTIVITY_THRESHOLD_DAYS = "5"  # 5 days for production
   "newInstallRate": {
     "last7Days": 10,
     "last30Days": 45
-  }
+  },
+  "adoptionTimeline": [
+    { "date": "2025-10-25", "version": "2.0.0", "newInstalls": 8 },
+    { "date": "2025-10-25", "version": "1.9.0", "newInstalls": 2 }
+  ],
+  "adoptionGaps": []
 }
 ```
 
 **Changes**:
 - `versionDistribution` now only includes active installations
 - All percentages are calculated based on active installations only
+- `adoptionTimeline`: Per-version new install counts over time (query params: `period`, `groupBy`)
+- `adoptionGaps`: Detected data gaps in the adoption timeline
 
 ## Definitions
 

@@ -1,4 +1,26 @@
 <script lang="ts">
+	import { onMount, onDestroy } from 'svelte';
+	import {
+		Chart,
+		LineController,
+		LineElement,
+		PointElement,
+		CategoryScale,
+		LinearScale,
+		Tooltip,
+		Legend
+	} from 'chart.js';
+
+	Chart.register(
+		LineController,
+		LineElement,
+		PointElement,
+		CategoryScale,
+		LinearScale,
+		Tooltip,
+		Legend
+	);
+
 	export let versionDistribution: Array<{
 		version: string;
 		count: number;
@@ -18,22 +40,164 @@
 		upgradesLast7d: number;
 		upgradesLast30d: number;
 	} | null = null;
+	export let adoptionTimeline: Array<{ date: string; version: string; newInstalls: number }> = [];
+	export let adoptionGaps: Array<{ from: string; to: string; days: number }> = [];
 	export let title: string = 'App Version Distribution';
 
-	// Calculate max count for bar sizing
+	let adoptionCanvas: HTMLCanvasElement;
+	let adoptionChart: Chart | null = null;
+	let adoptionPeriod: '30d' | '90d' = '30d';
+	let showDataTable = false;
+	let reducedMotion = false;
+
 	$: maxCount =
 		versionDistribution.length > 0 ? Math.max(...versionDistribution.map((v) => v.count)) : 1;
 
-	// Determine if a version is outdated (not the latest version)
+	// Derive top versions for the chart (max 5 to avoid legend noise)
+	$: topVersions = versionDistribution.slice(0, 5).map((v) => v.version);
+
+	// Build datasets for the adoption curve chart
+	$: adoptionDatasets = buildAdoptionDatasets(adoptionTimeline, topVersions, adoptionPeriod);
+
+	function buildAdoptionDatasets(
+		timeline: Array<{ date: string; version: string; newInstalls: number }>,
+		versions: string[],
+		period: string
+	) {
+		if (timeline.length === 0 || versions.length === 0) return { labels: [], datasets: [] };
+
+		// Filter to the selected period
+		const daysAgo = period === '90d' ? 90 : 30;
+		const cutoff = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+		const filtered = timeline.filter((e) => e.date >= cutoff);
+
+		// Collect all unique dates, sorted
+		const dateSet = new Set<string>();
+		for (const entry of filtered) dateSet.add(entry.date);
+		const labels = Array.from(dateSet).sort();
+
+		// Build a map: version -> { date -> newInstalls }
+		const versionDateMap = new Map<string, Map<string, number>>();
+		for (const v of versions) versionDateMap.set(v, new Map());
+		for (const entry of filtered) {
+			const vMap = versionDateMap.get(entry.version);
+			if (vMap) {
+				vMap.set(entry.date, (vMap.get(entry.date) || 0) + entry.newInstalls);
+			}
+		}
+
+		const palette = [
+			'rgba(59, 130, 246, 0.8)',
+			'rgba(16, 185, 129, 0.8)',
+			'rgba(245, 158, 11, 0.8)',
+			'rgba(239, 68, 68, 0.8)',
+			'rgba(139, 92, 246, 0.8)'
+		];
+		const paletteBg = [
+			'rgba(59, 130, 246, 0.1)',
+			'rgba(16, 185, 129, 0.1)',
+			'rgba(245, 158, 11, 0.1)',
+			'rgba(239, 68, 68, 0.1)',
+			'rgba(139, 92, 246, 0.1)'
+		];
+
+		const datasets = versions.map((v, i) => ({
+			label: v,
+			data: labels.map((d) => versionDateMap.get(v)?.get(d) || 0),
+			borderColor: palette[i % palette.length],
+			backgroundColor: paletteBg[i % paletteBg.length],
+			fill: true,
+			tension: 0.3,
+			pointRadius: 2,
+			pointHoverRadius: 5
+		}));
+
+		return { labels, datasets };
+	}
+
+	function createAdoptionChart() {
+		if (!adoptionCanvas || adoptionDatasets.labels.length === 0) return;
+		if (adoptionChart) adoptionChart.destroy();
+
+		const ctx = adoptionCanvas.getContext('2d');
+		if (!ctx) return;
+
+		adoptionChart = new Chart(ctx, {
+			type: 'line',
+			data: {
+				labels: adoptionDatasets.labels,
+				datasets: adoptionDatasets.datasets
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				animation: reducedMotion ? false : { duration: 300 },
+				interaction: {
+					mode: 'index',
+					intersect: false
+				},
+				plugins: {
+					legend: {
+						position: 'bottom',
+						labels: {
+							font: { family: "'Inter', sans-serif", size: 12 },
+							usePointStyle: true,
+							padding: 16
+						}
+					},
+					tooltip: {
+						titleFont: { family: "'Inter', sans-serif" },
+						bodyFont: { family: "'Inter', sans-serif" },
+						callbacks: {
+							title: (items) => `Date: ${items[0].label}`,
+							label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y} new installs`
+						}
+					}
+				},
+				scales: {
+					x: {
+						title: {
+							display: true,
+							text: 'Date',
+							font: { family: "'Inter', sans-serif", size: 12 }
+						},
+						ticks: {
+							font: { family: "'Inter', sans-serif", size: 10 },
+							maxRotation: 45,
+							autoSkip: true,
+							maxTicksLimit: 15
+						}
+					},
+					y: {
+						title: {
+							display: true,
+							text: 'New Installs',
+							font: { family: "'Inter', sans-serif", size: 12 }
+						},
+						beginAtZero: true,
+						ticks: {
+							font: { family: "'Inter', sans-serif", size: 10 },
+							precision: 0
+						}
+					}
+				}
+			}
+		});
+	}
+
+	function toggleDataTable() {
+		showDataTable = !showDataTable;
+	}
+
+	function switchPeriod(p: '30d' | '90d') {
+		adoptionPeriod = p;
+	}
+
 	function isOutdated(version: string): boolean {
 		if (!latestVersion || version === latestVersion) return false;
-
-		// Simple heuristic: versions that are not the latest are considered outdated
-		// A more sophisticated version comparison could be added
 		return version !== latestVersion;
 	}
 
-	// Format large numbers with K/M suffixes
 	function formatNumber(num: number): string {
 		if (num >= 1000000) {
 			return `${(num / 1000000).toFixed(1)}M`;
@@ -43,13 +207,14 @@
 		return num.toString();
 	}
 
-	// Handle export functionality
 	function exportData() {
 		const data = {
 			versionDistribution,
 			latestVersion,
 			outdatedInstallations,
 			newInstallRate,
+			adoptionTimeline,
+			adoptionGaps,
 			exportedAt: new Date().toISOString()
 		};
 
@@ -63,6 +228,26 @@
 		document.body.removeChild(a);
 		URL.revokeObjectURL(url);
 	}
+
+	$: if (adoptionCanvas && adoptionDatasets.labels.length > 0) {
+		createAdoptionChart();
+	}
+
+	onMount(() => {
+		reducedMotion =
+			typeof window !== 'undefined' &&
+			window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (adoptionCanvas && adoptionDatasets.labels.length > 0) {
+			createAdoptionChart();
+		}
+	});
+
+	onDestroy(() => {
+		if (adoptionChart) {
+			adoptionChart.destroy();
+			adoptionChart = null;
+		}
+	});
 </script>
 
 <div
@@ -200,6 +385,94 @@
 						</div>
 					{/each}
 				</div>
+			</div>
+		{/if}
+
+		{#if adoptionTimeline.length > 0}
+			<div class="adoption-curve" role="region" aria-labelledby="adoption-curve-title">
+				<div class="adoption-header">
+					<h4 id="adoption-curve-title" class="adoption-title">Version Adoption Curve</h4>
+					<div class="adoption-controls">
+						<div class="period-toggle" role="radiogroup" aria-label="Time period">
+							<button
+								class="period-btn"
+								class:active={adoptionPeriod === '30d'}
+								on:click={() => switchPeriod('30d')}
+								role="radio"
+								aria-checked={adoptionPeriod === '30d'}
+							>
+								30d
+							</button>
+							<button
+								class="period-btn"
+								class:active={adoptionPeriod === '90d'}
+								on:click={() => switchPeriod('90d')}
+								role="radio"
+								aria-checked={adoptionPeriod === '90d'}
+							>
+								90d
+							</button>
+						</div>
+						<button
+							class="data-table-toggle"
+							on:click={toggleDataTable}
+							aria-label={showDataTable ? 'Hide data table' : 'Show data table'}
+							aria-expanded={showDataTable}
+						>
+							{showDataTable ? 'Hide Table' : 'Show Table'}
+						</button>
+					</div>
+				</div>
+
+				<p class="sr-only" aria-live="polite">
+					Version adoption curve showing new installs per version over the last {adoptionPeriod ===
+					'30d'
+						? '30'
+						: '90'} days.
+					{#if adoptionGaps.length > 0}
+						Data gaps detected: {adoptionGaps.length}.
+					{/if}
+				</p>
+
+				{#if adoptionGaps.length > 0}
+					<div class="gap-alert" role="alert">
+						<span class="gap-icon" aria-hidden="true">⚠</span>
+						Data gaps detected ({adoptionGaps.length}) — some periods may have no reported installs.
+					</div>
+				{/if}
+
+				<div class="chart-container">
+					<canvas bind:this={adoptionCanvas} aria-describedby="adoption-chart-desc" tabindex="0"
+					></canvas>
+					<p id="adoption-chart-desc" class="sr-only">
+						Line chart displaying new installation counts per version over time. Use the Show Table
+						button for a tabular view.
+					</p>
+				</div>
+
+				{#if showDataTable}
+					<div class="data-table-wrapper" role="region" aria-label="Adoption timeline data table">
+						<table class="data-table">
+							<caption class="sr-only">Version adoption timeline data</caption>
+							<thead>
+								<tr>
+									<th scope="col">Date</th>
+									<th scope="col">Version</th>
+									<th scope="col">New Installs</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each adoptionTimeline.slice(0, 100) as entry}
+									<tr>
+										<td>{entry.date}</td>
+										<td>{entry.version}</td>
+										<td>{entry.newInstalls}</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	{/if}
@@ -426,5 +699,145 @@
 		.stats-footer {
 			grid-template-columns: 1fr;
 		}
+	}
+
+	.adoption-curve {
+		margin-top: 1.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid #e5e7eb;
+	}
+
+	.adoption-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+
+	.adoption-title {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #374151;
+		margin: 0;
+	}
+
+	.adoption-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.period-toggle {
+		display: flex;
+		border: 1px solid #d1d5db;
+		border-radius: 0.375rem;
+		overflow: hidden;
+	}
+
+	.period-btn {
+		padding: 0.25rem 0.75rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: #6b7280;
+		background: white;
+		border: none;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.period-btn.active {
+		background: #3b82f6;
+		color: white;
+	}
+
+	.period-btn:focus-visible {
+		outline: 2px solid #3b82f6;
+		outline-offset: 2px;
+	}
+
+	.data-table-toggle {
+		padding: 0.25rem 0.75rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: #6b7280;
+		background: white;
+		border: 1px solid #d1d5db;
+		border-radius: 0.375rem;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.data-table-toggle:hover {
+		background: #f9fafb;
+	}
+
+	.data-table-toggle:focus-visible {
+		outline: 2px solid #3b82f6;
+		outline-offset: 2px;
+	}
+
+	.gap-alert {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		margin-bottom: 1rem;
+		font-size: 0.75rem;
+		color: #92400e;
+		background: #fef3c7;
+		border: 1px solid #fcd34d;
+		border-radius: 0.375rem;
+	}
+
+	.gap-icon {
+		flex-shrink: 0;
+	}
+
+	.chart-container {
+		position: relative;
+		height: 280px;
+		width: 100%;
+	}
+
+	.data-table-wrapper {
+		margin-top: 1rem;
+		overflow-x: auto;
+	}
+
+	.data-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.75rem;
+	}
+
+	.data-table th,
+	.data-table td {
+		padding: 0.5rem 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid #e5e7eb;
+	}
+
+	.data-table th {
+		font-weight: 600;
+		color: #374151;
+		background: #f9fafb;
+	}
+
+	.data-table td {
+		color: #6b7280;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
 	}
 </style>
