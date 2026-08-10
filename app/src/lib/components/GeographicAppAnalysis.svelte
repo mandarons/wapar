@@ -4,16 +4,37 @@
 	export let iCloudDockerTotal: number;
 	export let haBouncieTotal: number;
 	export let countryToCount: { countryCode: string; count: number }[];
+	export let appName: string | null = null;
 
 	type AppLayer = 'both' | 'icloud' | 'bouncie';
 
-	let selectedLayer: AppLayer = 'both';
+	let selectedLayer: AppLayer =
+		appName === 'icloud-docker' ? 'icloud' : appName === 'ha-bouncie' ? 'bouncie' : 'both';
 
 	$: totalInstallations = iCloudDockerTotal + haBouncieTotal;
 
-	// Calculate estimated app-specific country distribution
-	// Since we don't have per-country app breakdowns, we'll use proportional estimation
-	$: estimatedCountryData = countryToCount.map((country) => {
+	// When a specific app is selected via global filter, the countryToCount data is already
+	// filtered server-side. Use it directly instead of proportional estimates.
+	$: isAppFiltered = appName === 'icloud-docker' || appName === 'ha-bouncie';
+
+	// Calculate country distribution - use real data when app is filtered
+	$: countryData = countryToCount.map((country) => {
+		if (isAppFiltered) {
+			// Real per-app data from the server
+			const appCount = country.count;
+			const appTotal = appName === 'icloud-docker' ? iCloudDockerTotal : haBouncieTotal;
+			return {
+				countryCode: country.countryCode,
+				count: country.count,
+				iCloudEstimate: appName === 'icloud-docker' ? appCount : 0,
+				bouncieEstimate: appName === 'ha-bouncie' ? appCount : 0,
+				iCloudPercentage:
+					appName === 'icloud-docker' && appTotal > 0 ? (appCount / appTotal) * 100 : 0,
+				bounciePercentage:
+					appName === 'ha-bouncie' && appTotal > 0 ? (appCount / appTotal) * 100 : 0
+			};
+		}
+		// Proportional estimation when showing all apps
 		let iCloudEstimate = 0;
 		let bouncieEstimate = 0;
 		if (totalInstallations > 0) {
@@ -31,12 +52,19 @@
 	});
 
 	// Get top countries by app
-	$: topICloudCountries = [...estimatedCountryData]
+	$: topICloudCountries = [...countryData]
 		.sort((a, b) => b.iCloudEstimate - a.iCloudEstimate)
+		.filter((c) => c.iCloudEstimate > 0)
 		.slice(0, 5);
-	$: topBouncieCountries = [...estimatedCountryData]
+	$: topBouncieCountries = [...countryData]
 		.sort((a, b) => b.bouncieEstimate - a.bouncieEstimate)
+		.filter((c) => c.bouncieEstimate > 0)
 		.slice(0, 5);
+
+	// Auto-select layer when app filter is active
+	$: if (isAppFiltered && selectedLayer === 'both') {
+		selectedLayer = appName === 'icloud-docker' ? 'icloud' : 'bouncie';
+	}
 </script>
 
 <div
@@ -51,47 +79,49 @@
 	</p>
 
 	<!-- Layer Toggle -->
-	<div class="flex justify-center mb-6">
-		<div
-			class="inline-flex rounded-button border border-wapar-gray-300 bg-wapar-gray-50 p-1"
-			role="group"
-			aria-label="Application filter"
-		>
-			<button
-				on:click={() => (selectedLayer = 'both')}
-				class="px-4 py-2 text-body font-medium rounded-button transition-colors {selectedLayer ===
-				'both'
-					? 'bg-white text-wapar-secondary-600 shadow-sm'
-					: 'text-wapar-gray-700 hover:text-wapar-gray-900'}"
-				data-testid="layer-both"
-				aria-pressed={selectedLayer === 'both'}
+	{#if !isAppFiltered}
+		<div class="flex justify-center mb-6">
+			<div
+				class="inline-flex rounded-button border border-wapar-gray-300 bg-wapar-gray-50 p-1"
+				role="group"
+				aria-label="Application filter"
 			>
-				Both Apps
-			</button>
-			<button
-				on:click={() => (selectedLayer = 'icloud')}
-				class="px-4 py-2 text-body font-medium rounded-button transition-colors {selectedLayer ===
-				'icloud'
-					? 'bg-white text-wapar-secondary-600 shadow-sm'
-					: 'text-wapar-gray-700 hover:text-wapar-gray-900'}"
-				data-testid="layer-icloud"
-				aria-pressed={selectedLayer === 'icloud'}
-			>
-				iCloud Docker
-			</button>
-			<button
-				on:click={() => (selectedLayer = 'bouncie')}
-				class="px-4 py-2 text-body font-medium rounded-button transition-colors {selectedLayer ===
-				'bouncie'
-					? 'bg-white text-wapar-primary-600 shadow-sm'
-					: 'text-wapar-gray-700 hover:text-wapar-gray-900'}"
-				data-testid="layer-bouncie"
-				aria-pressed={selectedLayer === 'bouncie'}
-			>
-				HA Bouncie
-			</button>
+				<button
+					on:click={() => (selectedLayer = 'both')}
+					class="px-4 py-2 text-body font-medium rounded-button transition-colors {selectedLayer ===
+					'both'
+						? 'bg-white text-wapar-secondary-600 shadow-sm'
+						: 'text-wapar-gray-700 hover:text-wapar-gray-900'}"
+					data-testid="layer-both"
+					aria-pressed={selectedLayer === 'both'}
+				>
+					Both Apps
+				</button>
+				<button
+					on:click={() => (selectedLayer = 'icloud')}
+					class="px-4 py-2 text-body font-medium rounded-button transition-colors {selectedLayer ===
+					'icloud'
+						? 'bg-white text-wapar-secondary-600 shadow-sm'
+						: 'text-wapar-gray-700 hover:text-wapar-gray-900'}"
+					data-testid="layer-icloud"
+					aria-pressed={selectedLayer === 'icloud'}
+				>
+					iCloud Docker
+				</button>
+				<button
+					on:click={() => (selectedLayer = 'bouncie')}
+					class="px-4 py-2 text-body font-medium rounded-button transition-colors {selectedLayer ===
+					'bouncie'
+						? 'bg-white text-wapar-primary-600 shadow-sm'
+						: 'text-wapar-gray-700 hover:text-wapar-gray-900'}"
+					data-testid="layer-bouncie"
+					aria-pressed={selectedLayer === 'bouncie'}
+				>
+					HA Bouncie
+				</button>
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	<!-- Analysis Content -->
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -113,7 +143,7 @@
 							</div>
 							<div class="text-right">
 								<div class="text-body font-semibold text-wapar-secondary-600">
-									~{country.iCloudEstimate.toLocaleString()}
+									{#if isAppFiltered}{country.iCloudEstimate.toLocaleString()}{:else}~{country.iCloudEstimate.toLocaleString()}{/if}
 								</div>
 								<div class="text-body-sm text-wapar-gray-600">
 									{country.iCloudPercentage.toFixed(1)}%
@@ -141,7 +171,7 @@
 							</div>
 							<div class="text-right">
 								<div class="text-body font-semibold text-wapar-primary-600">
-									~{country.bouncieEstimate.toLocaleString()}
+									{#if isAppFiltered}{country.bouncieEstimate.toLocaleString()}{:else}~{country.bouncieEstimate.toLocaleString()}{/if}
 								</div>
 								<div class="text-body-sm text-wapar-gray-600">
 									{country.bounciePercentage.toFixed(1)}%
@@ -159,12 +189,17 @@
 		<h4 class="text-heading-sm text-wapar-gray-900 mb-3">Regional Insights</h4>
 		<div class="space-y-2 text-body text-wapar-gray-700">
 			<p>
-				<span class="font-semibold">Market Coverage:</span> Both apps collectively serve
-				{countryToCount.length} countries worldwide.
+				<span class="font-semibold">Market Coverage:</span>
+				{#if isAppFiltered}Filtered to {appName === 'icloud-docker'
+						? 'iCloud Docker'
+						: 'HA Bouncie'} —
+				{/if}{countryToCount.length} countries worldwide.
 			</p>
 			<p>
-				<span class="font-semibold">Distribution Note:</span> Country-level app breakdowns are estimated
-				proportionally based on overall market share. Actual regional preferences may vary.
+				<span class="font-semibold">Distribution Note:</span>
+				{#if isAppFiltered}Country-level data shown is real (filtered by application).{:else}Country-level
+					app breakdowns are estimated proportionally based on overall market share. Actual regional
+					preferences may vary.{/if}
 			</p>
 			<p>
 				<span class="font-semibold">Geographic Diversity:</span> Distributed user base reduces regional

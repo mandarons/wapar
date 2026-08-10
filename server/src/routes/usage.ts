@@ -18,15 +18,21 @@ usageRoutes.get('/', async (c) => {
   
   const now = new Date().toUTCString();
   const db = getDb(c.env);
+  const appName = c.req.query('appName');
 
   // Get activity threshold from environment, default to 3 days
   const thresholdDays = getActivityThresholdDays(c.env);
   const cutoffDate = getActivityCutoffDate(thresholdDays);
 
+    // Build base filter for app-specific queries
+    const appFilter = appName ? eq(installations.appName, appName) : undefined;
+
     // Total installations count
     const totalInstallationsResult = await Logger.measureOperation(
       'usage.total_installations',
-      () => db.select({ count: count() }).from(installations),
+      () => db.select({ count: count() })
+        .from(installations)
+        .where(appFilter),
       requestContext
     );
     const totalInstallations = totalInstallationsResult[0]?.count ?? 0;
@@ -36,9 +42,11 @@ usageRoutes.get('/', async (c) => {
       'usage.active_installations',
       () => db.select({ count: count() })
         .from(installations)
-        .where(createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate)),
+        .where(appFilter
+          ? and(createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate), appFilter)
+          : createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate)),
       {
-        metadata: { cutoffDate, thresholdDays },
+        metadata: { cutoffDate, thresholdDays, appName: appName ?? null },
         ...requestContext
       }
     );
@@ -48,11 +56,16 @@ usageRoutes.get('/', async (c) => {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const monthlyActiveResult = await Logger.measureOperation(
       'usage.monthly_active',
-      () => db.select({ count: countDistinct(heartbeats.installationId) })
-        .from(heartbeats)
-        .where(gte(heartbeats.createdAt, since)),
+      () => appName
+        ? db.select({ count: countDistinct(heartbeats.installationId) })
+            .from(heartbeats)
+            .innerJoin(installations, eq(heartbeats.installationId, installations.id))
+            .where(and(gte(heartbeats.createdAt, since), eq(installations.appName, appName)))
+        : db.select({ count: countDistinct(heartbeats.installationId) })
+            .from(heartbeats)
+            .where(gte(heartbeats.createdAt, since)),
       {
-        metadata: { sinceDate: since },
+        metadata: { sinceDate: since, appName: appName ?? null },
         ...requestContext
       }
     );
@@ -68,12 +81,13 @@ usageRoutes.get('/', async (c) => {
         .from(installations)
         .where(and(
           createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate),
-          isNotNull(installations.countryCode)
+          isNotNull(installations.countryCode),
+          ...(appName ? [eq(installations.appName, appName)] : [])
         ))
         .groupBy(installations.countryCode)
         .orderBy(desc(count())),
       {
-        metadata: { cutoffDate, thresholdDays },
+        metadata: { cutoffDate, thresholdDays, appName: appName ?? null },
         ...requestContext
       }
     );
@@ -86,7 +100,9 @@ usageRoutes.get('/', async (c) => {
         count: count()
       })
         .from(installations)
-        .where(isNotNull(installations.countryCode))
+        .where(appName
+          ? and(isNotNull(installations.countryCode), eq(installations.appName, appName))
+          : isNotNull(installations.countryCode))
         .groupBy(installations.countryCode)
         .orderBy(desc(count())),
       requestContext
@@ -95,20 +111,22 @@ usageRoutes.get('/', async (c) => {
     // Earliest installation date (start of collected data)
     const earliestInstallationResult = await Logger.measureOperation(
       'usage.earliest_installation',
-      () => db.select({ earliestInstallationDate: min(installations.createdAt) }).from(installations),
+      () => db.select({ earliestInstallationDate: min(installations.createdAt) })
+        .from(installations)
+        .where(appFilter),
       requestContext
     );
     const earliestInstallationDate = earliestInstallationResult[0]?.earliestInstallationDate ?? null;
 
     // App-specific counts
-    const getAppCount = async (appName: string) => {
+    const getAppCount = async (appNameValue: string) => {
       const result = await Logger.measureOperation(
-        `usage.app_count.${appName}`,
+        `usage.app_count.${appNameValue}`,
         () => db.select({ count: count() })
           .from(installations)
-          .where(eq(installations.appName, appName)),
+          .where(eq(installations.appName, appNameValue)),
         {
-          metadata: { appName },
+          metadata: { appName: appNameValue },
           ...requestContext
         }
       );

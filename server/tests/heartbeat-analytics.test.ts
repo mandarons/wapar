@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { d1Exec, getBase, waitForCount } from './utils';
+import { d1Exec, getBase, resetDb, waitForCount } from './utils';
 
 const ENDPOINT = '/api/heartbeat-analytics';
 const INSTALL_ENDPOINT = '/api/installation';
@@ -12,12 +12,12 @@ function randomVersion() {
   return `${Math.floor(Math.random() * 9)}.${Math.floor(Math.random() * 9)}.${Math.floor(Math.random() * 9)}`;
 }
 
-async function createInstallation(): Promise<string> {
+async function createInstallation(appName?: string): Promise<string> {
   const base = getBase();
   const res = await fetch(`${base}${INSTALL_ENDPOINT}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ appName: randomAppName(), appVersion: randomVersion() })
+    body: JSON.stringify({ appName: appName || randomAppName(), appVersion: randomVersion() })
   });
   const body = await res.json();
   return body.id as string;
@@ -338,5 +338,129 @@ describe(ENDPOINT, () => {
     // DELETE should return 404
     const deleteRes = await fetch(`${base}${ENDPOINT}`, { method: 'DELETE' });
     expect(deleteRes.status).toBe(404);
+  });
+
+  it('should filter analytics by appName when provided', async () => {
+    await resetDb();
+    const base = getBase();
+
+    // Create installations for specific apps
+    const icloudId = await createInstallation('icloud-docker');
+    const bouncieId = await createInstallation('ha-bouncie');
+
+    // Create heartbeats for both
+    await createHeartbeat(icloudId, new Date().toISOString());
+    await createHeartbeat(bouncieId, new Date().toISOString());
+
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id IN (?, ?)',
+      [icloudId, bouncieId],
+      2
+    );
+
+    // Filter by icloud-docker
+    const icloudRes = await fetch(`${base}${ENDPOINT}?appName=icloud-docker`);
+    expect(icloudRes.status).toBe(200);
+    const icloudData = await icloudRes.json();
+    expect(icloudData.activeUsers.daily).toBeGreaterThanOrEqual(1);
+
+    // Filter by ha-bouncie
+    const bouncieRes = await fetch(`${base}${ENDPOINT}?appName=ha-bouncie`);
+    expect(bouncieRes.status).toBe(200);
+    const bouncieData = await bouncieRes.json();
+    expect(bouncieData.activeUsers.daily).toBeGreaterThanOrEqual(1);
+
+    // Without filter should include both
+    const allRes = await fetch(`${base}${ENDPOINT}`);
+    const allData = await allRes.json();
+    expect(allData.activeUsers.daily).toBeGreaterThanOrEqual(2);
+  });
+
+  it('should return zero values for non-existent appName', async () => {
+    const base = getBase();
+    const res = await fetch(`${base}${ENDPOINT}?appName=nonexistent`);
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.activeUsers.daily).toBe(0);
+    expect(data.activeUsers.weekly).toBe(0);
+    expect(data.activeUsers.monthly).toBe(0);
+    expect(data.engagementLevels.dormant.count).toBe(0);
+  });
+
+  it('should filter engagement levels by appName', async () => {
+    await resetDb();
+    const base = getBase();
+
+    // Create a highly active user for a specific app
+    const highlyActiveInstall = await createInstallation('icloud-docker');
+    const now = new Date();
+    
+    // Create heartbeats on 7 distinct days
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      date.setUTCHours(12, 0, 0, 0);
+      await createHeartbeat(highlyActiveInstall, date.toISOString());
+    }
+    
+    await waitForCount(
+      'SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?',
+      [highlyActiveInstall],
+      7
+    );
+
+    // Filter by icloud-docker should find the highly active user
+    const icloudRes = await fetch(`${base}${ENDPOINT}?appName=icloud-docker`);
+    const icloudData = await icloudRes.json();
+    expect(icloudData.engagementLevels.highlyActive.count).toBeGreaterThanOrEqual(1);
+
+    // Filter by ha-bouncie should not find the highly active user
+    const bouncieRes = await fetch(`${base}${ENDPOINT}?appName=ha-bouncie`);
+    const bouncieData = await bouncieRes.json();
+    expect(bouncieData.engagementLevels.highlyActive.count).toBe(0);
+  });
+
+  it('should filter timeline by appName', async () => {
+    await resetDb();
+    const base = getBase();
+
+    const install = await createInstallation('icloud-docker');
+    await createHeartbeat(install, new Date().toISOString());
+    
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [install], 1);
+
+    // Filter by icloud-docker should show the heartbeat
+    const icloudRes = await fetch(`${base}${ENDPOINT}?appName=icloud-docker`);
+    const icloudData = await icloudRes.json();
+    const totalHeartbeats = icloudData.timeline.reduce((sum: number, t: any) => sum + t.totalHeartbeats, 0);
+    expect(totalHeartbeats).toBeGreaterThanOrEqual(1);
+
+    // Filter by ha-bouncie should not show it
+    const bouncieRes = await fetch(`${base}${ENDPOINT}?appName=ha-bouncie`);
+    const bouncieData = await bouncieRes.json();
+    const bouncieHeartbeats = bouncieData.timeline.reduce((sum: number, t: any) => sum + t.totalHeartbeats, 0);
+    expect(bouncieHeartbeats).toBe(0);
+  });
+
+  it('should filter churn risk by appName', async () => {
+    await resetDb();
+    const base = getBase();
+
+    // Create an installation that was active 10 days ago (churn risk) for a specific app
+    const churnRiskInstall = await createInstallation('ha-bouncie');
+    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+    await createHeartbeat(churnRiskInstall, tenDaysAgo);
+    
+    await waitForCount('SELECT COUNT(1) as count FROM Heartbeat WHERE installation_id = ?', [churnRiskInstall], 1);
+
+    // Filter by ha-bouncie should find the churn risk user
+    const bouncieRes = await fetch(`${base}${ENDPOINT}?appName=ha-bouncie`);
+    const bouncieData = await bouncieRes.json();
+    expect(bouncieData.churnRisk.usersInactive7Days).toBeGreaterThanOrEqual(1);
+
+    // Filter by icloud-docker should not find it
+    const icloudRes = await fetch(`${base}${ENDPOINT}?appName=icloud-docker`);
+    const icloudData = await icloudRes.json();
+    expect(icloudData.churnRisk.usersInactive7Days).toBe(0);
   });
 });

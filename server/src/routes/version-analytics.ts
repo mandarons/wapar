@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { D1Database } from '../types/database';
 import { getDb } from '../db/client';
 import { installations } from '../db/schema';
-import { count, desc, gte, and, ne } from 'drizzle-orm';
+import { count, desc, gte, and, ne, eq } from 'drizzle-orm';
 import { Logger } from '../utils/logger';
 import { findLatestVersion, compareVersions } from '../utils/version';
 import { getActivityThresholdDays, getActivityCutoffDate, createActiveInstallationFilter } from '../utils/active-installations';
@@ -13,10 +13,20 @@ versionAnalyticsRoutes.get('/', async (c) => {
   const requestContext = Logger.getRequestContext(c);
   
   const db = getDb(c.env);
+  const appName = c.req.query('appName');
 
   // Get activity threshold from environment, default to 3 days
   const thresholdDays = getActivityThresholdDays(c.env);
   const cutoffDate = getActivityCutoffDate(thresholdDays);
+
+    // Build filter conditions
+    const conditions = [
+      createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate),
+      ne(installations.appVersion, 'unknown')
+    ];
+    if (appName) {
+      conditions.push(eq(installations.appName, appName));
+    }
 
     // Get version distribution for active installations only
     // Exclude 'unknown' versions (from auto-created installations, which can result from data loss/corruption or legitimate out-of-order requests such as clients sending heartbeats before installation records exist)
@@ -27,14 +37,11 @@ versionAnalyticsRoutes.get('/', async (c) => {
         count: count()
       })
         .from(installations)
-        .where(and(
-          createActiveInstallationFilter(installations.lastHeartbeatAt, cutoffDate),
-          ne(installations.appVersion, 'unknown')
-        ))
+        .where(and(...conditions))
         .groupBy(installations.appVersion)
         .orderBy(desc(count())),
       {
-        metadata: { cutoffDate, thresholdDays },
+        metadata: { cutoffDate, thresholdDays, appName: appName ?? null },
         ...requestContext
       }
     );
@@ -73,13 +80,17 @@ versionAnalyticsRoutes.get('/', async (c) => {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
+    const newInstallConditions = appName ? [eq(installations.appName, appName)] : [];
+
     const last7DaysResult = await Logger.measureOperation(
       'version_analytics.new_installs_7d',
       () => db.select({ count: count() })
         .from(installations)
-        .where(gte(installations.createdAt, sevenDaysAgo)),
+        .where(newInstallConditions.length > 0
+          ? and(...newInstallConditions, gte(installations.createdAt, sevenDaysAgo))
+          : gte(installations.createdAt, sevenDaysAgo)),
       {
-        metadata: { sinceDate: sevenDaysAgo },
+        metadata: { sinceDate: sevenDaysAgo, appName: appName ?? null },
         ...requestContext
       }
     );
@@ -88,9 +99,11 @@ versionAnalyticsRoutes.get('/', async (c) => {
       'version_analytics.new_installs_30d',
       () => db.select({ count: count() })
         .from(installations)
-        .where(gte(installations.createdAt, thirtyDaysAgo)),
+        .where(newInstallConditions.length > 0
+          ? and(...newInstallConditions, gte(installations.createdAt, thirtyDaysAgo))
+          : gte(installations.createdAt, thirtyDaysAgo)),
       {
-        metadata: { sinceDate: thirtyDaysAgo },
+        metadata: { sinceDate: thirtyDaysAgo, appName: appName ?? null },
         ...requestContext
       }
     );

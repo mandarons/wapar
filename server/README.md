@@ -156,6 +156,9 @@ Returns comprehensive statistics about active and stale installations with versi
 
 Returns usage analytics including active/stale metrics, monthly active users, and country distribution.
 
+**Query Parameters:**
+- `appName` (optional): Filter results by application name (e.g., `icloud-docker`, `ha-bouncie`). When omitted, returns aggregate data across all apps.
+
 **Response:**
 ```json
 {
@@ -176,24 +179,22 @@ Returns usage analytics including active/stale metrics, monthly active users, an
 ```
 
 **Fields:**
-- `totalInstallations`: Total count of all installations
-- `activeInstallations`: Count of installations with recent heartbeat (NEW)
-- `staleInstallations`: Count of installations without recent heartbeat (NEW)
-- `monthlyActive`: Unique installations with heartbeats in last 30 days
-- `activityThresholdDays`: The configured activity threshold in days (NEW)
+- `totalInstallations`: Total count of all installations (filtered by `appName` if provided)
+- `activeInstallations`: Count of installations with recent heartbeat (filtered by `appName` if provided)
+- `staleInstallations`: Count of installations without recent heartbeat (filtered by `appName` if provided)
+- `monthlyActive`: Unique installations with heartbeats in last 30 days (filtered by `appName` if provided)
+- `activityThresholdDays`: The configured activity threshold in days
 - `createdAt`: Server timestamp when the usage snapshot was generated (sync time)
-- `earliestInstallationDate`: Timestamp of the oldest installation (start of collected data; `null` when no installations exist)
-- `countryToCount`: Country distribution for **active installations only**
-- `iCloudDocker`, `haBouncie`: Total installations per app (not filtered by activity)
-
-**Important Notes:**
-- `countryToCount` now includes only active installations (breaking change)
-- App-specific totals (`iCloudDocker`, `haBouncie`) include all installations regardless of activity status
-- `monthlyActive` may differ from `activeInstallations` due to different time windows
+- `earliestInstallationDate`: Timestamp of the oldest installation (filtered by `appName` if provided; `null` when no installations exist)
+- `countryToCount`: Country distribution for active installations (filtered by `appName` if provided)
+- `iCloudDocker`, `haBouncie`: Total installations per app (always unfiltered)
 
 ### GET /api/version-analytics
 
 Returns comprehensive app version distribution analytics.
+
+**Query Parameters:**
+- `appName` (optional): Filter results by application name (e.g., `icloud-docker`, `ha-bouncie`). When omitted, returns aggregate data across all apps.
 
 **Response:**
 ```json
@@ -213,13 +214,13 @@ Returns comprehensive app version distribution analytics.
 ```
 
 **Fields:**
-- `versionDistribution`: Array of version objects with count and percentage (**active installations only**)
+- `versionDistribution`: Array of version objects with count and percentage (**active installations only**, filtered by `appName` if provided)
 - `latestVersion`: Version with highest installation count (null if no data)
 - `outdatedInstallations`: Count of active installations not on latest version
-- `newInstallRate`: Number of installations created in last 7 and 30 days
+- `newInstallRate`: Number of installations created in last 7 and 30 days (filtered by `appName` if provided)
 
 **Important Note:**
-- This endpoint now returns data for **active installations only** (breaking change from previous behavior)
+- This endpoint returns data for **active installations only** (breaking change from previous behavior)
 - Percentages are calculated based on active installation count
 - `outdatedInstallations` counts only active installations on older versions
 
