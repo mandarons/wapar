@@ -12,7 +12,8 @@
 		buildOverviewMetrics,
 		describeUpdate,
 		deriveLastSynced,
-		formatInstallCount
+		formatInstallCount,
+		formatStalePercentage
 	} from '$lib/utils/overview';
 	import { getCountryName } from '$lib/utils/countries';
 
@@ -672,9 +673,9 @@
 												class="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-800"
 												title="High percentage of stale installations"
 												role="status"
-												aria-label={`Warning: ${stalePercentage.toFixed(0)}% of installations are stale`}
+												aria-label={`Warning: ${formatStalePercentage(stalePercentage)} of installations are stale`}
 											>
-												⚠️ {stalePercentage.toFixed(0)}%
+												⚠️ {formatStalePercentage(stalePercentage)}
 											</span>
 										{/if}
 									</div>
@@ -839,9 +840,9 @@
 										aria-describedby="map-description"
 									></div>
 									<div id="map-description" class="sr-only">
-										World map visualization showing {data.countryToCount?.length ?? 0} countries with installation
-										data. Use keyboard navigation to explore countries or press the toggle button below
-										to view the data table for detailed information.
+										World map visualization showing {data.countryToCount?.length ?? 0} countries with
+										installation data. Use keyboard navigation to explore countries or press the toggle
+										button below to view the data table for detailed information.
 									</div>
 
 									<!-- Toggle button for map data table -->
@@ -926,7 +927,12 @@
 				{:else if tab.id === 'heartbeat' && data.heartbeatAnalytics}
 					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 						<HeartbeatAnalytics
-							activeUsers={data.heartbeatAnalytics?.activeUsers ?? { daily: 0, weekly: 0, monthly: 0, dau_mau_ratio: 0 }}
+							activeUsers={data.heartbeatAnalytics?.activeUsers ?? {
+								daily: 0,
+								weekly: 0,
+								monthly: 0,
+								dau_mau_ratio: 0
+							}}
 							engagementLevels={data.heartbeatAnalytics?.engagementLevels ?? {
 								highlyActive: { count: 0, description: '>7 heartbeats/week' },
 								active: { count: 0, description: '1-7 heartbeats/week' },
@@ -943,7 +949,7 @@
 								usersInactive7Days: 0,
 								usersInactive14Days: 0,
 								usersInactive30Days: 0
-			}}
+							}}
 						/>
 					</div>
 				{:else if tab.id === 'recent' && data.recentInstallations}

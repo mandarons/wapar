@@ -3,7 +3,8 @@ import {
 	buildOverviewMetrics,
 	describeUpdate,
 	deriveLastSynced,
-	formatInstallCount
+	formatInstallCount,
+	formatStalePercentage
 } from './overview';
 
 const baseDate = new Date('2025-01-15T12:00:00Z');
@@ -19,6 +20,39 @@ describe('formatInstallCount', () => {
 
 	it('truncates decimals before formatting', () => {
 		expect(formatInstallCount(42.9)).toBe('42');
+	});
+});
+
+describe('formatStalePercentage', () => {
+	it('formats with one decimal place', () => {
+		expect(formatStalePercentage(98.94)).toBe('98.9%');
+	});
+
+	it('rounds to one decimal place', () => {
+		expect(formatStalePercentage(98.96)).toBe('99.0%');
+	});
+
+	it('handles zero', () => {
+		expect(formatStalePercentage(0)).toBe('0.0%');
+	});
+
+	it('clamps negative values to zero', () => {
+		expect(formatStalePercentage(-5)).toBe('0.0%');
+	});
+
+	it('clamps values over 100 to 100', () => {
+		expect(formatStalePercentage(105)).toBe('100.0%');
+	});
+
+	it('formats exact 100%', () => {
+		expect(formatStalePercentage(100)).toBe('100.0%');
+	});
+
+	it('formats typical stale ratio like 25,747/26,023 = 98.94%', () => {
+		const stale = 25747;
+		const total = 26023;
+		const percentage = (stale / total) * 100;
+		expect(formatStalePercentage(percentage)).toBe('98.9%');
 	});
 });
 
