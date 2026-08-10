@@ -31,7 +31,7 @@ describe('buildOverviewMetrics', () => {
 			iCloudDockerTotal: 1400,
 			haBouncieTotal: 1088,
 			activityThresholdDays: 3,
-			createdAt: '2024-01-01T00:00:00Z'
+			earliestInstallationDate: '2024-01-01T00:00:00Z'
 		});
 
 		expect(metrics).toHaveLength(3);
@@ -69,14 +69,14 @@ describe('buildOverviewMetrics', () => {
 			iCloudDockerTotal: 600,
 			haBouncieTotal: 400,
 			activityThresholdDays: 7,
-			createdAt: null
+			earliestInstallationDate: null
 		});
 
 		expect(metrics[0].subtitle).toBe('Heartbeat within last 7 days');
 		expect(metrics[2].subtitle).toBe('No heartbeat in 7+ days');
 	});
 
-	it('shows "All time" when createdAt is null', () => {
+	it('shows "All time" when earliestInstallationDate is null', () => {
 		const metrics = buildOverviewMetrics({
 			totalInstallations: 1000,
 			activeInstallations: 800,
@@ -84,10 +84,26 @@ describe('buildOverviewMetrics', () => {
 			iCloudDockerTotal: 600,
 			haBouncieTotal: 400,
 			activityThresholdDays: 3,
-			createdAt: null
+			earliestInstallationDate: null
 		});
 
 		expect(metrics[1].subtitle).toBe('All time');
+	});
+
+	it('shows the earliest data date in the "Since" subtitle', () => {
+		const metrics = buildOverviewMetrics({
+			totalInstallations: 1000,
+			activeInstallations: 800,
+			staleInstallations: 200,
+			iCloudDockerTotal: 600,
+			haBouncieTotal: 400,
+			activityThresholdDays: 3,
+			earliestInstallationDate: '2026-07-10T00:00:00Z'
+		});
+
+		expect(metrics[1].subtitle).toBe(
+			`Since ${new Date('2026-07-10T00:00:00Z').toLocaleDateString()}`
+		);
 	});
 });
 
@@ -99,7 +115,7 @@ describe('describeUpdate', () => {
 			countryCount: 35,
 			installationsLast24h: null,
 			installationsLast7d: null,
-			createdAt: '2024-01-01T00:00:00Z'
+			earliestInstallationDate: '2024-01-01T00:00:00Z'
 		});
 
 		expect(summary).toMatch(/1(,|\u00a0)?800/); // active
@@ -115,7 +131,7 @@ describe('describeUpdate', () => {
 			countryCount: 8,
 			installationsLast24h: 12,
 			installationsLast7d: 58,
-			createdAt: '2024-01-01T00:00:00Z'
+			earliestInstallationDate: '2024-01-01T00:00:00Z'
 		});
 
 		expect(summary).toMatch(/12(,|\u00a0)?/);
@@ -130,7 +146,7 @@ describe('describeUpdate', () => {
 			countryCount: 4,
 			installationsLast24h: 5,
 			installationsLast7d: null,
-			createdAt: null
+			earliestInstallationDate: null
 		});
 
 		expect(summary).toContain('last 24 hours');
@@ -144,7 +160,7 @@ describe('describeUpdate', () => {
 			countryCount: 4,
 			installationsLast24h: null,
 			installationsLast7d: 15,
-			createdAt: null
+			earliestInstallationDate: null
 		});
 
 		expect(summary).toContain('last 7 days');
@@ -158,20 +174,20 @@ describe('describeUpdate', () => {
 			countryCount: 1,
 			installationsLast24h: null,
 			installationsLast7d: null,
-			createdAt: null
+			earliestInstallationDate: null
 		});
 
 		expect(summary).toContain('1 country');
 	});
 
-	it('uses "the beginning" when createdAt is null', () => {
+	it('uses "the beginning" when earliestInstallationDate is null', () => {
 		const summary = describeUpdate({
 			totalInstallations: 100,
 			activeInstallations: 75,
 			countryCount: 5,
 			installationsLast24h: null,
 			installationsLast7d: null,
-			createdAt: null
+			earliestInstallationDate: null
 		});
 
 		expect(summary).toContain('the beginning');

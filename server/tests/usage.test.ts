@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { d1Exec, getBase, waitForCount } from './utils';
+import { d1Exec, getBase, resetDb, waitForCount } from './utils';
 
 const ENDPOINT = '/api/usage';
 const INSTALL_ENDPOINT = '/api/installation';
@@ -108,6 +108,24 @@ describe(ENDPOINT, () => {
     const base = getBase();
     const res = await fetch(`${base}${ENDPOINT}`, { method: 'DELETE' });
     expect(res.status).toBe(404);
+  });
+
+  it('should return earliestInstallationDate reflecting the oldest installation', async () => {
+    await resetDb();
+    const base = getBase();
+
+    const id = await createInstallation();
+    await waitForCount(`SELECT COUNT(1) as count FROM Installation WHERE id = '${id}'`, 1);
+
+    const backdated = '2026-07-10T00:00:00.000Z';
+    await d1Exec(`UPDATE Installation SET created_at = ? WHERE id = ?`, [backdated, id]);
+
+    const res = await fetch(`${base}${ENDPOINT}`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    expect(body.earliestInstallationDate).toBe(backdated);
+    expect(new Date(body.earliestInstallationDate).getTime()).toBeLessThan(Date.now());
   });
 
   it('should count both icloud-docker and icloud-drive-docker installations', async () => {

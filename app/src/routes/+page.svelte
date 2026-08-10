@@ -80,6 +80,7 @@
 		monthlyActive: number;
 		activityThresholdDays: number;
 		createdAt: string | null;
+		earliestInstallationDate: string | null;
 		countryToCount: { countryCode: string; count: number }[];
 		iCloudDocker: { total: number };
 		haBouncie: { total: number };
@@ -423,7 +424,7 @@
 		iCloudDockerTotal: data.iCloudDocker?.total ?? 0,
 		haBouncieTotal: data.haBouncie?.total ?? 0,
 		activityThresholdDays: data.activityThresholdDays,
-		createdAt: data.createdAt
+		earliestInstallationDate: data.earliestInstallationDate
 	});
 
 	$: stalePercentage =
@@ -436,7 +437,7 @@
 		countryCount: data.countryToCount?.length ?? 0,
 		installationsLast24h: data.recentInstallations?.installationsLast24h ?? null,
 		installationsLast7d: data.recentInstallations?.installationsLast7d ?? null,
-		createdAt: data.createdAt
+		earliestInstallationDate: data.earliestInstallationDate
 	});
 
 	$: lastSyncedMeta = deriveLastSynced(lastSyncedIso);

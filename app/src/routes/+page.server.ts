@@ -23,6 +23,7 @@ export const load: PageServerLoad = async () => {
 				monthlyActive: 0,
 				activityThresholdDays: 3,
 				createdAt: new Date().toISOString(),
+				earliestInstallationDate: null,
 				countryToCount: [],
 				iCloudDocker: { total: 0 },
 				haBouncie: { total: 0 }
@@ -143,6 +144,7 @@ export const load: PageServerLoad = async () => {
 			monthlyActive: 600,
 			activityThresholdDays: 3,
 			createdAt: new Date('2024-01-01').toISOString(),
+			earliestInstallationDate: new Date('2024-01-01').toISOString(),
 			countryToCount: [
 				{ countryCode: 'US', count: 350 },
 				{ countryCode: 'GB', count: 150 },

@@ -202,7 +202,7 @@ $: overviewMetrics = buildOverviewMetrics({
   iCloudDockerTotal: data.iCloudDocker.total,
   haBouncieTotal: data.haBouncie.total,
   activityThresholdDays: data.activityThresholdDays,
-  createdAt: data.createdAt
+  earliestInstallationDate: data.earliestInstallationDate
 });
 ```
 

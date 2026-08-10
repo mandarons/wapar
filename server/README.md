@@ -164,6 +164,7 @@ Returns usage analytics including active/stale metrics, monthly active users, an
   "monthlyActive": 80,
   "activityThresholdDays": 3,
   "createdAt": "Sun, 02 Nov 2025 23:48:36 GMT",
+  "earliestInstallationDate": "2025-05-01T12:00:00.000Z",
   "countryToCount": [
     { "countryCode": "US", "count": 40 },
     { "countryCode": "CA", "count": 20 }
@@ -179,6 +180,8 @@ Returns usage analytics including active/stale metrics, monthly active users, an
 - `staleInstallations`: Count of installations without recent heartbeat (NEW)
 - `monthlyActive`: Unique installations with heartbeats in last 30 days
 - `activityThresholdDays`: The configured activity threshold in days (NEW)
+- `createdAt`: Server timestamp when the usage snapshot was generated (sync time)
+- `earliestInstallationDate`: Timestamp of the oldest installation (start of collected data; `null` when no installations exist)
 - `countryToCount`: Country distribution for **active installations only**
 - `iCloudDocker`, `haBouncie`: Total installations per app (not filtered by activity)
 
