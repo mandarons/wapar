@@ -75,3 +75,41 @@ test('renders growth tab with acquisition data', async ({ page }) => {
 	await expect(page.getByTestId('growth-new-user-rate')).toBeVisible();
 	await expect(page.getByTestId('growth-top-country')).toBeVisible();
 });
+
+test('deep-link opens the correct tab via URL hash', async ({ page }) => {
+	await page.goto('/#geography');
+	await expect(page.getByTestId('tab-geography')).toHaveAttribute('aria-selected', 'true');
+	await expect(page.locator('text=Top 10 countries')).toBeVisible();
+});
+
+test('deep-link with invalid hash defaults to overview', async ({ page }) => {
+	await page.goto('/#nonexistent');
+	await expect(page.getByTestId('overview-card')).toBeVisible();
+});
+
+test('clicking a tab updates the URL hash', async ({ page }) => {
+	await page.goto('/');
+	await page.getByTestId('tab-distribution').click();
+	await expect(page).toHaveURL(/#distribution/);
+});
+
+test('browser back button navigates between tabs', async ({ page }) => {
+	await page.goto('/');
+	await page.getByTestId('tab-distribution').click();
+	await expect(page).toHaveURL(/#distribution/);
+	await page.getByTestId('tab-geography').click();
+	await expect(page).toHaveURL(/#geography/);
+	await page.goBack();
+	await expect(page).toHaveURL(/#distribution/);
+	await expect(page.getByTestId('tab-distribution')).toHaveAttribute('aria-selected', 'true');
+});
+
+test('deep-link to hidden tab falls back to first visible tab', async ({ page }) => {
+	await page.goto('/#versions');
+	// versions tab may not be visible if no data — should fallback to overview
+	const overviewVisible = await page.getByTestId('overview-card').isVisible();
+	const versionsVisible = await page.getByTestId('tab-versions').isVisible();
+	if (!versionsVisible) {
+		expect(overviewVisible).toBe(true);
+	}
+});
