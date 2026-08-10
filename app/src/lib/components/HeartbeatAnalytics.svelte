@@ -41,8 +41,8 @@
 		occasional: { count: number; description: string };
 		dormant: { count: number; description: string };
 	} = {
-		highlyActive: { count: 0, description: '>7 heartbeats/week' },
-		active: { count: 0, description: '1-7 heartbeats/week' },
+		highlyActive: { count: 0, description: 'Active 7/7 days' },
+		active: { count: 0, description: 'Active 1-6 days/week' },
 		occasional: { count: 0, description: 'Active in last 30d but not last 7d' },
 		dormant: { count: 0, description: 'No heartbeat in 30 days' }
 	};

@@ -56,35 +56,37 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
     // Engagement levels based on heartbeat frequency
     // Use raw D1 database for complex SQL queries
     // Categories are mutually exclusive based on recent activity
+    // Note: heartbeats are deduplicated to max 1 per installation per UTC day,
+    // so max possible heartbeats in 7 days is 7. We use distinct days for engagement levels.
     
-    // Highly active: users with >7 heartbeats in last 7 days (avg >1/day)
+    // Highly active: users active on 7 of the last 7 days (daily engagement)
     const highlyActiveResult = await Logger.measureOperation(
       'heartbeat-analytics.highly_active',
       () => c.env.DB.prepare(`
         SELECT COUNT(*) as count
         FROM (
-          SELECT installation_id, COUNT(*) as heartbeat_count
+          SELECT installation_id, COUNT(DISTINCT strftime('%Y-%m-%d', created_at)) as distinct_days
           FROM Heartbeat
           WHERE created_at >= ?
           GROUP BY installation_id
-          HAVING heartbeat_count > 7
+          HAVING distinct_days = 7
         )
       `).bind(last7d).first<{ count: number }>(),
       requestContext
     );
     const highlyActive = Number(highlyActiveResult?.count ?? 0);
     
-    // Active: users with 1-7 heartbeats in last 7 days (excluding highly active)
+    // Active: users with 1-6 distinct active days in last 7 days (not highly active)
     const activeResult = await Logger.measureOperation(
       'heartbeat-analytics.active',
       () => c.env.DB.prepare(`
         SELECT COUNT(*) as count
         FROM (
-          SELECT installation_id, COUNT(*) as heartbeat_count
+          SELECT installation_id, COUNT(DISTINCT strftime('%Y-%m-%d', created_at)) as distinct_days
           FROM Heartbeat
           WHERE created_at >= ?
           GROUP BY installation_id
-          HAVING heartbeat_count >= 1 AND heartbeat_count <= 7
+          HAVING distinct_days >= 1 AND distinct_days < 7
         )
       `).bind(last7d).first<{ count: number }>(),
       requestContext
@@ -229,8 +231,8 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
         dau_mau_ratio: Math.round(dauMauRatio * 1000) / 1000
       },
       engagementLevels: {
-        highlyActive: { count: highlyActive, description: ">7 heartbeats/week" },
-        active: { count: active, description: "1-7 heartbeats/week" },
+        highlyActive: { count: highlyActive, description: "Active 7/7 days" },
+        active: { count: active, description: "Active 1-6 days/week" },
         occasional: { count: occasional, description: "Active in last 30d but not last 7d" },
         dormant: { count: dormant, description: "No heartbeat in 30 days" }
       },
