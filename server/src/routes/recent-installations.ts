@@ -29,10 +29,18 @@ recentInstallationsRoutes.get('/', async (c) => {
       conditions.push(eq(installations.appName, appName));
     }
     
-    // Get recent installations
+    // Get recent installations — project only public-safe fields (no ipAddress/previousId/data)
     const recentInstallations = await Logger.measureOperation(
       'recent-installations.query',
-      () => db.select()
+      () => db.select({
+        id: installations.id,
+        appName: installations.appName,
+        appVersion: installations.appVersion,
+        countryCode: installations.countryCode,
+        region: installations.region,
+        lastHeartbeatAt: installations.lastHeartbeatAt,
+        createdAt: installations.createdAt,
+      })
         .from(installations)
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(desc(installations.createdAt))
