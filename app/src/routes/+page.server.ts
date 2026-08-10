@@ -92,8 +92,7 @@ export const load: PageServerLoad = async ({ url }) => {
 				timeline: [],
 				healthMetrics: {
 					avgHeartbeatsPerUser: 0,
-					avgTimeBetweenHeartbeats: '0 hours',
-					heartbeatFailureRate: 0
+					avgTimeBetweenHeartbeats: '0 hours'
 				},
 				churnRisk: {
 					usersInactive7Days: 0,
@@ -197,8 +196,7 @@ export const load: PageServerLoad = async ({ url }) => {
 				],
 				healthMetrics: {
 					avgHeartbeatsPerUser: 5.8,
-					avgTimeBetweenHeartbeats: '4.2 hours',
-					heartbeatFailureRate: 0
+					avgTimeBetweenHeartbeats: '4.2 hours'
 				},
 				churnRisk: {
 					usersInactive7Days: 45,

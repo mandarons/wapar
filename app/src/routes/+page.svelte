@@ -66,7 +66,6 @@
 		healthMetrics: {
 			avgHeartbeatsPerUser: number;
 			avgTimeBetweenHeartbeats: string;
-			heartbeatFailureRate: number;
 		};
 		churnRisk: {
 			usersInactive7Days: number;
@@ -887,8 +886,7 @@
 							timeline={data.heartbeatAnalytics?.timeline ?? []}
 							healthMetrics={data.heartbeatAnalytics?.healthMetrics ?? {
 								avgHeartbeatsPerUser: 0,
-								avgTimeBetweenHeartbeats: '0 hours',
-								heartbeatFailureRate: 0
+								avgTimeBetweenHeartbeats: '0 hours'
 							}}
 							churnRisk={data.heartbeatAnalytics?.churnRisk ?? {
 								usersInactive7Days: 0,

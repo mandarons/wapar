@@ -207,7 +207,6 @@ describe(ENDPOINT, () => {
     expect(response.status).toBe(200);
     expect(data.healthMetrics).toHaveProperty('avgHeartbeatsPerUser');
     expect(data.healthMetrics).toHaveProperty('avgTimeBetweenHeartbeats');
-    expect(data.healthMetrics).toHaveProperty('heartbeatFailureRate');
     expect(typeof data.healthMetrics.avgHeartbeatsPerUser).toBe('number');
     expect(typeof data.healthMetrics.avgTimeBetweenHeartbeats).toBe('string');
     expect(data.healthMetrics.avgTimeBetweenHeartbeats).toContain('hours');

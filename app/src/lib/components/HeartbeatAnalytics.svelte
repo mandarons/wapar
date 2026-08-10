@@ -62,8 +62,7 @@
 	export let healthMetrics: {
 		avgHeartbeatsPerUser: number;
 		avgTimeBetweenHeartbeats: string;
-		heartbeatFailureRate: number;
-	} = { avgHeartbeatsPerUser: 0, avgTimeBetweenHeartbeats: '0 hours', heartbeatFailureRate: 0 };
+	} = { avgHeartbeatsPerUser: 0, avgTimeBetweenHeartbeats: '0 hours' };
 
 	export let title: string = 'Active Usage Analytics';
 
@@ -365,7 +364,7 @@
 	{/if}
 
 	<!-- Health Metrics -->
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 		<div class="card variant-filled-surface p-4">
 			<div class="text-sm opacity-75 mb-1">Avg Heartbeats/User</div>
 			<div class="text-2xl font-bold">{healthMetrics.avgHeartbeatsPerUser.toFixed(1)}</div>
@@ -374,11 +373,6 @@
 		<div class="card variant-filled-surface p-4">
 			<div class="text-sm opacity-75 mb-1">Avg Time Between Heartbeats</div>
 			<div class="text-2xl font-bold">{healthMetrics.avgTimeBetweenHeartbeats}</div>
-		</div>
-
-		<div class="card variant-filled-surface p-4">
-			<div class="text-sm opacity-75 mb-1">Failure Rate</div>
-			<div class="text-2xl font-bold">{(healthMetrics.heartbeatFailureRate * 100).toFixed(1)}%</div>
 		</div>
 	</div>
 

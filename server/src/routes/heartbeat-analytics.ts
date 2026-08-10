@@ -239,8 +239,7 @@ heartbeatAnalyticsRoutes.get('/', async (c) => {
       timeline,
       healthMetrics: {
         avgHeartbeatsPerUser: Math.round(avgHeartbeatsPerUser * 10) / 10,
-        avgTimeBetweenHeartbeats: `${avgHours} hours`,
-        heartbeatFailureRate: 0 // Not implemented - would need error tracking
+        avgTimeBetweenHeartbeats: `${avgHours} hours`
       },
       churnRisk: {
         usersInactive7Days,
