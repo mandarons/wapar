@@ -10,6 +10,7 @@
 	import RecentInstallations from '$lib/components/RecentInstallations.svelte';
 	import HeartbeatAnalytics from '$lib/components/HeartbeatAnalytics.svelte';
 	import GrowthAnalytics from '$lib/components/GrowthAnalytics.svelte';
+	import { Button, Card } from '$lib/components/ui';
 	import {
 		buildOverviewMetrics,
 		describeUpdate,
@@ -717,10 +718,7 @@
 				class={`mt-8 ${activeTab === tab.id ? '' : 'hidden'}`}
 			>
 				{#if tab.id === 'overview'}
-					<div
-						class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
-						data-testid="overview-card"
-					>
+					<Card testId="overview-card" padding="lg">
 						<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 							<div class="space-y-2">
 								<h2 class="text-xl font-semibold text-gray-900">Install overview</h2>
@@ -740,19 +738,19 @@
 									<span class="font-medium text-gray-700">Last synced:</span>
 									<span class="ml-1">{lastSyncedMeta.relative}</span>
 								</div>
-								<button
-									class="inline-flex items-center justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
-									on:click={handleManualRefresh}
+								<Button
+									variant="outline"
 									disabled={isRefreshing}
 									aria-busy={isRefreshing}
-									data-testid="manual-refresh-button"
+									testId="manual-refresh-button"
+									on:click={handleManualRefresh}
 								>
 									{#if isRefreshing}
 										Refreshing
 									{:else}
 										Refresh data
 									{/if}
-								</button>
+								</Button>
 							</div>
 						</div>
 						<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -819,9 +817,9 @@
 								</div>
 							{/each}
 						</div>
-					</div>
+					</Card>
 				{:else if tab.id === 'distribution'}
-					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+					<Card padding="lg">
 						<div class="mb-6 text-center">
 							<h2 class="text-xl font-semibold text-gray-900">Distribution insights</h2>
 							<p class="mt-2 text-sm text-gray-600">
@@ -875,13 +873,9 @@
 										<option value="bar">Bar</option>
 									</select>
 								</div>
-								<button
-									on:click={handleExportChart}
-									class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-									data-testid="export-chart-button"
-								>
+								<Button variant="outline" testId="export-chart-button" on:click={handleExportChart}>
 									Export chart
-								</button>
+								</Button>
 							</div>
 						</div>
 						<div class="mx-auto w-full max-w-2xl" style="height: 400px;">
@@ -894,7 +888,7 @@
 								title=""
 							/>
 						</div>
-					</div>
+					</Card>
 				{:else if tab.id === MAP_TAB_ID}
 					<div class="space-y-6">
 						<div class="text-center">
@@ -1134,7 +1128,7 @@
 						{/if}
 					</div>
 				{:else if tab.id === 'versions' && data.versionAnalytics}
-					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+					<Card padding="lg">
 						<VersionAnalytics
 							versionDistribution={data.versionAnalytics?.versionDistribution ?? []}
 							latestVersion={data.versionAnalytics?.latestVersion ?? null}
@@ -1147,9 +1141,9 @@
 							adoptionTimeline={data.versionAnalytics?.adoptionTimeline ?? []}
 							adoptionGaps={data.versionAnalytics?.adoptionGaps ?? []}
 						/>
-					</div>
+					</Card>
 				{:else if tab.id === 'growth' && data.newInstallations}
-					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+					<Card padding="lg">
 						<GrowthAnalytics
 							summary={data.newInstallations?.summary ?? {
 								totalNew: 0,
@@ -1161,9 +1155,9 @@
 							gaps={data.newInstallations?.gaps ?? []}
 							topCountriesNewUsers={data.newInstallations?.topCountriesNewUsers ?? []}
 						/>
-					</div>
+					</Card>
 				{:else if tab.id === 'heartbeat' && data.heartbeatAnalytics}
-					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+					<Card padding="lg">
 						<HeartbeatAnalytics
 							activeUsers={data.heartbeatAnalytics?.activeUsers ?? {
 								daily: 0,
@@ -1206,9 +1200,9 @@
 							}}
 							retention={data.heartbeatAnalytics?.retention ?? []}
 						/>
-					</div>
+					</Card>
 				{:else if tab.id === 'recent' && data.recentInstallations}
-					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+					<Card padding="lg">
 						<RecentInstallations
 							installations={data.recentInstallations?.installations ?? []}
 							total={data.recentInstallations?.total ?? 0}
@@ -1218,7 +1212,7 @@
 							installationsLast7d={data.recentInstallations?.installationsLast7d ?? 0}
 							appName={data.recentInstallations?.appName ?? undefined}
 						/>
-					</div>
+					</Card>
 				{:else if tab.id === 'insights'}
 					<GeographicAppAnalysis
 						iCloudDockerTotal={data.iCloudDocker?.total ?? 0}
